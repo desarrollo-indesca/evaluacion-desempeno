@@ -99,3 +99,4 @@ class Formacion(models.Model):
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="formaciones")
     anadido_por = models.CharField(max_length=1, choices=ROLES)
     activo = models.BooleanField(default=True)
+    competencias = models.ManyToManyField(Competencias, related_name="formaciones")
