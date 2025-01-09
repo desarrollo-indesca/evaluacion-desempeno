@@ -27,8 +27,8 @@ class DatosPersonal(models.Model):
     tipo_personal = models.ForeignKey("TipoPersonal", on_delete=models.CASCADE, related_name="personal")
     cargo = models.ForeignKey("Cargo", on_delete=models.CASCADE, related_name="personal")
     activo = models.BooleanField(default=True)
-    supervisor = models.ForeignKey("self", on_delete=models.SET_NULL, related_name="supervisados")
-    gerencia = models.ForeignKey("Gerencia", on_delete=models.SET_NULL, related_name="personal_gerencia")
+    supervisor = models.ForeignKey("self", on_delete=models.CASCADE, related_name="supervisados")
+    gerencia = models.ForeignKey("Gerencia", on_delete=models.CASCADE, related_name="personal_gerencia")
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}"
