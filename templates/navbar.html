@@ -1,50 +1,40 @@
 {% load static %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
-    <div class="container">
-      <a class="navbar-brand d-inline-flex" href="/">
-          <img src="{% static 'img/logo.png' %}" alt="Logo de Pequiven" height="36">&nbsp;|&nbsp;
-          <img src="{% static 'img/icono_indesca.svg' %}" alt="Logo de INDESCA" height="36">
+<nav class="bg-white border-gray-200 dark:bg-gray-900">
+    <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+      <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
+          <img src="{% static '/img/logo.svg' %}" class="h-8" alt="Indesca Logo" />
+          <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Evaluación de Desempeño</span>
       </a>
-      <button class="navbar-toggler" data-interval="5000" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
+      <button data-collapse-toggle="navbar-default" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-default" aria-expanded="false">
+          <span class="sr-only">Abrir Menú Principal</span>
+          <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+          </svg>
       </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav ms-auto">
+      <div class="hidden w-full md:block md:w-auto" id="navbar-default">
+        <ul class="font-medium flex flex-col items-center p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+          <li>
+            <b class="underline">Período:</b>
+            {% if periodo %}
+            {{periodo.fecha_inicio}}-{{periodo.fecha_fin}}
+            {% endif %}
+          </li>
           {% if request.user.is_authenticated %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'seleccion_tipo_intercambiador' %}">Intercambiadores</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'consulta_calderas' %}?page=1">Calderas</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'seleccion_equipo' %}">Equipos Auxiliares</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'consulta_turbinas_vapor' %}">Turbinas de Vapor</a>
-          </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle text-white" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              {{request.user.get_full_name}}
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item" href="{% url 'consultar_usuarios' %}">Administrar Usuarios</a></li>
-              {% if request.user.is_superuser %}
-              <li>
-                <a class="dropdown-item" href="{% url 'consulta_plantas' %}">Administrar Plantas</a>
-              </li>
-              {% endif %}
-              <li><a class="dropdown-item" target="_blank" href="{% url 'encuesta_satisfaccion' %}">Encuesta de Satisfacción</a></li>
-              <li><a class="dropdown-item" target="_blank" href="{% url 'manual' %}">Manual de Usuario</a></li>
-              <li><a class="dropdown-item" href="{% url 'cerrar_sesion' %}">Cerrar Sesión</a></li>
-            </ul>
-          </li>
-          {% else %}
-          <li class="nav-item text-white">
-            Inicie sesión para acceder a las opciones
+          <li>
+            <details class="dropdown">
+              <summary class="btn m-1">{{request.user.get_full_name}}</summary>
+              <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+                <li>
+                  <form method="post" action="{% url 'logout_view' %}">
+                    {% csrf_token %}
+                    <button type="submit">Cerrar Sesión</button>
+               </form>
+                </li>
+              </ul>
+            </details>
           </li>
           {% endif %}
         </ul>
       </div>
-    </div>
+    </div> 
 </nav>

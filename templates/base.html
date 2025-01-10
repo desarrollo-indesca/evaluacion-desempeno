@@ -1,33 +1,29 @@
 {% load static %}
-{% load pwa %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{titulo}}</title>
-    <link rel="icon" type="image/x-icon" href="{% static 'img/logo.ico' %}">
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <script src="{% static 'js/jquery.min.js' %}"></script>
-    <script src="{% static 'js/chart.umd.min.js' %}"></script>
+    <title>INDESCA - Evaluación de Desempeño</title>
 
-    {% progressive_web_app_meta %}
+    <!-- INTERNAL IMPORTS -->
+    <link rel="stylesheet" href="{% static 'css/daisy-ui.min.css' %}">
+    <script src="{% static 'js/htmx.min.js' %}"></script>
+    <script src="{% static 'js/tailwindcss.min.js' %}"></script>
 
     {% block head %}
     {% endblock %}
 </head>
-<body class="d-flex flex-column d-flex flex-column" style="min-height: 100vh !important;">
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <div class="flex flex-col">
+        {% include 'navbar.html' %}
 
-    {% include 'navbar.html' %}
-
-    <main class="container-fluid mt-3 ps-5 pe-5 pb-2 pt-2">
-        {% block contenido %}
-        {% endblock %}
-    </main>
-
-    {% include 'footer.html' %}
+        <main class="flex-grow p-5">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
     
-    
-    {% block extra_javascript %}
-    {% endblock %}
+    {% include 'footer.html' %}   
+</body>
 </html>
