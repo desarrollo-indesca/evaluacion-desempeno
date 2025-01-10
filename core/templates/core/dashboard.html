@@ -1,7 +1,93 @@
 {% extends 'base.html' %}
 
 {% block head %}
+<style>
+    .card {
+        margin: 1rem auto;
+        max-width: 400px;
+    }
+    .card.bg-green {
+        background-color: #34D399;
+    }
+    .card.bg-yellow {
+        background-color: #F7DC6F;
+    }
+    .card.bg-red {
+        background-color: #FF6C6C;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
+<div role="tablist" class="tabs tabs-lifted">
+    <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="Inicio" checked />
+    <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+        <h1 class="text-3xl text-center font-semibold">Evaluación de Desempeño del Personal</h1>
+
+        <div class="grid grid-cols-12">
+            <div class="md:col-span-3 col-span-12">
+                <div class="card border-2 border my-4">
+                    <div class="card-content p-4">
+                        <h2 class="text-2xl font-semibold text-center">Información del Usuario</h2>
+                        <hr>
+                        <div class="overflow-x-auto">
+                            <table class="table w-full">
+                                <tbody>
+                                    <tr>
+                                        <th>Ficha</th>
+                                        <td>{{datos_personal.ficha}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <td>{{request.user.get_full_name}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Tipo de Personal</th>
+                                        <td>{{datos_personal.tipo_personal}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Cargo</th>
+                                        <td>{{datos_personal.cargo}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Supervisor</th>
+                                        <td>{% if datos_personal.supervisor %}{{datos_personal.supervisor}}{% else %}No tiene{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Gerencia</th>
+                                        <td>{{datos_personal.gerencia}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Fecha de Ingreso</th>
+                                        <td>{{datos_personal.fecha_ingreso}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Antigüedad</th>
+                                        <td>{{antiguedad}} meses</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-12">
+                <div class="grid grid-cols-12">
+
+                </div>
+            </div>
+        </div>
+    </div>
+  
+    <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="Consultar" />
+    <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+      Tab content 2
+    </div>
+  
+    <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="Revisar" />
+    <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+      Tab content 3
+    </div>
+  </div>
 {% endblock %}
