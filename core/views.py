@@ -4,7 +4,9 @@ from django.db import transaction
 from django.contrib import messages
 from django.views import View
 from django.shortcuts import render, redirect
+from datetime import date
 from core.models import *
+from evaluacion.models import Evaluacion
 
 # Create your views here.
 
@@ -52,16 +54,12 @@ class Dashboard(LoginRequiredMixin, View, PeriodoContextMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['datos_personal'] = DatosPersonal.objects.get(activo = True)
-        from datetime import date
 
         datos_personal = context['datos_personal']
         today = date.today()
-        time_in_charge = today.year - datos_personal.fecha_ingreso.year - (
-            (today.month, today.day) < (datos_personal.fecha_ingreso.month, datos_personal.fecha_ingreso.day)
-        )
         time_in_charge_months = (today.year - datos_personal.fecha_ingreso.year) * 12 + today.month - datos_personal.fecha_ingreso.month - ((today.month, today.day) < (datos_personal.fecha_ingreso.month, datos_personal.fecha_ingreso.day))
         context['antiguedad'] = time_in_charge_months
-
+        context['evaluacion'] = Evaluacion.objects.filter(evaluado=datos_personal, periodo = context['periodo']).first()
         return context
 
     def get(self, request):
