@@ -1,23 +1,5 @@
 {% extends 'base.html' %}
 
-{% block head %}
-<style>
-    .card {
-        margin: 1rem auto;
-        max-width: 400px;
-    }
-    .card.bg-green {
-        background-color: #34D399;
-    }
-    .card.bg-yellow {
-        background-color: #F7DC6F;
-    }
-    .card.bg-red {
-        background-color: #FF6C6C;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div role="tablist" class="tabs tabs-lifted">
     <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="Inicio" checked />
@@ -144,7 +126,7 @@
                                             <td>{{instrumento}}</td>
                                             <td>{{instrumento.estado}}</td>
                                             <td></td>
-                                            <td><a class="btn btn-error" href="#">Acceder al Instrumento</a></td>
+                                            <td><a class="btn btn-error" href="{% url 'instrumento' pk=instrumento.pk %}">Acceder al Instrumento</a></td>
                                         </tr>
                                         {% endfor %}
                                         <tr>

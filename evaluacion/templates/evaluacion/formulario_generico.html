@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1 class="text-center text-2xl">{{instrumento.nombre}}</h1>
+<hr>
+
+{% for seccion in instrumento.secciones.all %}
+    <div class="my-4">
+        <h2 class="text-lg font-semibold text-center">{{seccion.nombre}}</h2>
+        
+            <div class="my-2">
+                <table class="table w-full">
+                    <tbody>
+                        {% for pregunta in seccion.preguntas.all %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td class="text-center">
+                                <h3 class="text-md font-semibold text-center tooltip" data-tip="{{pregunta.tip}}">
+                                    {{pregunta.pregunta}}
+                                </h3>
+                            </td>
+                            <td>
+                                <select name="pregunta_{{pregunta.pk}}" id="pregunta_{{pregunta.pk}}" class="select select-bordered w-full max-w-xs">
+                                    <option disabled selected>Seleccionar</option>
+                                    {% for opcion in pregunta.opciones.all %}
+                                        <option value="{{opcion.valor}}">{{opcion.opcion}}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </div>
+                    </tbody>
+                </table>
+    </div>
+{% endfor %}
+
+{% endblock %}
