@@ -44,19 +44,20 @@ class Instrumento(models.Model):
         return self.nombre
 
 class Seccion(models.Model):
-    nombre = models.CharField(max_length=50)
+    nombre = models.CharField(max_length=300)
     peso = models.SmallIntegerField()
     instrumento = models.ForeignKey(Instrumento, on_delete=models.CASCADE, related_name="secciones")
 
 class Pregunta(models.Model):
-    pregunta = models.CharField(max_length=200)
+    pregunta = models.CharField(max_length=400)
     peso = models.SmallIntegerField()
+    tip = models.CharField(max_length=400, null=True, blank=True)
     seccion = models.ForeignKey(Seccion, on_delete=models.CASCADE, related_name="preguntas")
 
 class Opciones(models.Model):
     opcion = models.CharField(max_length=200)
     valor = models.SmallIntegerField()
-    pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE, related_name="opciones")
+    pregunta = models.ManyToManyField(Pregunta, related_name="opciones")
 
 class Evaluacion(models.Model):
     periodo = models.ForeignKey(Periodo, on_delete=models.CASCADE, related_name="evaluaciones")
