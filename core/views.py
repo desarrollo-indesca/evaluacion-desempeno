@@ -11,12 +11,15 @@ from evaluacion.models import Evaluacion
 # Create your views here.
 
 class PeriodoContextMixin():
+    def get_periodo(self):
+        return Periodo.objects.get(activo=True)
+
     def get_context_data(self, **kwargs):
         context = {}
         if hasattr(super(), 'get_context_data'):
             context = super().get_context_data(**kwargs)
 
-        context['periodo'] = Periodo.objects.get(activo=True)
+        context['periodo'] = self.get_periodo()
         return context
 
 class Login(PeriodoContextMixin, View):

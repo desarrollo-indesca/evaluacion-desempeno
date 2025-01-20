@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'evaluacion',
     'core',
     'gerencia',
+    'widget_tweaks'
 ]
 
 MIDDLEWARE = [

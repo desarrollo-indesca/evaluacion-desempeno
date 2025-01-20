@@ -1,6 +1,10 @@
 from django import forms
+from .models import Respuesta
 
-class FormularioRespuestas(forms.ModelForm):
+class FormularioRespuestasEmpleado(forms.ModelForm):
     class Meta:
-        model = ResultadoInstrumento
-        fields = ('respuesta', 'comentario')
+        model = Respuesta
+        fields = ('respuesta_empleado', 'comentario_empleado', 'pregunta')
+        widgets = {
+            'pregunta': forms.HiddenInput(),
+        }
