@@ -31,6 +31,11 @@ PRIORIDADES = (
     (3,3),
 )
 
+CALCULOS = (
+    ("S", "SUMA"),
+    ("P", "PROMEDIO"),
+)
+
 class Formulario(models.Model):
     tipo_personal = models.ForeignKey(TipoPersonal, on_delete=models.CASCADE, related_name="formularios")
     activo = models.BooleanField(default=True)
@@ -38,6 +43,7 @@ class Formulario(models.Model):
 class Instrumento(models.Model):
     nombre = models.CharField(max_length=50)
     peso = models.SmallIntegerField()
+    calculo = models.CharField(max_length=1, choices=ROLES, default="S")
     formulario = models.ForeignKey(Formulario, on_delete=models.CASCADE, related_name="instrumentos")
 
     def __str__(self):
@@ -46,6 +52,7 @@ class Instrumento(models.Model):
 class Seccion(models.Model):
     nombre = models.CharField(max_length=300)
     peso = models.SmallIntegerField()
+    calculo = models.CharField(max_length=1, choices=ROLES, default="S")
     instrumento = models.ForeignKey(Instrumento, on_delete=models.CASCADE, related_name="secciones")
 
 class Pregunta(models.Model):

@@ -14,14 +14,14 @@
                 <table class="table w-full">
                     <thead class="bg-gray-900">
                         <tr>
-                            <th colspan="3" class="text-center text-lg text-white">{{seccion.seccion.nombre}}</th>
+                            <th colspan="3" class="text-center text-lg text-white w-5/5">{{seccion.seccion.nombre}}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for pregunta in seccion.preguntas %}
                         <tr class="hover:bg-gray-100">
-                            <td>{{forloop.counter}}</td>
-                            <td class="text-center">
+                            <td class="text-center w-1/5">{{forloop.counter}}</td>
+                            <td class="text-center w-2/5">
                                 <h3 class="text-md font-semibold text-center tooltip" data-tip="{{pregunta.pregunta.tip}}">
                                     {{pregunta.pregunta.pregunta}}
                                 </h3>
@@ -30,8 +30,8 @@
                                     {% for error in pregunta.form.pregunta.errors %}{{error}}<br>{% endfor %}
                                 </small>
                             </td>
-                            <td>
-                                <select name="{{pregunta.form.prefix}}-respuesta_empleado" id="id_{{pregunta.form.prefix}}-respuesta_empleado" class="select select-bordered w-full max-w-xs">
+                            <td class="text-center w-2/5">
+                                <select name="{{pregunta.form.prefix}}-respuesta_empleado" id="id_{{pregunta.form.prefix}}-respuesta_empleado" class="select select-bordered w-full max-w-xs" required>
                                     <option disabled selected>Seleccionar</option>
                                     {% for opcion in pregunta.pregunta.opciones.all %}
                                         <option value="{{opcion.valor}}" {% if opcion.valor|slugify == pregunta.form.instance.respuesta_empleado|slugify %}selected{% endif %}>{{opcion.opcion}}</option>
