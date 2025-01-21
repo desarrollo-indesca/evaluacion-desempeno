@@ -34,6 +34,7 @@ PRIORIDADES = (
 CALCULOS = (
     ("S", "SUMA"),
     ("P", "PROMEDIO"),
+    ("M", "MÍNIMO")
 )
 
 class Formulario(models.Model):
@@ -55,6 +56,12 @@ class Seccion(models.Model):
     calculo = models.CharField(max_length=1, choices=ROLES, default="S")
     instrumento = models.ForeignKey(Instrumento, on_delete=models.CASCADE, related_name="secciones")
 
+    def titulo(self):
+        return self.nombre.split(":")[0]
+
+    def descripcion(self):
+        return self.nombre.split(":")[1] if self.nombre.find(":") != -1 else ""
+
 class Pregunta(models.Model):
     pregunta = models.CharField(max_length=400)
     peso = models.SmallIntegerField()
@@ -62,9 +69,12 @@ class Pregunta(models.Model):
     seccion = models.ForeignKey(Seccion, on_delete=models.CASCADE, related_name="preguntas")
 
 class Opciones(models.Model):
-    opcion = models.CharField(max_length=200)
+    opcion = models.CharField(max_length=300)
     valor = models.SmallIntegerField()
     pregunta = models.ManyToManyField(Pregunta, related_name="opciones")
+
+    class Meta:
+        ordering = ["valor"]
 
 class Evaluacion(models.Model):
     periodo = models.ForeignKey(Periodo, on_delete=models.CASCADE, related_name="evaluaciones")

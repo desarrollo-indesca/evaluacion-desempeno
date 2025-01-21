@@ -57,7 +57,7 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, View):
     def post(self, request, pk):
         instrumento = Instrumento.objects.get(pk=pk)
 
-        try:
+        if(True):
             with transaction.atomic():
                 evaluacion = Evaluacion.objects.get(evaluado=request.user.datos_personal.get(activo=True), periodo=self.get_periodo(), fecha_fin__isnull=True)
                 resultado_instrumento = ResultadoInstrumento.objects.get_or_create(
@@ -66,10 +66,10 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, View):
                 )[0]
 
                 total_instrumento = 0 
-                max_instrumento = 0              
+                max_instrumento = 0 if instrumento.calculo == 'S' else 1e9 if instrumento.calculo == 'M' else instrumento.secciones.count()     
                 for seccion in instrumento.secciones.all():
                     max_seccion = 0
-                    total_ponderado = 0
+                    total = 0
                     for pregunta in seccion.preguntas.all():
                         form = FormularioRespuestasEmpleado(request.POST, 
                                                             instance=pregunta.respuestas.get(evaluacion=evaluacion) if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None, 
@@ -78,38 +78,46 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, View):
                             form.instance.evaluacion = evaluacion
                             form.save()
 
-                            if(form.instance.respuesta_empleado >= 0):
+                            if(seccion.calculo == 'S' and form.instance.respuesta_empleado >= 0):
                                 max_seccion += form.instance.pregunta.peso
-                                total_ponderado += form.instance.pregunta.peso * form.instance.respuesta_empleado / 2
+                                total += form.instance.pregunta.peso * form.instance.respuesta_empleado / 2
+                            elif(seccion.calculo == 'P'):
+                                total += form.instance.respuesta_empleado
+                                max_seccion += 1
                         else:
                             print(form.errors)
                             raise Exception(str(form.errors))
 
-                    total_ponderado = round(total_ponderado, 2)
+                    total = round(total, 2)
 
-                    if(total_ponderado > 0):
-                        total_ponderado = total_ponderado*seccion.peso/max_seccion
-                        total_instrumento += total_ponderado
-                        max_instrumento += seccion.peso
-                    else:
-                        total_ponderado = None
+                    if(seccion.calculo == 'S'):
+                        if(total > 0):
+                            total = total*seccion.peso/max_seccion
+                            total_instrumento += total
+                            max_instrumento += seccion.peso
+                        else:
+                            total = None
+                    elif(seccion.calculo == 'P'):
+                        total = total / max_seccion
+                        total_instrumento += total
+                    elif(seccion.calculo == 'M'):
+                        total_instrumento = min(total_instrumento, total)
 
                     ResultadoSeccion.objects.update_or_create(
                         seccion=seccion, 
                         resultado_instrumento=resultado_instrumento, 
                         defaults={
-                            'resultado_empleado': total_ponderado,
+                            'resultado_empleado': total,
                         }
                     )
 
-                total_instrumento = total_instrumento*instrumento.peso/max_instrumento
+                if(instrumento.calculo == 'S'):
+                    total_instrumento = total_instrumento*instrumento.peso/max_instrumento
+                elif(instrumento.calculo == 'P'):
+                    total_instrumento = total_instrumento / max_instrumento
+               
                 resultado_instrumento.resultado_empleado = total_instrumento
                 resultado_instrumento.save()
-                    
-        except Exception as e:
-            print(str(e))
-            context = self.get_context_data(True)
-            return render(request, 'evaluacion/formulario_generico.html', context)
         
         messages.success(request, 'Respuestas del Instrumento almacenadas correctamente.')
         return redirect('dashboard')
