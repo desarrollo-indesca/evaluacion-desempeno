@@ -78,16 +78,16 @@ class Evaluacion(models.Model):
     estado = models.CharField(max_length=1, choices=ESTADOS, default="P")
 
 class ResultadoInstrumento(models.Model):
-    resultado_empleado = models.DecimalField(decimal_places=2, max_digits=3, null=True, blank=True)
-    resultado_supervisor = models.DecimalField(decimal_places=2, max_digits=3, null=True, blank=True)
-    resultado_final = models.DecimalField(decimal_places=2, max_digits=3, null=True, blank=True)
+    resultado_empleado = models.DecimalField(decimal_places=2, max_digits=5, null=True, blank=True)
+    resultado_supervisor = models.DecimalField(decimal_places=2, max_digits=5, null=True, blank=True)
+    resultado_final = models.DecimalField(decimal_places=2, max_digits=5, null=True, blank=True)
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="resultados")
     instrumento = models.ForeignKey(Instrumento, on_delete=models.CASCADE, related_name="resultados")
 
 class ResultadoSeccion(models.Model):
-    resultado_empleado = models.DecimalField(decimal_places=2, max_digits=3, null=True, blank=True)
-    resultado_supervisor = models.DecimalField(decimal_places=2, max_digits=3, null=True, blank=True)
-    resultado_final = models.DecimalField(decimal_places=2, max_digits=3, null=True, blank=True)
+    resultado_empleado = models.DecimalField(decimal_places=2, max_digits=5, null=True, blank=True)
+    resultado_supervisor = models.DecimalField(decimal_places=2, max_digits=5, null=True, blank=True)
+    resultado_final = models.DecimalField(decimal_places=2, max_digits=5, null=True, blank=True)
     seccion = models.ForeignKey(Seccion, on_delete=models.CASCADE, related_name="resultados")
     resultado_instrumento = models.ForeignKey(ResultadoInstrumento, on_delete=models.CASCADE, related_name="resultados_secciones")
 

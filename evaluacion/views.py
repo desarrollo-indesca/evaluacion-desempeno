@@ -64,9 +64,12 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, View):
                     evaluacion=evaluacion, 
                     instrumento=instrumento
                 )[0]
-                
+
+                total_instrumento = 0 
+                max_instrumento = 0              
                 for seccion in instrumento.secciones.all():
-                    total = 0
+                    max_seccion = 0
+                    total_ponderado = 0
                     for pregunta in seccion.preguntas.all():
                         form = FormularioRespuestasEmpleado(request.POST, 
                                                             instance=pregunta.respuestas.get(evaluacion=evaluacion) if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None, 
@@ -75,26 +78,32 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, View):
                             form.instance.evaluacion = evaluacion
                             form.save()
 
-                            total += form.instance.respuesta_empleado
+                            if(form.instance.respuesta_empleado >= 0):
+                                max_seccion += form.instance.pregunta.peso
+                                total_ponderado += form.instance.pregunta.peso * form.instance.respuesta_empleado / 2
                         else:
                             print(form.errors)
                             raise Exception(str(form.errors))
 
-                    # TODO : chequear el archivo para ver el cálculo de los instrumentos
-                    if instrumento.calculo == 'P':
-                        total = total / seccion.preguntas.count()
-                    elif instrumento.calculo == 'S':
-                        total = total / seccion.preguntas.count()
+                    total_ponderado = round(total_ponderado, 2)
+
+                    if(total_ponderado > 0):
+                        total_ponderado = total_ponderado*seccion.peso/max_seccion
+                        total_instrumento += total_ponderado
+                        max_instrumento += seccion.peso
+                    else:
+                        total_ponderado = None
 
                     ResultadoSeccion.objects.update_or_create(
                         seccion=seccion, 
                         resultado_instrumento=resultado_instrumento, 
                         defaults={
-                            'resultado_empleado': total,
+                            'resultado_empleado': total_ponderado,
                         }
                     )
-                    
-                resultado_instrumento.resultado_empleado = resultado_instrumento.resultados_secciones.aggregate(models.Sum('resultado_empleado'))['resultado_empleado__sum']
+
+                total_instrumento = total_instrumento*instrumento.peso/max_instrumento
+                resultado_instrumento.resultado_empleado = total_instrumento
                 resultado_instrumento.save()
                     
         except Exception as e:

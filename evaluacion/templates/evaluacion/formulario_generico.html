@@ -6,7 +6,7 @@
 <h1 class="text-center text-2xl">{{titulo}}</h1>
 <hr>
 
-<form action="" method="post">
+<form method="post">
     {% csrf_token %}
     {% for seccion in instrumento %}
     <div class="my-4">       
@@ -34,13 +34,15 @@
                                 <select name="{{pregunta.form.prefix}}-respuesta_empleado" id="id_{{pregunta.form.prefix}}-respuesta_empleado" class="select select-bordered w-full max-w-xs" required>
                                     <option disabled selected>Seleccionar</option>
                                     {% for opcion in pregunta.pregunta.opciones.all %}
-                                        <option value="{{opcion.valor}}" {% if opcion.valor|slugify == pregunta.form.instance.respuesta_empleado|slugify %}selected{% endif %}>{{opcion.opcion}}</option>
+                                        <option value="{{opcion.valor}}" {% if opcion.valor == pregunta.form.instance.respuesta_empleado %}selected{% endif %}>{{opcion.opcion}}</option>
                                     {% endfor %}
                                 </select>
                                 <small class="text-error">
                                     {% for error in pregunta.form.respuesta_empleado.errors %}{{error}}<br>{% endfor %}
                                 </small>
-                                {% render_field pregunta.form.comentario_empleado class="hidden input" %}
+
+                                <br>
+                                {% render_field pregunta.form.comentario_empleado class="input input-bordered mt-1 w-full max-w-xs" placeholder="Comentario del Evaluado" type="text" %}
                                 <small class="text-error">
                                     {% for error in pregunta.form.comentario_empleado.errors %}{{error}}<br>{% endfor %}
                                 </small>
@@ -60,5 +62,25 @@
     </div>
 </form>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const selects = document.querySelectorAll('select');
+        selects.forEach(function(select) {
+            select.addEventListener('change', function() {
+                if (this.value == -1) {
+                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').setAttribute('required', true);
+                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').classList.add('input-error');
+                } else {
+                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').removeAttribute('required');
+                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').classList.remove('input-error');
+                }
+            });
+        });
+        
+        selects.forEach(function(select) {
+            select.dispatchEvent(new Event('change'));
+        });
+    });
+</script>
 
 {% endblock %}

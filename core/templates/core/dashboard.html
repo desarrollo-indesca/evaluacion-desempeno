@@ -124,8 +124,8 @@
                                         {% for instrumento in evaluacion.formulario.instrumentos.all %}
                                         <tr>
                                             <td>{{instrumento}}</td>
-                                            <td>{{instrumento.estado}}</td>
-                                            <td></td>
+                                            <td>{{instrumento.resultados.exists|yesno:"Completado,Pendiente"}}</td>
+                                            <td>{{instrumento.resultados.first.resultado_empleado|default:"-"}} / {{instrumento.peso}}</td>
                                             <td><a class="btn btn-error" href="{% url 'instrumento' pk=instrumento.pk %}">Acceder al Instrumento</a></td>
                                         </tr>
                                         {% endfor %}
