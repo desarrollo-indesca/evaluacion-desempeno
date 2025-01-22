@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+
+<div class="flex justify-evenly items-center p-3">
+    <div class="w-25">
+        <a href="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
+    </div>
+    <div class="w-50">
+        <h1 class="text-center text-2xl">{{titulo}}</h1>
+    </div>
+    <div class="w-25"></div>
+</div>
+<hr>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="my-4">       
+            <div class="my-2 max-w-screen">
+                <table class="table max-w-screen">
+                    <thead class="bg-gray-900 text-md">
+                        <tr>
+                            <th class="text-center text-white">
+                                Necesidad de Formación
+                            </th>
+                            <th class="text-center text-white">
+                                Prioridad
+                            </th>
+                            <th class="text-center text-white">
+                                Clasificación
+                            </th>
+                            <th class="text-center text-white">
+                                Competencias Técnicas
+                            </th>
+                            <th class="text-center text-white">
+                                Competencias Genéricas
+                            </th>      
+                            <th>
+                                +/-
+                            </th>  
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{formset.management_form}}
+                        {% for form in formset %}
+                        <tr class="hover:bg-gray-100">
+                            <td class="text-center w-2/8">
+                                {% for hidden_field in form.hidden_fields %}
+                                {{hidden_field}}
+                                {% endfor %}
+                                {% render_field form.necesidad_formacion class="input input-bordered w-full" %}
+                            </td>
+                            <td class="text-center w-1/8">
+                                {% render_field form.prioridad class="select select-bordered w-full" %}
+                            </td>
+                            <td class="text-center w-1/8">
+                                {% render_field form.clasificacion class="select select-bordered w-full" %}                                
+                            </td>
+                            <td class="text-xs">
+                                {% render_field form.competencias_genericas %}
+                            </td>
+                            <td class="text-xs">
+                                {% render_field form.competencias_tecnicas %}
+                            </td>
+                            <td>
+                                {% if forloop.first %}
+                                <button class="btn btn-success anadir" type="button">
+                                    +
+                                </button>
+                                {% else %}
+                                <button class="btn btn-success eliminar" type="button">
+                                    -
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </div>
+                    </tbody>
+                </table>
+            </div>
+    </div>
+
+    <div class="flex justify-center items-center w-full">
+        <div>
+            <input type="submit" value="Guardar" class="btn btn-error">
+        </div>
+    </div>
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const selects = document.querySelectorAll('select');
+        selects.forEach(function(select) {
+            select.addEventListener('change', function() {
+                if (this.value == -1) {
+                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').setAttribute('required', true);
+                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').classList.add('input-error');
+                } else {
+                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').removeAttribute('required');
+                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').classList.remove('input-error');
+                }
+            });
+        });
+        
+        selects.forEach(function(select) {
+            select.dispatchEvent(new Event('change'));
+        });
+    });
+</script>
+
+{% endblock %}

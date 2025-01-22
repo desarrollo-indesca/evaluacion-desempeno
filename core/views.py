@@ -21,6 +21,19 @@ class PeriodoContextMixin():
 
         context['periodo'] = self.get_periodo()
         return context
+    
+class EvaluacionEstadoMixin():
+    estado = ""
+
+    def get(self, request, pk):
+        try:
+            evaluacion = Evaluacion.objects.get(pk=pk)
+        except:
+            evaluacion = Evaluacion.objects.get(evaluado=self.request.user.datos_personal.get(activo=True), periodo=self.get_periodo())
+
+
+        if(evaluacion.estado == self.estado):
+            return render(request, self.template_name, context=self.get_context_data())
 
 class Login(PeriodoContextMixin, View):
     template_name = 'core/login.html'

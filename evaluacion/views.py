@@ -1,9 +1,11 @@
 from django.views import View
+from django.http import HttpResponseForbidden
+from django.forms import modelformset_factory
 from .models import *
 from django.shortcuts import render, redirect
-from core.views import PeriodoContextMixin
+from core.views import PeriodoContextMixin, EvaluacionEstadoMixin
 from django.db import transaction, models 
-from .forms import FormularioRespuestasEmpleado
+from .forms import *
 from django.contrib import messages
 
 # Create your views here.
@@ -11,11 +13,18 @@ from django.contrib import messages
 class ComenzarEvaluacion(View):
     def post(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
-        evaluacion.estado = 'E'
-        evaluacion.save()
-        return redirect('dashboard')
+
+        if(evaluacion.estado == 'P'):
+            evaluacion.estado = 'E'
+            evaluacion.save()
+            return redirect('dashboard')
+        
+        return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
     
-class FormularioInstrumentoEmpleado(PeriodoContextMixin, View):
+class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
+    template_name = 'evaluacion/formulario_generico.html'
+    estado = "E"
+
     def get_context_data(self, post=False, **kwargs):
         context = super().get_context_data(**kwargs)
         evaluacion = Evaluacion.objects.get(evaluado=self.request.user.datos_personal.get(activo=True), periodo=self.get_periodo())
@@ -122,5 +131,19 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, View):
         messages.success(request, 'Respuestas del Instrumento almacenadas correctamente.')
         return redirect('dashboard')
 
-    def get(self, request, pk):
-        return render(request, 'evaluacion/formulario_generico.html', context=self.get_context_data())
+class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
+    template_name = "evaluacion/formacion_empleado.html"
+    estado = "E"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+
+        context['formset'] = modelformset_factory(
+            Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo'),
+        )
+
+        context['titulo'] = "Detección de Necesidades de Formación"
+
+        return context

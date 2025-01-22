@@ -122,10 +122,16 @@ class LogrosYMetas(models.Model):
 class ClasificacionFormacion(models.Model):
     clasificacion = models.CharField(max_length=200)
 
+    def __str__(self):
+        return self.clasificacion.upper()
+
 class Competencias(models.Model):
     nombre = models.CharField(max_length=45)
     tipo_personal = models.ForeignKey(TipoPersonal, on_delete=models.CASCADE, related_name="competencias")
     tipo = models.CharField(max_length=1, choices=ROLES)
+
+    def __str__(self):
+        return self.nombre.upper()
 
 class Formacion(models.Model):
     necesidad_formacion = models.CharField(max_length=200)
