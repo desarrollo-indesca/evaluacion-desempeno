@@ -18,27 +18,42 @@
     {% csrf_token %}
     <div class="my-4">       
             <div class="my-2 max-w-screen">
-                <table class="table max-w-screen">
-                    <thead class="bg-gray-900 text-md">
+                <table class="table table-bordered max-w-screen">
+                    <thead class="bg-gray-900 text-md text-white text-center">
                         <tr>
-                            <th class="text-center text-white">
-                                Necesidad de Formación
+                            <th colspan="3">
+                                Detección de Necesidades de Formación (DNF)
                             </th>
-                            <th class="text-center text-white">
-                                Prioridad
+                            <th rowspan="2">
+                                <div class="tooltip" data-tip="Seleccione la(s) competencia(s) que mejorara la formación.">
+                                    Competencias Técnicas
+                                </div>
                             </th>
-                            <th class="text-center text-white">
-                                Clasificación
+                            <th rowspan="2">
+                                <div class="tooltip" data-tip="Seleccione la(s) competencia(s) que mejorara la formación.">
+                                    Competencias Genéricas
+                                </div>
                             </th>
-                            <th class="text-center text-white">
-                                Competencias Técnicas
-                            </th>
-                            <th class="text-center text-white">
-                                Competencias Genéricas
-                            </th>      
-                            <th>
+                            <th rowspan="2">
                                 +/-
-                            </th>  
+                            </th> 
+                        </tr>
+                        <tr>
+                            <th>
+                                <div class="tooltip" data-tip="Coloque la necesidad del Adiestramiento no el nombre del curso.">
+                                    Necesidad de Formación
+                                </div>
+                            </th>
+                            <th>
+                                <div class="tooltip" data-tip="Seleccione la Prioridad de la Necesidad">
+                                    Prioridad
+                                </div>
+                            </th>
+                            <th>
+                                <div class="tooltip" data-tip="Seleccione la Clasificacion según lista anexa">
+                                    Clasificación
+                                </div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>

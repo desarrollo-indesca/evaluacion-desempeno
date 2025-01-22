@@ -140,6 +140,24 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
 
+        # TODO añadir queryset en caso de que existan
+        context['formset'] = modelformset_factory(
+            Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo'),
+        )
+
+        context['titulo'] = "Detección de Necesidades de Formación"
+
+        return context
+    
+class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
+    template_name = "evaluacion/formacion_empleado.html"
+    estado = "E"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+
         context['formset'] = modelformset_factory(
             Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo'),
         )
