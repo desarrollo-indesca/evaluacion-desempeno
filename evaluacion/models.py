@@ -31,6 +31,11 @@ PRIORIDADES = (
     (3,3),
 )
 
+NIVELES_PRIORIDAD = (
+    ("P", "PRIORITARIO"),
+    ("N", "NO PRIORITARIO")
+)
+
 CALCULOS = (
     ("S", "SUMA"),
     ("P", "PROMEDIO"),
@@ -113,7 +118,8 @@ class Respuesta(models.Model):
 
 class LogrosYMetas(models.Model):
     descripcion = models.CharField(max_length=200)
-    porc_cumplimiento = models.SmallIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
+    porc_cumplimiento = models.SmallIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)], null=True, blank=True)
+    nivel_prioridad = models.CharField(max_length=1, choices=NIVELES_PRIORIDAD)
     anadido_por = models.CharField(max_length=1, choices=ROLES)
     activo = models.BooleanField(default=True)
     periodo = models.CharField(max_length=1, choices=PERIODO_METAS)

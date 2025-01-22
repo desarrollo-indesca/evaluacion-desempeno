@@ -150,7 +150,7 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
         return context
     
 class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
-    template_name = "evaluacion/formacion_empleado.html"
+    template_name = "evaluacion/metas_empleado.html"
     estado = "E"
 
     def get_context_data(self, **kwargs):
@@ -159,9 +159,9 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
 
         context['formset'] = modelformset_factory(
-            Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo'),
+            LogrosYMetas, form=FormularioMetas, exclude = ('anadido_por', 'activo', 'periodo', 'evaluacion')
         )
 
-        context['titulo'] = "Detección de Necesidades de Formación"
+        context['titulo'] = "Formulario de Logros y Metas"
 
         return context
