@@ -1,6 +1,7 @@
 from django.views import View
 from django.http import HttpResponseForbidden
 from django.forms import modelformset_factory
+import datetime
 from .models import *
 from django.shortcuts import render, redirect
 from core.views import PeriodoContextMixin, EvaluacionEstadoMixin
@@ -20,7 +21,22 @@ class ComenzarEvaluacion(View):
             return redirect('dashboard')
         
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
-    
+
+class FinalizarEvaluacion(View):
+    def post(self, request, pk):
+        evaluacion = Evaluacion.objects.get(pk=pk)
+
+        if(evaluacion.estado == 'E' and (
+            evaluacion.resultados.count() == evaluacion.formulario.instrumentos.count() and
+            evaluacion.formaciones.count() and evaluacion.logros_y_metas.count()
+        )):
+            evaluacion.estado = 'S'
+            evaluacion.fecha_envio = datetime.datetime.now()
+            evaluacion.save()
+            return redirect('dashboard')
+        
+        return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
+
 class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     template_name = 'evaluacion/formulario_generico.html'
     estado = "E"

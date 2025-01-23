@@ -11,6 +11,7 @@ ESTADOS = (
     ("G", "ENVIADO A LA GERENCIA"),
     ("H", "ENVIADO A GESTIÓN HUMANA"),
     ("A", "APROBADA"),
+    ("R", "RECHAZADA")
 )
 
 ROLES = (
@@ -91,6 +92,12 @@ class Evaluacion(models.Model):
     fecha_aprobacion = models.DateTimeField(null=True, blank=True)
     formulario = models.ForeignKey(Formulario, on_delete=models.CASCADE, related_name="evaluaciones")
     estado = models.CharField(max_length=1, choices=ESTADOS, default="P")
+
+    def total(self):
+        return self.resultados.aggregate(models.Sum('resultado_empleado')).get('resultado_empleado__sum')
+    
+    def peso(self):
+        return self.formulario.instrumentos.aggregate(models.Sum('peso')).get('peso__sum')
 
 class ResultadoInstrumento(models.Model):
     resultado_empleado = models.DecimalField(decimal_places=2, max_digits=5, null=True, blank=True)
