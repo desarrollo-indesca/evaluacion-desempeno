@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load static %}
 
 {% block content %}
 
@@ -56,10 +57,10 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="form">
                         {{formset.management_form}}
                         {% for form in formset %}
-                        <tr class="hover:bg-gray-100">
+                        <tr class="form hover:bg-gray-100">
                             <td class="text-center w-2/8">
                                 {% for hidden_field in form.hidden_fields %}
                                 {{hidden_field}}
@@ -103,4 +104,6 @@
         </div>
     </div>
 </form>
+
+<script src="{% static 'js/dynamic-form.js' %}"></script>
 {% endblock %}

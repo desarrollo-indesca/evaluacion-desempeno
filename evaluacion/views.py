@@ -158,9 +158,15 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
 
-        context['formset'] = modelformset_factory(
-            LogrosYMetas, form=FormularioMetas, exclude = ('anadido_por', 'activo', 'periodo', 'evaluacion')
-        )
+        context['formset_actual'] = modelformset_factory(
+            LogrosYMetas, form=FormularioMetas, exclude = ('anadido_por', 'activo', 'periodo', 'evaluacion'),
+            min_num=0
+        )(prefix="form-actual")
+
+        context['formset_proximo'] = modelformset_factory(
+            LogrosYMetas, form=FormularioMetas, exclude = ('anadido_por', 'activo', 'periodo', 'evaluacion'),
+            min_num=0
+        )(prefix="form-proximo")
 
         context['titulo'] = "Formulario de Logros y Metas"
 

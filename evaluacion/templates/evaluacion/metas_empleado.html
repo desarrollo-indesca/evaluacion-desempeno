@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load static %}
 
 {% block content %}
 
@@ -21,33 +22,33 @@
                 <table class="table table-bordered max-w-screen">
                     <thead class="bg-gray-900 text-md text-white text-center">
                         <tr>
-                            <th class="w-2/4">
+                            <th class="w-3/5">
                                 Metas y Logros en el período evaluado
                             </th>
-                            <th class="w-1/4">
+                            <th class="w-1/5">
                                 <div class="tooltip" data-tip="Coloque el Porcentaje cumplido de la meta o el logro.">
                                     % Cumplido
                                 </div>
                             </th>
-                            <th>
+                            <th class="w-1/5">
                                 +/-
                             </th> 
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="form-actual">
                         {{formset_actual.management_form}}
                         {% for form in formset_actual %}
-                        <tr class="hover:bg-gray-100">
+                        <tr class="form-actual hover:bg-gray-100">
                             <td class="text-center w-2/4">
                                 {% for hidden_field in form.hidden_fields %}
                                 {{hidden_field}}
                                 {% endfor %}
-                                {% render_field form.descripcion class="input input-bordered w-full" %}
+                                {% render_field form.descripcion class="input input-bordered w-full" placeholder="Meta o Logro en este Período" %}
                             </td>
                             <td class="text-center w-1/8">
-                                {% render_field form.porc_cumplimiento class="select select-bordered w-full" %}
+                                {% render_field form.porc_cumplimiento class="input input-bordered w-full" placeholder="% Cumplido" %}
                             </td>
-                            <td>
+                            <td class="flex justify-center">
                                 {% if forloop.first %}
                                 <button class="btn btn-success anadir" type="button">
                                     +
@@ -68,33 +69,33 @@
                 <table class="table table-bordered max-w-screen">
                     <thead class="bg-gray-900 text-md text-white text-center">
                         <tr>
-                            <th class="w-2/4">
+                            <th class="w-3/5">
                                 Metas para el siguiente período
                             </th>
-                            <th class="w-1/4">
+                            <th class="w-1/5">
                                 <div class="tooltip" data-tip="Seleccione si la meta es Prioritaria o No Prioritaria">
                                     Nivel de Prioridad
                                 </div>
                             </th>
-                            <th class="w-1/4">
+                            <th class="w-1/5">
                                 +/-
                             </th> 
                         </tr>
                     </thead>
-                    <tbody>
-                        {{formset_actual.management_form}}
-                        {% for form in formset_actual %}
-                        <tr class="hover:bg-gray-100">
+                    <tbody id="form-proximo">
+                        {{formset_proximo.management_form}}
+                        {% for form in formset_proximo %}
+                        <tr class="form-proximo hover:bg-gray-100">
                             <td class="text-center w-2/4">
                                 {% for hidden_field in form.hidden_fields %}
                                 {{hidden_field}}
                                 {% endfor %}
-                                {% render_field form.descripcion class="input input-bordered w-full" %}
+                                {% render_field form.descripcion class="input input-bordered w-full" placeholder="Meta para el siguiente Período" %}
                             </td>
                             <td class="text-center w-1/8">
                                 {% render_field form.nivel_prioridad class="select select-bordered w-full" %}
                             </td>
-                            <td>
+                            <td class="flex justify-center">
                                 {% if forloop.first %}
                                 <button class="btn btn-success anadir" type="button">
                                     +
@@ -118,4 +119,6 @@
         </div>
     </div>
 </form>
+
+<script src="{% static 'js/dynamic-form.js' %}"></script>
 {% endblock %}
