@@ -26,9 +26,9 @@ PERIODO_METAS = (
 )
 
 PRIORIDADES = (
-    (1,1),
-    (2,2),
-    (3,3),
+    ("1","1"),
+    ("2","2"),
+    ("3","3"),
 )
 
 NIVELES_PRIORIDAD = (

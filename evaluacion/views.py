@@ -140,14 +140,47 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
 
-        # TODO añadir queryset en caso de que existan
         context['formset'] = modelformset_factory(
             Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo'),
-        )
+        ) if not evaluacion.formaciones.exists() else modelformset_factory(
+            Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo'),
+            extra = 0
+        )(queryset = evaluacion.formaciones.all(), initial=[{'competencias_tecnicas': [c.pk for c in form.competencias.filter(tipo='T')]} for form in evaluacion.formaciones.all()])
 
         context['titulo'] = "Detección de Necesidades de Formación"
 
         return context
+    
+    def post(self, request, pk):
+        evaluacion = Evaluacion.objects.get(pk=pk)
+
+        formset = modelformset_factory(
+            Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo', 'competencias'),
+        )(request.POST)
+
+        if formset.is_valid():
+            with transaction.atomic():
+                evaluacion.formaciones.all().delete()
+                for form in formset:
+                    form.instance.evaluacion = evaluacion
+                    form.instance.anadido_por = "E"
+                    form.save()
+
+                    competencias_tecnicas = form.cleaned_data.get('competencias_tecnicas')
+                    competencias_genericas = form.cleaned_data.get('competencias_genericas')
+
+                    for competencia in competencias_tecnicas:
+                        form.instance.competencias.add(competencia)
+
+                    for competencia in competencias_genericas:
+                        form.instance.competencias.add(competencia)
+
+        else:
+            print(formset.errors)
+            raise Exception(str(formset.errors))
+
+        messages.success(request, 'Respuestas de Formación almacenadas correctamente.')
+        return redirect('dashboard')
     
 class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     template_name = "evaluacion/metas_empleado.html"
@@ -192,8 +225,8 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 
         with transaction.atomic():
             evaluacion.logros_y_metas.all().delete()
+
             formset_actual.is_valid()
-            print(formset_actual)
             for form in formset_actual:
                 if(form.is_valid()):
                     form.instance.evaluacion = evaluacion

@@ -22,16 +22,25 @@ class FormularioFormacion(forms.ModelForm):
     competencias_genericas = forms.ModelMultipleChoiceField(
         queryset=Competencias.objects.filter(tipo="G"),
         widget=forms.CheckboxSelectMultiple,
+        required=False
     )
 
     competencias_tecnicas = forms.ModelMultipleChoiceField(
         queryset=Competencias.objects.filter(tipo="T"),
         widget=forms.CheckboxSelectMultiple,
+        required=False
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if(kwargs.get('instance')):
+            self.fields['competencias_genericas'].initial =kwargs['instance'].competencias.filter(tipo="G")
+            self.fields['competencias_tecnicas'].initial = kwargs['instance'].competencias.filter(tipo="T")
 
     class Meta:
         model = Formacion
-        exclude = ('id', 'evaluacion', 'anadido_por', 'activo')
+        exclude = ('id', 'evaluacion', 'anadido_por', 'activo', 'competencias')
 
 class FormularioMetas(forms.ModelForm):
     class Meta:

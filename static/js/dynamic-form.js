@@ -75,6 +75,10 @@ const anadir = (e) => {
     newForm.innerHTML = newForm.innerHTML.replace(formRegex, formPrefix);
 
     const newElement = formContainer.insertBefore(newForm, e.target.parentNode.parentNode.lastSibling);
+    newElement.querySelectorAll("input, select").forEach(el => {
+        if(el.type !== "checkbox") el.value = "";
+        if (el.type === "checkbox") el.removeAttribute("checked");
+    });
 
     const anadirElement = newElement.querySelector(".anadir");
     anadirElement.classList.replace("anadir", "eliminar");
