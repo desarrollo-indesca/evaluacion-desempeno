@@ -86,7 +86,7 @@ const anadir = (e) => {
 
     totalForms.setAttribute("value", `${formNum + 1}`);
 
-    const newIdElement = newElement.querySelector(`#id_${formPrefix}id`);
+    const newIdElement = newElement.querySelector(`#id_${formPrefix}-id`);
     if (newIdElement) newIdElement.remove();
 };
 
@@ -101,3 +101,10 @@ document.addEventListener("submit", (e) => {
     }
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+    const idFields = document.querySelectorAll('[id*="-id"]');
+    idFields.forEach(idField => idField.remove());
+
+    const initialFormsFields = document.querySelectorAll('[id$="-INITIAL_FORMS"]');
+    initialFormsFields.forEach(initialField => initialField.value = "0");
+});

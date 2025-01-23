@@ -124,22 +124,40 @@
                                         {% for instrumento in evaluacion.formulario.instrumentos.all %}
                                         <tr>
                                             <td>{{instrumento}}</td>
-                                            <td>{{instrumento.resultados.exists|yesno:"Completado,Pendiente"}}</td>
+                                            <td>
+                                                {% if evaluacion.resultados.exists %}
+                                                <span class="badge badge-success">Completado</span>
+                                                {% else %}
+                                                <span class="badge badge-error">Pendiente</span>
+                                                {% endif %}
+                                            </td>
                                             <td>{{instrumento.resultados.first.resultado_empleado|default:"-"}} / {{instrumento.peso}}</td>
                                             <td><a class="btn btn-error" href="{% url 'instrumento' pk=instrumento.pk %}">Acceder al Instrumento</a></td>
                                         </tr>
                                         {% endfor %}
                                         <tr>
                                             <td>Formación</td>
-                                            <td>Pendiente</td>
+                                            <td>
+                                                {% if evaluacion.formacion.all.exists %}
+                                                <span class="badge badge-success">Completado</span>
+                                                {% else %}
+                                                <span class="badge badge-error">Pendiente</span>
+                                                {% endif %}
+                                            </td>
                                             <td>N/A</td>
                                             <td>
                                                 <a class="btn btn-error" href="{% url 'formacion' pk=evaluacion.pk %}">Acceder al Instrumento</a>
                                             </td>
                                         </tr>
-                                        <tr>
+                                        <tr >
                                             <td>Logros y Metas</td>
-                                            <td>Pendiente</td>
+                                            <td>
+                                                {% if evaluacion.logros_y_metas.all.exists %}
+                                                <span class="badge badge-success">Completado</span>
+                                                {% else %}
+                                                <span class="badge badge-error">Pendiente</span>
+                                                {% endif %}
+                                            </td>
                                             <td>N/A</td>
                                             <td>
                                                 <a class="btn btn-error" href="{% url 'metas' pk=evaluacion.pk %}">Acceder al Instrumento</a>

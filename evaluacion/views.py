@@ -153,21 +153,58 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     template_name = "evaluacion/metas_empleado.html"
     estado = "E"
 
+    def get_formsets(self, add_prefixes = False, qs_actual = None, qs_proximo = None):
+        formset_actual = modelformset_factory(
+            LogrosYMetas, form=FormularioMetas, exclude = ('anadido_por', 'activo', 'periodo', 'evaluacion'),
+            min_num=0, extra = 0 if qs_actual else 1
+        )
+
+        formset_proximo = modelformset_factory(
+            LogrosYMetas, form=FormularioMetas, exclude = ('anadido_por', 'activo', 'periodo', 'evaluacion'),
+            min_num=0, extra = 0 if qs_proximo else 1
+        )
+
+        if(add_prefixes and qs_actual and qs_proximo):
+            formset_actual = formset_actual(queryset=qs_actual, prefix="form-actual")
+            formset_proximo = formset_proximo(queryset=qs_proximo, prefix="form-proximo")
+        elif(add_prefixes):
+            formset_actual = formset_actual(prefix="form-actual")
+            formset_proximo = formset_proximo(prefix="form-proximo")
+
+        return formset_actual, formset_proximo
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
-
-        context['formset_actual'] = modelformset_factory(
-            LogrosYMetas, form=FormularioMetas, exclude = ('anadido_por', 'activo', 'periodo', 'evaluacion'),
-            min_num=0
-        )(prefix="form-actual")
-
-        context['formset_proximo'] = modelformset_factory(
-            LogrosYMetas, form=FormularioMetas, exclude = ('anadido_por', 'activo', 'periodo', 'evaluacion'),
-            min_num=0
-        )(prefix="form-proximo")
-
+        context['formset_actual'], context['formset_proximo'] = self.get_formsets(True, evaluacion.logros_y_metas.filter(periodo = "A"), evaluacion.logros_y_metas.filter(periodo = "P"))
         context['titulo'] = "Formulario de Logros y Metas"
 
         return context
+
+    def post(self, request, pk, *args, **kwargs):
+        evaluacion = Evaluacion.objects.get(pk=pk)
+
+        formset_actual, formset_proximo = self.get_formsets()
+
+        formset_actual = formset_actual(request.POST, prefix="form-actual")
+        formset_proximo = formset_proximo(request.POST, prefix="form-proximo")
+
+        with transaction.atomic():
+            evaluacion.logros_y_metas.all().delete()
+            formset_actual.is_valid()
+            print(formset_actual)
+            for form in formset_actual:
+                if(form.is_valid()):
+                    form.instance.evaluacion = evaluacion
+                    form.instance.periodo = "A"
+                    form.save()
+
+            formset_proximo.is_valid()
+            for form in formset_proximo:
+                if(form.is_valid()):
+                    form.instance.evaluacion = evaluacion
+                    form.instance.periodo = "P"
+                    form.save()
+        
+        return redirect('dashboard')
