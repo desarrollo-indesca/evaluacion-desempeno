@@ -16,13 +16,13 @@
         <tr class="text-center">
             <td>{{pregunta.pregunta}}</td>
             <td >
-                {{pregunta.respuesta}} {% if pregunta.respuesta.valor != -1 %}(
+                {{pregunta.respuesta}} {% if pregunta.respuesta.valor != -1 %}<b>(
                         {% if pregunta.calculo == "S" %}
                         {{pregunta.respuesta_ponderada|floatformat:2}}
                         {% else %}
                         {{pregunta.respuesta.valor}}
                         {% endif %}              
-                ){% endif %}
+                )</b>{% endif %}
 
                 {% if pregunta.comentario.empleado %}
                 <span class="badge badge-info tooltip" data-tip="Comentario del Evaluado: {{pregunta.comentario.empleado}}">!</span>
@@ -74,7 +74,7 @@
 
         <tr class="text-center font-bold">
             <td>
-                SUMATORIA PONDERADA
+                {% if instrumento.instrumento.calculo == 'S' %}Sumatoria Ponderada{% elif instrumento.instrumento.calculo == 'M' %}Mínimo{% elif instrumento.instrumento.calculo == 'P' %}Promedio{% endif %}
             </td>
             <td>
                 {{instrumento.resultado_empleado}}

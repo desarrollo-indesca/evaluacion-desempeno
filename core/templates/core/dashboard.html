@@ -156,6 +156,13 @@
                                                 </div>
                                             </div>
                                             {% endfor %}
+                                            <div class="collapse collapse-arrow bg-base-200 mb-2">
+                                                <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
+                                                <div class="collapse-title text-xl font-medium">Detección de Necesidades de Formación</div>
+                                                <div class="collapse-content">
+                                                    <div hx-trigger="revealed once" hx-get="{% url 'consulta_formacion' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML"></div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <label class="modal-backdrop" for="modal-evaluacion">Close</label>
@@ -239,7 +246,7 @@
                                 </table>
                                 <script>
                                     document.addEventListener("htmx:beforeRequest", event => {
-                                        if (!confirm("¿Estás seguro de enviar la evaluación? No podrás hacerle cambios directamente de nuevo."))
+                                        if (event.detail.verb === "post" && !confirm("¿Estás seguro de enviar la evaluación? No podrás hacerle cambios directamente de nuevo.")) 
                                             event.preventDefault();
                                     });
                                 </script>

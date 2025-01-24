@@ -315,3 +315,16 @@ class ResultadosPorInstrumentoYVersion(View):
                     
                 }
             )
+
+class ConsultaFormacionesEvaluacion(View):
+    template_name = "evaluacion/partials/consulta_formacion.html"
+    estado = "E"
+
+    def get(self, request, pk):
+        evaluacion = Evaluacion.objects.get(pk=pk)
+        formaciones = evaluacion.formaciones.filter(anadido_por=request.GET.get('version'))
+        for formacion in formaciones:
+            formacion.competencias_genericas = formacion.competencias.filter(tipo='G')
+            formacion.competencias_tecnicas = formacion.competencias.filter(tipo='T')
+
+        return render(request, self.template_name, {'formaciones': formaciones, 'evaluacion': evaluacion})

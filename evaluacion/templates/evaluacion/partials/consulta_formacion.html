@@ -1,0 +1,34 @@
+<table class="table table-xs table-zebra text-center">
+    <thead>
+        <tr class="bg-gray-900 text-white">
+            <th>Formación</th>
+            <th>Prioridad</th>
+            <th>Clasificación</th>
+            <th>Competencias Técnicas</th>
+            <th>Competencias Genéricas</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for formacion in formaciones %}
+            <tr>
+                <td>{{formacion.necesidad_formacion}}</td>
+                <td>{{formacion.prioridad}}</td>
+                <td>{{formacion.clasificacion}}</td>
+                <td>
+                    <ul>
+                        {% for competencia in formacion.competencias_tecnicas.all %}
+                            <li>- {{competencia}}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        {% for competencia in formacion.competencias_genericas.all %}
+                            <li>- {{competencia}}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
