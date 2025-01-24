@@ -157,10 +157,17 @@
                                             </div>
                                             {% endfor %}
                                             <div class="collapse collapse-arrow bg-base-200 mb-2">
-                                                <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
+                                                <input type="checkbox" name="my-accordion-dnf" />
                                                 <div class="collapse-title text-xl font-medium">Detección de Necesidades de Formación</div>
                                                 <div class="collapse-content">
                                                     <div hx-trigger="revealed once" hx-get="{% url 'consulta_formacion' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML"></div>
+                                                </div>
+                                            </div>
+                                            <div class="collapse collapse-arrow bg-base-200 mb-2">
+                                                <input type="checkbox" name="my-accordion-metas" />
+                                                <div class="collapse-title text-xl font-medium">Logros y Metas</div>
+                                                <div class="collapse-content">
+                                                    <div hx-trigger="revealed" hx-get="{% url 'consulta_metas' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML"></div>
                                                 </div>
                                             </div>
                                         </div>

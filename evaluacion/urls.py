@@ -10,4 +10,5 @@ urlpatterns = [
     path('finalizar/<int:pk>/', FinalizarEvaluacion.as_view(), name="finalizar_evaluacion"),
     path('seccion/', ResultadosPorInstrumentoYVersion.as_view(), name="ver_instrumento"),
     path('formacion/consulta/<int:pk>/', ConsultaFormacionesEvaluacion.as_view(), name="consulta_formacion"),
+    path('metas/consulta/<int:pk>/', ConsultaLogrosMetas.as_view(), name="consulta_metas"),
 ]

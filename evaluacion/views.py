@@ -318,7 +318,6 @@ class ResultadosPorInstrumentoYVersion(View):
 
 class ConsultaFormacionesEvaluacion(View):
     template_name = "evaluacion/partials/consulta_formacion.html"
-    estado = "E"
 
     def get(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
@@ -328,3 +327,15 @@ class ConsultaFormacionesEvaluacion(View):
             formacion.competencias_tecnicas = formacion.competencias.filter(tipo='T')
 
         return render(request, self.template_name, {'formaciones': formaciones, 'evaluacion': evaluacion})
+    
+class ConsultaLogrosMetas(View):
+    template_name = "evaluacion/partials/consulta_logros_metas.html"
+
+    def get(self, request, pk):
+        evaluacion = Evaluacion.objects.get(pk=pk)
+        metas = evaluacion.logros_y_metas.filter(anadido_por=request.GET.get('version'), activo=True)
+
+        metas_periodo_actual = metas.competencias.filter(periodo='A')
+        metas_periodo_proximo = metas.competencias.filter(periodo='P')
+
+        return render(request, self.template_name, {'metas_periodo_actual': metas_periodo_actual, 'metas_periodo_proximo': metas_periodo_proximo})

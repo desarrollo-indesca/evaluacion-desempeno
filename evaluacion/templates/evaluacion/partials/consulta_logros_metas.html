@@ -1,0 +1,40 @@
+<table class="table table-xs table-zebra text-center">
+    <thead>
+        <tr class="bg-gray-900 text-white">
+            <th colspan="2">Metas y Logros en el periodo evaluado</th>
+        </tr>
+        <tr>
+            <th>Metas y Logros</th>
+            <th>% Cumplido</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for meta in metas_periodo_actual %}
+        <tr>
+            <td>{{meta.descripcion}}</td>
+            <td>{{meta.porc_cumplimiento|floatformat:2}}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<br>
+
+<table class="table table-xs table-zebra text-center mt-3">
+    <thead>
+        <tr class="bg-gray-900 text-white">
+            <th colspan="2">Metas y Logros en el proximo periodo</th>
+        </tr>
+        <tr>
+            <th>Meta</th>
+            <th>Prioridad</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for meta in metas_periodo_actual %}
+        <tr>
+            <td>{{meta.descripcion}}</td>
+            <td>{{meta.prioridad}}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
