@@ -335,7 +335,7 @@ class ConsultaLogrosMetas(View):
         evaluacion = Evaluacion.objects.get(pk=pk)
         metas = evaluacion.logros_y_metas.filter(anadido_por=request.GET.get('version'), activo=True)
 
-        metas_periodo_actual = metas.competencias.filter(periodo='A')
-        metas_periodo_proximo = metas.competencias.filter(periodo='P')
+        metas_periodo_actual = metas.filter(periodo='A')
+        metas_periodo_proximo = metas.filter(periodo='P')
 
         return render(request, self.template_name, {'metas_periodo_actual': metas_periodo_actual, 'metas_periodo_proximo': metas_periodo_proximo})

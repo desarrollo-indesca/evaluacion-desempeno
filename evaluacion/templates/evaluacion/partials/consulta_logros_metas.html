@@ -26,14 +26,14 @@
         </tr>
         <tr>
             <th>Meta</th>
-            <th>Prioridad</th>
+            <th>Nivel de Prioridad</th>
         </tr>
     </thead>
     <tbody>
-        {% for meta in metas_periodo_actual %}
+        {% for meta in metas_periodo_proximo %}
         <tr>
             <td>{{meta.descripcion}}</td>
-            <td>{{meta.prioridad}}%</td>
+            <td>{{meta.prioridad_larga}}</td>
         </tr>
         {% endfor %}
     </tbody>

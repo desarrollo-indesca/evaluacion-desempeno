@@ -139,6 +139,9 @@ class LogrosYMetas(models.Model):
     periodo = models.CharField(max_length=1, choices=PERIODO_METAS)
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="logros_y_metas")
 
+    def prioridad_larga(self):
+        return [p[1] for p in NIVELES_PRIORIDAD if self.nivel_prioridad == p[0]][0]
+
 class ClasificacionFormacion(models.Model):
     clasificacion = models.CharField(max_length=200)
 

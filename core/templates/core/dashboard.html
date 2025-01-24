@@ -33,7 +33,7 @@
                                     </tr>
                                     <tr>
                                         <th>Supervisor</th>
-                                        <td>{% if datos_personal.supervisor %}{{datos_personal.supervisor}}{% else %}No tiene{% endif %}</td>
+                                        <td>{% if datos_personal.supervisor %}{{datos_personal.supervisor.get_full_name.upper}}{% else %}No tiene{% endif %}</td>
                                     </tr>
                                     <tr>
                                         <th>Gerencia</th>
@@ -239,7 +239,7 @@
                                             <td colspan="2" class="text-center">
                                                 <b>TOTAL</b>
                                             </td>
-                                            <td>{{evaluacion.total}} / {{evaluacion.peso|floatformat:2}}</td>
+                                            <td>{{evaluacion.total|default:"-"}} / {{evaluacion.peso|floatformat:2}}</td>
                                         </tr>
 
                                         {% if puede_finalizar %}
