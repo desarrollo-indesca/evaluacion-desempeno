@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth import get_user_model
 
 # Create your models here.
+class NombreMixin():
+    def __str__(self):
+        return self.nombre
 
 class Periodo(models.Model):
     fecha_inicio = models.DateField()
@@ -11,14 +14,14 @@ class Periodo(models.Model):
     def __str__(self):
         return f"PERIODO {self.fecha_inicio} - {self.fecha_fin}"
 
-class TipoPersonal(models.Model):
+class TipoPersonal(NombreMixin, models.Model):
     nombre = models.CharField(max_length=50)
 
-class Cargo(models.Model):
+class Cargo(NombreMixin, models.Model):
     nombre = models.CharField(max_length=50)
     nivel = models.SmallIntegerField()
 
-class Gerencia(models.Model):
+class Gerencia(NombreMixin, models.Model):
     nombre = models.CharField(max_length=50)
     
 class DatosPersonal(models.Model):
@@ -27,8 +30,9 @@ class DatosPersonal(models.Model):
     tipo_personal = models.ForeignKey("TipoPersonal", on_delete=models.CASCADE, related_name="personal")
     cargo = models.ForeignKey("Cargo", on_delete=models.CASCADE, related_name="personal")
     activo = models.BooleanField(default=True)
-    supervisor = models.ForeignKey("self", on_delete=models.CASCADE, related_name="supervisados")
+    supervisor = models.ForeignKey("self", on_delete=models.CASCADE, related_name="supervisados", null=True, blank=True)
     gerencia = models.ForeignKey("Gerencia", on_delete=models.CASCADE, related_name="personal_gerencia")
+    fecha_ingreso = models.DateField()
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}"

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block content %}
+
+<div class="flex justify-evenly items-center p-3">
+    <div class="w-25">
+        <a href="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
+    </div>
+    <div class="w-50">
+        <h1 class="text-center text-2xl">{{titulo}}</h1>
+    </div>
+    <div class="w-25"></div>
+</div>
+<hr>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="my-4">       
+            <div class="my-2 max-w-screen">
+                <table class="table table-bordered max-w-screen">
+                    <thead class="bg-gray-900 text-md text-white text-center">
+                        <tr>
+                            <th colspan="3">
+                                Detección de Necesidades de Formación (DNF)
+                            </th>
+                            <th rowspan="2">
+                                <div class="tooltip" data-tip="Seleccione la(s) competencia(s) que mejorara la formación.">
+                                    Competencias Técnicas
+                                </div>
+                            </th>
+                            <th rowspan="2">
+                                <div class="tooltip" data-tip="Seleccione la(s) competencia(s) que mejorara la formación.">
+                                    Competencias Genéricas
+                                </div>
+                            </th>
+                            <th rowspan="2">
+                                +/-
+                            </th> 
+                        </tr>
+                        <tr>
+                            <th>
+                                <div class="tooltip" data-tip="Coloque la necesidad del Adiestramiento no el nombre del curso.">
+                                    Necesidad de Formación
+                                </div>
+                            </th>
+                            <th>
+                                <div class="tooltip" data-tip="Seleccione la Prioridad de la Necesidad">
+                                    Prioridad
+                                </div>
+                            </th>
+                            <th>
+                                <div class="tooltip" data-tip="Seleccione la Clasificacion según lista anexa">
+                                    Clasificación
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="form">
+                        {{formset.management_form}}
+                        {% for form in formset %}
+                        <tr class="form hover:bg-gray-100">
+                            <td class="text-center w-2/8">
+                                {% render_field form.necesidad_formacion class="input input-bordered w-full" %}
+                            </td>
+                            <td class="text-center w-1/8">
+                                {% render_field form.prioridad class="select select-bordered w-full" %}
+                            </td>
+                            <td class="text-center w-1/8">
+                                {% render_field form.clasificacion class="select select-bordered w-full" %}                                
+                            </td>
+                            <td class="text-xs">
+                                {% render_field form.competencias_genericas %}
+                            </td>
+                            <td class="text-xs">
+                                {% render_field form.competencias_tecnicas %}
+                            </td>
+                            <td>
+                                {% if forloop.first %}
+                                <button class="btn btn-success anadir" type="button">
+                                    +
+                                </button>
+                                {% else %}
+                                <button class="btn btn-error eliminar" type="button">
+                                    -
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </div>
+                    </tbody>
+                </table>
+            </div>
+    </div>
+
+    <div class="flex justify-center items-center w-full">
+        <div>
+            <input type="submit" value="Guardar" class="btn btn-error">
+        </div>
+    </div>
+</form>
+
+<script src="{% static 'js/dynamic-form.js' %}"></script>
+{% endblock %}
