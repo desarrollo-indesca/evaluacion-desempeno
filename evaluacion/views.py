@@ -1,6 +1,7 @@
 from django.views import View
 from django.http import HttpResponseForbidden
 from django.forms import modelformset_factory
+from django.db.models.aggregates import Sum
 import datetime
 from .models import *
 from django.shortcuts import render, redirect
@@ -257,3 +258,60 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
                     form.save()
         
         return redirect('dashboard')
+    
+class ResultadosPorInstrumentoYVersion(View):
+    template_name = 'evaluacion/resultados_por_inst_y_version.html'
+    def get(self, request, **args):
+            evaluacion = Evaluacion.objects.get(pk=request.GET['pk'])
+            instrumento = ResultadoInstrumento.objects.get(pk=request.GET['instrumento'])
+            valor = request.GET['version']
+
+            secciones = []
+            for seccion in instrumento.resultados_secciones.all(): 
+                max_seccion = seccion.seccion.preguntas.aggregate(models.Sum('peso')).get('peso__sum')
+                max_relativo = 0 
+                valor_relativo = 0               
+                for pregunta in seccion.seccion.preguntas.all():
+                    respuesta = pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado if valor == 'E' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_supervisor if valor == 'S' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_final
+                    if(respuesta >= 0):
+                        max_relativo += pregunta.peso
+                        valor_relativo += respuesta*pregunta.peso/2
+                
+                secciones.append(
+                    {
+                        'nombre': seccion.seccion.titulo(),
+                        'peso': seccion.seccion.peso,
+                        'max_relativo': max_relativo,
+                        'resultado': seccion.resultado_empleado if valor == 'E' else seccion.resultado_supervisor if valor == 'S' else seccion.resultado_final,
+                        'calculo': seccion.seccion.calculo,
+                        'seccion': seccion.seccion,
+                        'valor_relativo': valor_relativo,
+                        'valor_ponderado': (float(seccion.seccion.instrumento.peso) * max_seccion / 100) * float(seccion.resultado_empleado / seccion.seccion.peso)  if seccion.seccion.calculo == 'S' else seccion.seccion.instrumento.peso * seccion.resultado_empleado,
+                        'preguntas': []
+                    } 
+                )               
+
+                for pregunta in seccion.seccion.preguntas.all():
+                    secciones[-1]['preguntas'].append(
+                        {
+                            'pregunta': pregunta.pregunta,
+                            'peso': pregunta.peso,
+                            'respuesta_ponderada': pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado / 2 * pregunta.peso if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,
+                            'respuesta': next((opcion for opcion in pregunta.opciones.all() if opcion.valor == (pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado if valor == 'E' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_supervisor if valor == 'S' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_final)), None),
+                            'comentario': {
+                                'empleado': pregunta.respuestas.get(evaluacion=evaluacion).comentario_empleado if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,
+                                'supervisor': pregunta.respuestas.get(evaluacion=evaluacion).comentario_supervisor if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,
+                                'gghh': pregunta.respuestas.get(evaluacion=evaluacion).comentario_gghh if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,   
+                            },
+                        }
+                    )
+
+            return render(
+                request, 
+                self.template_name,
+                {
+                    'secciones': secciones,
+                    'instrumento': instrumento,
+                    
+                }
+            )

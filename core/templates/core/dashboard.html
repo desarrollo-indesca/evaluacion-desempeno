@@ -94,11 +94,72 @@
                                         </tr>
                                         <tr>
                                             <td colspan="2" class="text-center">
-                                                <a class="btn btn-error" href="#">Ver Evaluación</a>
+                                                <label for="modal-evaluacion" class="btn btn-error">Ver Evaluación</label>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
+
+                                <input type="checkbox" id="modal-evaluacion" class="modal-toggle" />
+                                <div class="modal" role="dialog">
+                                    <div class="modal-box w-11/12 max-w-5xl">
+                                        <div class="flex justify-center items-center">
+                                            <h3 class="text-lg font-bold">Evaluación &nbsp;</h3>
+                                            <select name="version" id="version">
+                                                <option value="E">Empleado</option>
+                                                <option value="S">Supervisor</option>
+                                                <option value="G">Gestión Humana</option>
+                                            </select>
+                                        </div>
+                                        <table class="table-xs w-full p-5 my-5">
+                                            <tbody>
+                                                <tr>
+                                                    <th>Evaluado</th>
+                                                    <td class="text-center">{{datos_personal.user.get_full_name}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Cargo</th>
+                                                    <td class="text-center">{{datos_personal.cargo}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Periodo</th>
+                                                    <td class="text-center">{{periodo.fecha_inicio}} - {{periodo.fecha_fin}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Fecha de Inicio</th>
+                                                    <td class="text-center">{{evaluacion.fecha_envio|default:'-'}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Fecha Envío a Supervisor</th>
+                                                    <td class="text-center">{{evaluacion.fecha_fin|default:'-'}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Fecha Revisión por Supervisor</th>
+                                                    <td class="text-center">{{evaluacion.fecha_revision|default:'-'}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Fecha Aprobación</th>
+                                                    <td class="text-center">{{evaluacion.fecha_aprobacion|default:'-'}}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+
+                                        <hr>
+
+                                        <div class="my-5">
+                                            {% for resultado in evaluacion.resultados.all %}
+                                            <div class="collapse collapse-arrow bg-base-200 mb-2">
+                                                <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
+                                                <div class="collapse-title text-xl font-medium">{{resultado.instrumento}} ({{resultado.resultado_empleado}} / {{resultado.instrumento.peso}})</div>
+                                                <div class="collapse-content">
+                                                    <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <label class="modal-backdrop" for="modal-evaluacion">Close</label>
+                                </div>
                                 {% elif evaluacion.estado == 'P' %}
                                 <div class="w-full flex justify-center items-center p-4">
                                     <form method="post" hx-post="{% url 'comenzar_evaluacion' pk=evaluacion.pk %}" hx-select="#proceso-evaluacion" hx-target="#proceso-evaluacion" hx-swap="outerHTML">
@@ -176,6 +237,12 @@
                                         {% endif %}
                                     </tbody>
                                 </table>
+                                <script>
+                                    document.addEventListener("htmx:beforeRequest", event => {
+                                        if (!confirm("¿Estás seguro de enviar la evaluación? No podrás hacerle cambios directamente de nuevo."))
+                                            event.preventDefault();
+                                    });
+                                </script>
                                 {% endif %}
                             </div>
                         </div>
@@ -195,11 +262,4 @@
       Tab content 3
     </div>
   </div>
-
-<script>
-    document.addEventListener("htmx:beforeRequest", event => {
-        if (!confirm("¿Estás seguro de enviar la evaluación? No podrás hacerle cambios directamente de nuevo."))
-            event.preventDefault();
-    });
-</script>
 {% endblock %}

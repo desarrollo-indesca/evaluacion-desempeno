@@ -8,4 +8,5 @@ urlpatterns = [
     path('metas/<int:pk>/', MetasEmpleado.as_view(), name="metas"),
 
     path('finalizar/<int:pk>/', FinalizarEvaluacion.as_view(), name="finalizar_evaluacion"),
+    path('seccion/', ResultadosPorInstrumentoYVersion.as_view(), name="ver_instrumento"),
 ]

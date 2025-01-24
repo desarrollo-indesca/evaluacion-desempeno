@@ -69,7 +69,7 @@ class Login(PeriodoContextMixin, View):
 class Dashboard(LoginRequiredMixin, View, PeriodoContextMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['datos_personal'] = DatosPersonal.objects.get(activo = True)
+        context['datos_personal'] = DatosPersonal.objects.get(activo = True, user = self.request.user)
 
         datos_personal = context['datos_personal']
         evaluacion = Evaluacion.objects.filter(evaluado=datos_personal, periodo = context['periodo']).first()

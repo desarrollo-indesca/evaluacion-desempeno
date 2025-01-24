@@ -1,0 +1,87 @@
+<table class="table table-xs">
+    <tbody>
+        {% for seccion in secciones %}
+        <tr>
+            <th class="text-center bg-gray-900 text-white" colspan="3">{{seccion.seccion}} (
+                {{seccion.resultado}}
+                / {{seccion.seccion.peso}})</th>
+        </tr>
+        <tr class="bg-gray-900 text-white text-center">
+            <th>Pregunta</th>
+            <th>Respuesta</th>
+            <th>Peso</th>
+        </tr>
+
+        {% for pregunta in seccion.preguntas %}
+        <tr class="text-center">
+            <td>{{pregunta.pregunta}}</td>
+            <td >
+                {{pregunta.respuesta}} {% if pregunta.respuesta.valor != -1 %}(
+                        {% if pregunta.calculo == "S" %}
+                        {{pregunta.respuesta_ponderada|floatformat:2}}
+                        {% else %}
+                        {{pregunta.respuesta.valor}}
+                        {% endif %}              
+                ){% endif %}
+
+                {% if pregunta.comentario.empleado %}
+                <span class="badge badge-info tooltip" data-tip="Comentario del Evaluado: {{pregunta.comentario.empleado}}">!</span>
+                {% endif %}
+
+                {% if pregunta.comentario.supervisor %}
+                <span class="badge badge-info tooltip" data-tip="Comentario del Supervisor: {{pregunta.comentario.supervisor}}">!</span>
+                {% endif %}
+
+                {% if pregunta.comentario.gghh %}
+                <span class="badge badge-info tooltip" data-tip="Comentario de Gestión Humana: {{pregunta.comentario.gghh}}">!</span>
+                {% endif %}
+            </td>
+            <td>{% if pregunta.respuesta.valor >= 0 %}{{pregunta.peso}}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+
+        <tr class="text-center border-dark">
+            <td class="font-bold">
+                {% if seccion.calculo == 'S' %}
+                Sumatoria ({{seccion.seccion.peso}}%)
+                {% elif seccion.calculo == 'M' %}
+                Mínimo
+                {% elif seccion.calculo == 'P' %}
+                Promedio
+                {% endif %}                
+            </td>
+            <td class="font-bold" colspan="2">
+                {% if seccion.calculo == 'S' %}
+                ({{seccion.valor_relativo}} / {{seccion.max_relativo}} * {{seccion.peso}}) → {{seccion.resultado}} → {{seccion.valor_ponderado|floatformat:2}}
+                {% else %}
+                {{seccion.resultado}}
+                {% endif %}
+            </td>
+            <td class="font-bold"></td>
+        </tr>
+        {% endfor %}
+
+        <tr class="bg-gray-900 text-white text-center">
+            <th colspan="3">Resumen por Sección</th>
+        </tr>
+        {% for seccion in secciones %}
+        <tr class="text-center">
+            <td>{{seccion.seccion}}</td>
+            <td>{{seccion.resultado}}</td>
+            <td>{{seccion.peso}}</td>
+        </tr>
+        {% endfor %}
+
+        <tr class="text-center font-bold">
+            <td>
+                SUMATORIA PONDERADA
+            </td>
+            <td>
+                {{instrumento.resultado_empleado}}
+            </td>
+            <td>
+                {{instrumento.instrumento.peso}}
+            </td>
+        </tr>
+    </tbody>
+</table>

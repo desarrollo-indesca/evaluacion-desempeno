@@ -62,6 +62,9 @@ class Seccion(models.Model):
     calculo = models.CharField(max_length=1, choices=ROLES, default="S")
     instrumento = models.ForeignKey(Instrumento, on_delete=models.CASCADE, related_name="secciones")
 
+    def __str__(self):
+        return self.titulo().upper()
+
     def titulo(self):
         return self.nombre.split(":")[0]
 
@@ -79,6 +82,9 @@ class Opciones(models.Model):
     valor = models.SmallIntegerField()
     pregunta = models.ManyToManyField(Pregunta, related_name="opciones")
 
+    def __str__(self):
+        return self.opcion.upper()
+
     class Meta:
         ordering = ["valor"]
 
@@ -92,6 +98,7 @@ class Evaluacion(models.Model):
     fecha_aprobacion = models.DateTimeField(null=True, blank=True)
     formulario = models.ForeignKey(Formulario, on_delete=models.CASCADE, related_name="evaluaciones")
     estado = models.CharField(max_length=1, choices=ESTADOS, default="P")
+    comentario_evaluado = models.TextField(null=True, blank=True) 
 
     def total(self):
         return self.resultados.aggregate(models.Sum('resultado_empleado')).get('resultado_empleado__sum')
