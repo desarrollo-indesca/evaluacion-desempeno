@@ -192,17 +192,17 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for instrumento in evaluacion.formulario.instrumentos.all %}
+                                        {% for instrumento in instrumentos %}
                                         <tr>
-                                            <td>{{instrumento}}</td>
+                                            <td>{{instrumento.nombre}}</td>
                                             <td>
-                                                {% if evaluacion.resultados.exists %}
+                                                {% if instrumento.completado %}
                                                 <span class="badge badge-success">Completado</span>
                                                 {% else %}
                                                 <span class="badge badge-error">Pendiente</span>
                                                 {% endif %}
                                             </td>
-                                            <td>{{instrumento.resultados.first.resultado_empleado|default:"-"}} / {{instrumento.peso|floatformat:2}}</td>
+                                            <td>{{instrumento.resultado|default:"-"}} / {{instrumento.peso|floatformat:2}}</td>
                                             <td><a class="btn btn-error" href="{% url 'instrumento' pk=instrumento.pk %}">Acceder al Instrumento</a></td>
                                         </tr>
                                         {% endfor %}

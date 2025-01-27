@@ -80,6 +80,15 @@ class Dashboard(LoginRequiredMixin, View, PeriodoContextMixin):
         context['puede_finalizar'] = evaluacion.resultados.count() == evaluacion.formulario.instrumentos.count() and (
             evaluacion.formaciones.exists() and evaluacion.logros_y_metas.exists()
         )
+        context['instrumentos'] = [
+            {
+                'nombre': instrumento.nombre,
+                'completado': instrumento.resultados.filter(evaluacion = evaluacion).exists(),
+                'resultado': instrumento.resultados.filter(evaluacion = evaluacion).first().resultado_empleado if instrumento.resultados.filter(evaluacion = evaluacion).exists() else None,
+                'peso': instrumento.peso,
+                'pk': instrumento.pk
+            } for instrumento in evaluacion.formulario.instrumentos.all()
+        ]
         return context
 
     def get(self, request):
