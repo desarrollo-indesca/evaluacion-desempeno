@@ -111,8 +111,22 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, 
                                 total += form.instance.respuesta_empleado
                                 max_seccion += 1
                         else:
-                            print(form.errors)
-                            raise Exception(str(form.errors))
+                            context = {} 
+                            context['instrumento'] = [{
+                                    'preguntas': [{
+                                        'form': FormularioRespuestasEmpleado(request.POST, prefix=pregunta.pk, initial={
+                                            'pregunta': pregunta
+                                        }),
+                                        'pregunta': pregunta,
+                                    } for pregunta in seccion.preguntas.all()],
+                                    'seccion': seccion
+                                } for seccion in instrumento.secciones.all()
+                            ]
+
+                            return render(
+                                request, self.template_name,
+                                context
+                            )
 
                     total = round(total, 2)
 
@@ -247,6 +261,7 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
             for form in formset_actual:
                 if(form.is_valid()):
                     form.instance.evaluacion = evaluacion
+                    form.instance.anadido_por = "E"
                     form.instance.periodo = "A"
                     form.save()
 
@@ -255,6 +270,7 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
                 if(form.is_valid()):
                     form.instance.evaluacion = evaluacion
                     form.instance.periodo = "P"
+                    form.instance.anadido_por = "E"
                     form.save()
         
         return redirect('dashboard')
@@ -335,7 +351,10 @@ class ConsultaLogrosMetas(View):
         evaluacion = Evaluacion.objects.get(pk=pk)
         metas = evaluacion.logros_y_metas.filter(anadido_por=request.GET.get('version'), activo=True)
 
+        print(request.GET.get('version'))
         metas_periodo_actual = metas.filter(periodo='A')
         metas_periodo_proximo = metas.filter(periodo='P')
+        
+        print(metas_periodo_actual, metas_periodo_proximo)
 
         return render(request, self.template_name, {'metas_periodo_actual': metas_periodo_actual, 'metas_periodo_proximo': metas_periodo_proximo})
