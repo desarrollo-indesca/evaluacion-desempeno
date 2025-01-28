@@ -1,7 +1,7 @@
 from django.views import View
+from django.views.generic import ListView
 from django.http import HttpResponseForbidden
 from django.forms import modelformset_factory
-from django.db.models.aggregates import Sum
 import datetime
 from .models import *
 from django.shortcuts import render, redirect
@@ -358,3 +358,20 @@ class ConsultaLogrosMetas(View):
         print(metas_periodo_actual, metas_periodo_proximo)
 
         return render(request, self.template_name, {'metas_periodo_actual': metas_periodo_actual, 'metas_periodo_proximo': metas_periodo_proximo})
+
+class ConsultaEvaluaciones(ListView):
+    template_name = "evaluacion/partials/lista_evaluaciones.html"
+    model = Evaluacion
+
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            evaluado=self.request.user.datos_personal.get(activo=True)
+        )
+
+class RevisionSupervisados(PeriodoContextMixin, ListView):
+    template_name = "evaluacion/partials/lista_evaluaciones_supervisores.html"
+    model = DatosPersonal
+    template_name = "evaluacion/partials/revision_supervisados.html"
+
+    def get_queryset(self):
+        return super().get_queryset().filter(activo=True)
