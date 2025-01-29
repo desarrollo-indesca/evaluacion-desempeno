@@ -73,7 +73,7 @@ class Seccion(models.Model):
 
 class Pregunta(models.Model):
     pregunta = models.CharField(max_length=400)
-    peso = models.SmallIntegerField()
+    peso = models.DecimalField(max_digits=5, decimal_places=2)
     tip = models.CharField(max_length=400, null=True, blank=True)
     seccion = models.ForeignKey(Seccion, on_delete=models.CASCADE, related_name="preguntas")
 
@@ -147,7 +147,7 @@ class LogrosYMetas(models.Model):
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="logros_y_metas")
 
     def prioridad_larga(self):
-        return [p[1] for p in NIVELES_PRIORIDAD if self.nivel_prioridad == p[0]][0]
+        return [p[1] for p in NIVELES_PRIORIDAD if self.nivel_prioridad == p[0]][0] if self.nivel_prioridad else "N/A"
 
 class ClasificacionFormacion(models.Model):
     clasificacion = models.CharField(max_length=200)

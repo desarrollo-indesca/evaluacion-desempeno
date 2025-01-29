@@ -14,5 +14,4 @@ class DatosPersonalFilter(django_filters.FilterSet):
     
     class Meta:
         model = DatosPersonal
-        fields = ['user__first_name', 'cargo', 'tipo_personal', 'supervisor__ficha', 
-                  'supervisor__nombre', 'gerencia', 'ficha', 'fecha_ingreso']
+        fields = ['user__first_name', 'cargo', 'tipo_personal', 'gerencia', 'ficha', 'fecha_ingreso']

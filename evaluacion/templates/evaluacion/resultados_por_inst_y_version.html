@@ -36,7 +36,9 @@
                 <span class="badge badge-info tooltip" data-tip="Comentario de Gestión Humana: {{pregunta.comentario.gghh}}">!</span>
                 {% endif %}
             </td>
-            <td>{% if pregunta.respuesta.valor >= 0 %}{{pregunta.peso}}{% else %}—{% endif %}</td>
+            <td>
+                {% if pregunta.respuesta.valor >= 0 and seccion.calculo == "S" %}{{pregunta.peso}}{% else %}—{% endif %}
+            </td>
         </tr>
         {% endfor %}
 

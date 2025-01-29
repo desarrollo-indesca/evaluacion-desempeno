@@ -9,17 +9,19 @@ class Command(BaseCommand):
                 instrumento = Instrumento.objects.get(pk=9)
 
                 for seccion in instrumento_a_copiar.secciones.all():
-                     seccion_copia = seccion
-                     seccion_copia.pk = None
-                     seccion_copia.instrumento = instrumento
-                     seccion_copia.save()
+                     seccion_copia = Seccion.objects.create(
+                          peso = seccion.peso,
+                          calculo = seccion.calculo,
+                          instrumento = instrumento
+                     )
 
                      for pregunta in seccion.preguntas.all():
                           pregunta_copia = Pregunta.objects.create(
                                pregunta = pregunta.pregunta,
                                tip = pregunta.tip,
-                               peso = pregunta.peso
+                               peso = pregunta.peso,
+                               seccion = seccion_copia
                           )
 
-                          pregunta_copia.opciones.add(pregunta.opciones.all().values_list())  
+                          pregunta_copia.opciones.set(pregunta.opciones.all())
 

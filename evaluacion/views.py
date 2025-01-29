@@ -93,11 +93,11 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, 
                     instrumento=instrumento
                 )[0]
 
-                total_instrumento = 0 
+                total_instrumento = 0 if instrumento.calculo != 'M' else 1e9
                 max_instrumento = 0 if instrumento.calculo == 'S' else 1e9 if instrumento.calculo == 'M' else instrumento.secciones.count()     
                 for seccion in instrumento.secciones.all():
                     max_seccion = 0
-                    total = 0
+                    total = 0 if seccion.calculo != 'M' else 1e9
                     for pregunta in seccion.preguntas.all():
                         form = FormularioRespuestasEmpleado(request.POST, 
                                                             instance=pregunta.respuestas.get(evaluacion=evaluacion) if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None, 
@@ -112,6 +112,8 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, 
                             elif(seccion.calculo == 'P'):
                                 total += form.instance.respuesta_empleado
                                 max_seccion += 1
+                            elif(seccion.calculo == 'M'):
+                                total = min(total, form.instance.respuesta_empleado)
                         else:
                             context = {} 
                             context['instrumento'] = [{
@@ -129,8 +131,11 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, 
                                 request, self.template_name,
                                 context
                             )
+                        
+                        print(total)
 
                     total = round(total, 2)
+                    print(total)
 
                     if(seccion.calculo == 'S'):
                         if(total > 0):
@@ -143,7 +148,7 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, 
                         total = total / max_seccion
                         total_instrumento += total
                     elif(seccion.calculo == 'M'):
-                        total_instrumento = min(total_instrumento, total)
+                        total_instrumento += total
 
                     ResultadoSeccion.objects.update_or_create(
                         seccion=seccion, 
@@ -304,7 +309,7 @@ class ResultadosPorInstrumentoYVersion(View):
                         'calculo': seccion.seccion.calculo,
                         'seccion': seccion.seccion,
                         'valor_relativo': valor_relativo,
-                        'valor_ponderado': (float(seccion.seccion.instrumento.peso) * max_seccion / 100) * float(seccion.resultado_empleado / seccion.seccion.peso)  if seccion.seccion.calculo == 'S' else seccion.seccion.instrumento.peso * seccion.resultado_empleado,
+                        'valor_ponderado': (float(seccion.seccion.instrumento.peso) * float(max_seccion) / 100) * float(seccion.resultado_empleado / seccion.seccion.peso)  if seccion.seccion.calculo == 'S' else float(seccion.seccion.instrumento.peso) * float(seccion.resultado_empleado),
                         'preguntas': []
                     } 
                 )               
@@ -314,7 +319,7 @@ class ResultadosPorInstrumentoYVersion(View):
                         {
                             'pregunta': pregunta.pregunta,
                             'peso': pregunta.peso,
-                            'respuesta_ponderada': pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado / 2 * pregunta.peso if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,
+                            'respuesta_ponderada': pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado / 2 * float(pregunta.peso) if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,
                             'respuesta': next((opcion for opcion in pregunta.opciones.all() if opcion.valor == (pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado if valor == 'E' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_supervisor if valor == 'S' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_final)), None),
                             'comentario': {
                                 'empleado': pregunta.respuestas.get(evaluacion=evaluacion).comentario_empleado if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,

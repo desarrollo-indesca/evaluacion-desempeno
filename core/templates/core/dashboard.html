@@ -221,7 +221,7 @@
                                                 <a class="btn btn-error" href="{% url 'formacion' pk=evaluacion.pk %}">Acceder al Instrumento</a>
                                             </td>
                                         </tr>
-                                        <tr >
+                                        <tr>
                                             <td>Logros y Metas</td>
                                             <td>
                                                 {% if evaluacion.logros_y_metas.all.exists %}
@@ -289,13 +289,13 @@
                                                             </tbody>
                                                         </table>
 
-                                                        <hr>
-
                                                         <div class="my-5">
                                                             {% for resultado in evaluacion.resultados.all %}
                                                             <div class="collapse collapse-arrow bg-base-200 mb-2">
                                                                 <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
-                                                                <div class="collapse-title text-xl font-medium">{{resultado.instrumento}} ({{resultado.resultado_empleado}} / {{resultado.instrumento.peso}})</div>
+                                                                <div class="collapse-title text-xl font-medium">
+                                                                    {{resultado.instrumento}} ({{resultado.resultado_empleado}} / {{resultado.instrumento.peso}})
+                                                                </div>
                                                                 <div class="collapse-content">
                                                                     <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>
                                                                 </div>
@@ -317,15 +317,24 @@
                                                             </div>
                                                         </div>
 
-                                                        <div class="my-5 text-justify">
+                                                        <div class="stats shadow">
+                                                            <div class="stat bg-gray-900 text-white">
+                                                              <div class="stat-title text-white">Resultado de la Evaluación</div>
+                                                              <div class="stat-value">{{evaluacion.total|floatformat:2}}</div>
+                                                              <div class="stat-desc text-white">de {{evaluacion.peso|floatformat:2}} puntos.</div>
+                                                            </div>
+                                                          </div>
+
+                                                        <div class="my-5 text-left">
                                                             <form class="flex justify-center items-center flex-col" hx-post="{% url 'finalizar_evaluacion' pk=evaluacion.pk %}" hx-target="body">
                                                                 <div class="my-3">
                                                                     <input type="checkbox" name="aceptar" id="aceptar" class="checkbox" required>
                                                                     <label for="aceptar">
                                                                         &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y estoy de acuerdo en que sea enviada a mi supervisor. 
                                                                     </label>
-                                                                    <input type="text" class="w-full input input-bordered"placeholder="Ingrese sus comentarios" name="comentarios">
-                                                                    <hr>
+                                                                </div>
+                                                                <div class="w-full">
+                                                                    <input type="text" class="w-full input input-bordered"placeholder="Ingrese sus comentarios sobre los resultados" name="comentarios">
                                                                 </div>
                                                                 <div class="flex justify-center my-3">
                                                                     <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la evaluación a mi supervisor</button>
