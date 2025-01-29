@@ -37,6 +37,9 @@ class DatosPersonal(models.Model):
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}"
     
+    def evaluacion_actual(self):
+        return self.evaluaciones.filter(periodo__activo=True).last()
+    
 class PeriodoGerencial(models.Model):
     gerente = models.ForeignKey(DatosPersonal, on_delete=models.CASCADE, related_name="personal_gerente")
     activo = models.BooleanField(default=True)

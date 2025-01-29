@@ -30,9 +30,20 @@
             <td>{{supervisado.ficha}}</td>
             <td>{{supervisado.user.get_full_name.upper}}</td>
             {% with evaluacion=supervisado.evaluacion_actual %}
-            <td>{{evaluacion.estado_largo}}</td>
             <td>
-                <button class="btn btn-error"> Detalles </button>
+                {% if evaluacion %}
+                {{evaluacion.estado_largo}}
+                {% else %}
+                <span class="badge badge-error">Sin Evaluación Activa</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if evaluacion %}
+                <label for="modal-{{evaluacion.pk}}" class="btn btn-error">Revisar Evaluación Actual</label>
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with evaluacion=evaluacion include_others=True finish=False id=evaluacion.pk %}
+                {% endif %}
+                
+                <a class="btn btn-gray" hx-target="closest .tab-content" hx-get="{% url 'consultar_historico_supervisados' pk=supervisado.pk %}">Ver Histórico de Evaluaciones</a>
             </td>
             {% endwith %}
         </tr>

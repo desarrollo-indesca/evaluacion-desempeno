@@ -1,6 +1,18 @@
 {%  load widget_tweaks %}
 
+{% if not supervisado %}
 <h3 class="text-center text-2xl">Consulta General de Evaluaciones</h3>
+{% else %}
+<div class="flex justify-center items-center my-3">
+    <div class="w-1/3 text-center">
+        <a href="#" class="btn btn-teal-500" hx-trigger="click" hx-target="closest .tab-content" hx-get="{% url 'consultar_supervisados' pk=request.user.pk %}">Regresar</a>
+    </div>
+    <div class="w-1/3">
+        <h3 class="text-center text-2xl">Evaluaciones de: {{datos_personal.user.get_full_name.upper}}</h3>
+    </div>
+    <div class="w-1/3"></div>
+</div>
+{% endif %}
 <hr>
 
 <form hx-get="{% url 'consultar_evaluaciones' pk=request.user.pk %}" hx-select="#evaluaciones" hx-target="#evaluaciones" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
@@ -31,7 +43,8 @@
             <td>{{evaluacion.periodo}}</td>
             <td>{{evaluacion.estado_largo}}</td>
             <td>
-                <button class="btn btn-error"> Detalles </button>
+                <label for="modal-{{evaluacion.pk}}" class="btn btn-error">Revisar Evaluación</label>
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk %}
             </td>
         </tr>
         {% empty %}

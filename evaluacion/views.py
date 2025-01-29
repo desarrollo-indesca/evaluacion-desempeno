@@ -372,6 +372,7 @@ class ConsultaEvaluaciones(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
+        context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
         return context
 
     def get_queryset(self):
@@ -388,7 +389,32 @@ class RevisionSupervisados(PeriodoContextMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
+        context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
         return context
 
     def get_queryset(self):
         return super().get_queryset().filter(supervisor=self.request.user.datos_personal.get(activo=True), activo=True)
+
+class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
+    template_name = "evaluacion/partials/lista_evaluaciones.html"
+    model = Evaluacion
+    filter_class = EvaluacionFilter
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
+        context['datos_personal'] = DatosPersonal.objects.get(pk=self.kwargs['pk'])
+        context['supervisado'] = True
+        return context
+    
+    def get(self, request, *args, **kwargs):
+        if(request.user.datos_personal.get(
+                activo=True
+            ).supervisados.filter(pk=self.kwargs['pk']).exists()):
+            return super().get(request, *args, **kwargs)
+        else:
+            return HttpResponseForbidden()
+
+    def get_queryset(self):
+        return super().get_queryset().filter(evaluado__pk=self.kwargs['pk'])    
