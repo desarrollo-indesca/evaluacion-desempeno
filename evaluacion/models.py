@@ -102,6 +102,9 @@ class Evaluacion(models.Model):
     comentario_supervisor = models.TextField(null=True, blank=True) 
     comentario_gghh = models.TextField(null=True, blank=True) 
 
+    def estado_largo(self):
+        return list(filter(lambda x: x[0] == self.estado, ESTADOS))[0][1]
+
     def total(self):
         return self.resultados.aggregate(models.Sum('resultado_empleado')).get('resultado_empleado__sum')
     

@@ -1,3 +1,43 @@
-<!--
-TODO
--->
+{%  load widget_tweaks %}
+
+<h3 class="text-center text-2xl">Consulta General de Evaluaciones</h3>
+<hr>
+
+<form hx-get="{% url 'consultar_evaluaciones' pk=request.user.pk %}" hx-select="#evaluaciones" hx-target="#evaluaciones" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
+    <div>
+        {{filter.form.periodo.label_tag}} <br>
+        {% render_field filter.form.periodo class="select select-bordered w-full" %}
+    </div>
+    <div>
+        {{filter.form.estado.label_tag}} <br>
+        {% render_field filter.form.estado class="select select-bordered w-full" %}
+    </div>
+</form>
+
+<table class="table table-zebra my-4 text-center">
+    <thead class="bg-gray-900 text-white">
+        <tr>
+            <th>ID Evaluación</th>
+            <th>Periodo</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+
+    <tbody id="evaluaciones">
+        {% for evaluacion in filter.qs %}
+        <tr>
+            <td>{{evaluacion.id}}</td>
+            <td>{{evaluacion.periodo}}</td>
+            <td>{{evaluacion.estado_largo}}</td>
+            <td>
+                <button class="btn btn-error"> Detalles </button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <th colspan="4">No se encontraron evaluaciones.</th>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

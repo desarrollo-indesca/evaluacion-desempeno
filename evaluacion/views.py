@@ -362,6 +362,12 @@ class ConsultaEvaluaciones(ListView):
     template_name = "evaluacion/partials/lista_evaluaciones.html"
     model = Evaluacion
     filter_class = EvaluacionFilter
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
+        return context
 
     def get_queryset(self):
         return super().get_queryset().filter(
