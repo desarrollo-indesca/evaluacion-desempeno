@@ -2,13 +2,14 @@ from django.views import View
 from django.views.generic import ListView
 from django.http import HttpResponseForbidden
 from django.forms import modelformset_factory
+from django.shortcuts import render, redirect
+from django.db import transaction, models 
+from django.contrib import messages
 import datetime
 from .models import *
-from django.shortcuts import render, redirect
-from core.views import PeriodoContextMixin, EvaluacionEstadoMixin
-from django.db import transaction, models 
 from .forms import *
-from django.contrib import messages
+from .filters import *
+from core.views import PeriodoContextMixin, EvaluacionEstadoMixin
 
 # Create your views here.
 
@@ -33,6 +34,7 @@ class FinalizarEvaluacion(View):
         )):
             evaluacion.estado = 'S'
             evaluacion.fecha_envio = datetime.datetime.now()
+            evaluacion.comentario_evaluado = request.POST.get('comentarios')
             evaluacion.save()
             return redirect('dashboard')
         
@@ -351,17 +353,15 @@ class ConsultaLogrosMetas(View):
         evaluacion = Evaluacion.objects.get(pk=pk)
         metas = evaluacion.logros_y_metas.filter(anadido_por=request.GET.get('version'), activo=True)
 
-        print(request.GET.get('version'))
         metas_periodo_actual = metas.filter(periodo='A')
         metas_periodo_proximo = metas.filter(periodo='P')
         
-        print(metas_periodo_actual, metas_periodo_proximo)
-
         return render(request, self.template_name, {'metas_periodo_actual': metas_periodo_actual, 'metas_periodo_proximo': metas_periodo_proximo})
 
 class ConsultaEvaluaciones(ListView):
     template_name = "evaluacion/partials/lista_evaluaciones.html"
     model = Evaluacion
+    filter_class = EvaluacionFilter
 
     def get_queryset(self):
         return super().get_queryset().filter(
@@ -372,6 +372,7 @@ class RevisionSupervisados(PeriodoContextMixin, ListView):
     template_name = "evaluacion/partials/lista_evaluaciones_supervisores.html"
     model = DatosPersonal
     template_name = "evaluacion/partials/revision_supervisados.html"
+    filter_class = DatosPersonalFilter
 
     def get_queryset(self):
         return super().get_queryset().filter(activo=True)

@@ -99,6 +99,8 @@ class Evaluacion(models.Model):
     formulario = models.ForeignKey(Formulario, on_delete=models.CASCADE, related_name="evaluaciones")
     estado = models.CharField(max_length=1, choices=ESTADOS, default="P")
     comentario_evaluado = models.TextField(null=True, blank=True) 
+    comentario_supervisor = models.TextField(null=True, blank=True) 
+    comentario_gghh = models.TextField(null=True, blank=True) 
 
     def total(self):
         return self.resultados.aggregate(models.Sum('resultado_empleado')).get('resultado_empleado__sum')
