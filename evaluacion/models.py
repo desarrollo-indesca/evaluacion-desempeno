@@ -110,7 +110,9 @@ class Evaluacion(models.Model):
     
     def peso(self):
         return self.formulario.instrumentos.aggregate(models.Sum('peso')).get('peso__sum')
-
+    
+    class Meta:
+        ordering = ("periodo","fecha_inicio",)
 class ResultadoInstrumento(models.Model):
     resultado_empleado = models.DecimalField(decimal_places=2, max_digits=5, null=True, blank=True)
     resultado_supervisor = models.DecimalField(decimal_places=2, max_digits=5, null=True, blank=True)

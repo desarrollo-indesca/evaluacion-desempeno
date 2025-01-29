@@ -33,7 +33,7 @@
                                     </tr>
                                     <tr>
                                         <th>Supervisor</th>
-                                        <td>{% if datos_personal.supervisor %}{{datos_personal.supervisor.get_full_name.upper}}{% else %}No tiene{% endif %}</td>
+                                        <td>{% if datos_personal.supervisor %}{{datos_personal.supervisor.user.get_full_name.upper}}{% else %}No tiene{% endif %}</td>
                                     </tr>
                                     <tr>
                                         <th>Gerencia</th>
@@ -58,6 +58,7 @@
                 <div class="grid grid-cols-12">
                     <div class="col-span-12">
                         <div class="card border-2 border my-4 mx-2 w-full" id="proceso-evaluacion" style="min-width: 100%;">
+                            {% if evaluacion %}
                             <div class="card-content p-3">
                                 <h2 class="text-center text-2xl font-semibold">Proceso de Evaluación</h2>
                                 <hr><br>
@@ -348,6 +349,14 @@
                                 </script>
                                 {% endif %}
                             </div>
+                            {% else %}
+                            <div class="w-full flex justify-center items-center p-4">
+                                <h3 class="text-lg font-bold">Usted no tiene evaluaciones activas. Si cree que esto es un error, notificar a Gestión Humana e Informática.</h3>
+                                {% if antiguedad < 5 %}
+                                <h3 class="text-lg font-bold">Esto puede deberse a que usted no haya cumplido los 6 meses de antiguedad.</h3>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -362,7 +371,7 @@
   
     <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="Revisar" />
     <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
-      Tab content 3
+        <div hx-trigger="intersect" hx-get="{% url 'consultar_supervisados' pk=request.user.pk %}"></div>
     </div>
   </div>
 {% endblock %}

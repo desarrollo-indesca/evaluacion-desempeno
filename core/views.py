@@ -79,7 +79,7 @@ class Dashboard(LoginRequiredMixin, View, PeriodoContextMixin):
         context['evaluacion'] = evaluacion
         context['puede_finalizar'] = evaluacion.resultados.count() == evaluacion.formulario.instrumentos.count() and (
             evaluacion.formaciones.exists() and evaluacion.logros_y_metas.exists()
-        )
+        ) if evaluacion else False
         context['instrumentos'] = [
             {
                 'nombre': instrumento.nombre,
@@ -88,7 +88,7 @@ class Dashboard(LoginRequiredMixin, View, PeriodoContextMixin):
                 'peso': instrumento.peso,
                 'pk': instrumento.pk
             } for instrumento in evaluacion.formulario.instrumentos.all()
-        ]
+        ] if evaluacion else None
         return context
 
     def get(self, request):

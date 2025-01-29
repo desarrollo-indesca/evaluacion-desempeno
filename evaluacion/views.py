@@ -380,5 +380,10 @@ class RevisionSupervisados(PeriodoContextMixin, ListView):
     template_name = "evaluacion/partials/revision_supervisados.html"
     filter_class = DatosPersonalFilter
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
+        return context
+
     def get_queryset(self):
-        return super().get_queryset().filter(user=self.request.user, activo=True)
+        return super().get_queryset().filter(supervisor=self.request.user.datos_personal.get(activo=True), activo=True)
