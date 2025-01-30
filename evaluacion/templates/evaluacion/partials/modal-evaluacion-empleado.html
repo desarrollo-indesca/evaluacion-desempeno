@@ -54,6 +54,7 @@
                 <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
                 <div class="collapse-title text-xl font-medium">
                     {{resultado.instrumento}} ({{resultado.resultado_empleado}} / {{resultado.instrumento.peso}})
+                    <a href="" class="btn btn-xs btn-info ml-2" href="#">Revisar Respuestas</a>
                 </div>
                 <div class="collapse-content">
                     <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>
@@ -66,7 +67,7 @@
             {% if evaluacion.formaciones.count %}
             <div class="collapse collapse-arrow bg-base-200 mb-2">
                 <input type="checkbox" name="my-accordion-dnf" />
-                <div class="collapse-title text-xl font-medium">Detección de Necesidades de Formación</div>
+                <div class="collapse-title text-xl font-medium">Detección de Necesidades de Formación <a href="" class="btn btn-xs btn-info ml-2" href="#">Revisar Respuestas</a></div>
                 <div class="collapse-content">
                     <div hx-trigger="revealed once" hx-get="{% url 'consulta_formacion' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML"></div>
                 </div>
@@ -78,7 +79,7 @@
             {% if evaluacion.logros_y_metas.count %}
             <div class="collapse collapse-arrow bg-base-200 mb-2">
                 <input type="checkbox" name="my-accordion-metas" />
-                <div class="collapse-title text-xl font-medium">Logros y Metas</div>
+                <div class="collapse-title text-xl font-medium">Logros y Metas <a href="" class="btn btn-xs btn-info ml-2" href="#">Revisar Respuestas</a></div>
                 <div class="collapse-content">
                     <div hx-trigger="revealed" hx-get="{% url 'consulta_metas' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML"></div>
                 </div>
