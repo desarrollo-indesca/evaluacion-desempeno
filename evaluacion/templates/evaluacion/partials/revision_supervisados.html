@@ -32,7 +32,11 @@
             {% with evaluacion=supervisado.evaluacion_actual %}
             <td>
                 {% if evaluacion %}
+                {% if evaluacion.estado == 'S' %}
+                REVISIÓN POR SUPERVISOR
+                {% else %}
                 {{evaluacion.estado_largo}}
+                {% endif %}
                 {% else %}
                 <span class="badge badge-error">Sin Evaluación Activa</span>
                 {% endif %}

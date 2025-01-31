@@ -417,4 +417,48 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
             return HttpResponseForbidden()
 
     def get_queryset(self):
-        return super().get_queryset().filter(evaluado__pk=self.kwargs['pk'])    
+        return super().get_queryset().filter(evaluado__pk=self.kwargs['pk'])
+
+class FormularioInstrumentoSupervisor(PeriodoContextMixin, View):
+    estado = "S"
+
+    def get_context_data(self, post=False, **kwargs):
+        context = super().get_context_data(**kwargs)
+        evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+        instrumento = Instrumento.objects.filter(id=self.kwargs['instrumento']).prefetch_related(
+            models.Prefetch(
+                'secciones',
+                queryset=Seccion.objects.prefetch_related(models.Prefetch(
+                    'preguntas', 
+                    queryset=Pregunta.objects.prefetch_related('opciones', 'respuestas')
+                )), 
+            )
+        ).first()
+        
+        if(instrumento.resultados.filter(evaluacion = evaluacion).exists()):
+            context['instrumento'] = [{
+                    'preguntas': [{
+                        'form': FormularioRespuestasEmpleado(instance=pregunta.respuestas.get(evaluacion=evaluacion), prefix=pregunta.pk) if not post else FormularioRespuestasEmpleado(self.request.POST, prefix=pregunta.pk),
+                        'pregunta': pregunta,
+                    } for pregunta in seccion.preguntas.all()],
+                    'seccion': seccion
+                } for seccion in instrumento.secciones.all()
+            ]
+        else:
+            context['instrumento'] = [{
+                    'preguntas': [{
+                        'form': FormularioRespuestasEmpleado(prefix=pregunta.pk, initial={
+                            'pregunta': pregunta
+                        }) if not post else FormularioRespuestasEmpleado(self.request.POST, prefix=pregunta.pk),
+                        'pregunta': pregunta,
+                    } for pregunta in seccion.preguntas.all()],
+                    'seccion': seccion
+                } for seccion in instrumento.secciones.all()
+            ]
+
+        context['titulo'] = instrumento.nombre.title()
+
+        return context
+    
+class RevisionEvaluacion(PeriodoContextMixin, View):
+    pass
