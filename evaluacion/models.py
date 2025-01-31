@@ -171,3 +171,16 @@ class Formacion(models.Model):
     anadido_por = models.CharField(max_length=1, choices=ROLES)
     activo = models.BooleanField(default=True)
     competencias = models.ManyToManyField(Competencias, related_name="formaciones")
+
+class Escalafon(models.Model):
+    nivel = models.CharField(max_length=80)
+    tipo_personal = models.ForeignKey(TipoPersonal, on_delete=models.CASCADE, related_name="escalafones")
+    valor_requerido = models.IntegerField()
+
+    def __str__(self):
+        return self.nivel
+    
+class ResultadoEscalafon(models.Model):
+    evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="escalafones")
+    escalafon = models.ForeignKey(Escalafon, on_delete=models.CASCADE, related_name="escalafones")
+    asignado_por = models.CharField(max_length=1, choices=ROLES)
