@@ -1,0 +1,78 @@
+<h3 class="text-center text-2xl">Revisión de la Evaluación de: {{evaluacion.evaluado.user.get_full_name.upper}}</h3>
+
+<table class="table w-full text-center">
+    <thead>
+        <tr>
+            <th>Instrumento</th>
+            <th>Estado</th>
+            <th>Total</th>
+            <th>Editar</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for instrumento in instrumentos %}
+        <tr>
+            <td>{{instrumento.nombre}}</td>
+            <td>
+                {% if instrumento.completado %}
+                <span class="badge badge-success">Revisado</span>
+                {% else %}
+                <span class="badge badge-error">Por Revisar</span>
+                {% endif %}
+            </td>
+            <td>{{instrumento.resultado|default:"-"}} / {{instrumento.peso|floatformat:2}}</td>
+            <td><a class="btn btn-error" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'revision_instrumento' pk=instrumento.pk evaluacion=evaluacion.pk %}">Acceder al Instrumento</a></td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td>Formación</td>
+            <td>
+                {% if formaciones.exists %}
+                <span class="badge badge-success">Revisado</span>
+                {% else %}
+                <span class="badge badge-error">Por Revisar</span>
+                {% endif %}
+            </td>
+            <td>N/A</td>
+            <td>
+                <a class="btn btn-error" href="{% url 'formacion' pk=evaluacion.pk %}">Acceder al Instrumento</a>
+            </td>
+        </tr>
+        <tr>
+            <td>Logros y Metas</td>
+            <td>
+                {% if logros_y_metas.exists %}
+                <span class="badge badge-success">Revisado</span>
+                {% else %}
+                <span class="badge badge-error">Por Revisar</span>
+                {% endif %}
+            </td>
+            <td>N/A</td>
+            <td>
+                <a class="btn btn-error" href="{% url 'metas' pk=evaluacion.pk %}">Acceder al Instrumento</a>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2" class="text-center">
+                <b>TOTAL</b>
+            </td>
+            <td>{{evaluacion.total_supervisor|default:"-"}} / {{evaluacion.peso|floatformat:2}}</td>
+        </tr>
+
+        {% if puede_finalizar %}
+        <tr>
+            <td colspan="4" class="text-center">
+                <label for="modal-evaluacion" class="btn btn-error">Enviar al Gerente del Departamento</label>
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=False finish=True id="evaluacion" %}
+            </td>
+        </tr>
+        {% endif %}
+    </tbody>
+</table>
+<script>
+    document.addEventListener("htmx:beforeRequest", event => {
+        if (event.detail.verb === "post" && !confirm("¿Estás seguro de enviar la evaluación? No podrás hacerle cambios directamente de nuevo.")) 
+            event.preventDefault();
+    });
+</script>

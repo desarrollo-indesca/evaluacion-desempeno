@@ -4,6 +4,7 @@ from .views import *
 urlpatterns = [
     path('comenzar/<int:pk>/', ComenzarEvaluacion.as_view(), name="comenzar_evaluacion"),
     path('instrumento/<int:pk>/', FormularioInstrumentoEmpleado.as_view(), name="instrumento"),
+    path('instrumento/<int:pk>/<int:evaluacion>/', FormularioInstrumentoSupervisor.as_view(), name="revision_instrumento"),
     path('formacion/<int:pk>/', FormacionEmpleado.as_view(), name="formacion"),
     path('metas/<int:pk>/', MetasEmpleado.as_view(), name="metas"),
 
@@ -15,5 +16,5 @@ urlpatterns = [
     path('consulta/<int:pk>/', ConsultaEvaluaciones.as_view(), name="consultar_evaluaciones"),
     path('supervisados/<int:pk>/', RevisionSupervisados.as_view(), name="consultar_supervisados"),
     path('supervisados/historico/<int:pk>/', HistoricoEvaluacionesSupervisado.as_view(), name="consultar_historico_supervisados"),
-    path('supervisados/instrumento/<int:pk>/<int:instrumento>/', FormularioInstrumentoSupervisor.as_view(), name="supervision_instrumento"),
+    path('supervisados/revisar/<int:pk>/', RevisionEvaluacion.as_view(), name="revisar_evaluacion"),
 ]

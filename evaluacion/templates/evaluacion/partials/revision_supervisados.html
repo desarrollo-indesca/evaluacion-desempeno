@@ -32,19 +32,19 @@
             {% with evaluacion=supervisado.evaluacion_actual %}
             <td>
                 {% if evaluacion %}
-                {% if evaluacion.estado == 'S' %}
-                REVISIÓN POR SUPERVISOR
-                {% else %}
                 {{evaluacion.estado_largo}}
-                {% endif %}
                 {% else %}
                 <span class="badge badge-error">Sin Evaluación Activa</span>
                 {% endif %}
             </td>
             <td>
                 {% if evaluacion %}
+                {% if evaluacion.estado == 'S' %}
+                <a for="modal-{{evaluacion.pk}}" class="btn btn-error" href="#" hx-get="{% url 'revisar_evaluacion' pk=evaluacion.pk %}" hx-target="closest .tab-content">Revisar Evaluación Actual</a>
+                {% else %}
                 <label for="modal-{{evaluacion.pk}}" class="btn btn-error">Revisar Evaluación Actual</label>
                 {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with evaluacion=evaluacion include_others=True finish=False id=evaluacion.pk %}
+                {% endif %}
                 {% endif %}
                 
                 <a class="btn btn-gray" hx-target="closest .tab-content" hx-get="{% url 'consultar_historico_supervisados' pk=supervisado.pk %}">Ver Histórico de Evaluaciones</a>

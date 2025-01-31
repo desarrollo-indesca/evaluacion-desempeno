@@ -4,6 +4,7 @@ from django.db import transaction
 from django.contrib import messages
 from django.views import View
 from django.shortcuts import render, redirect
+from django.http import HttpResponseForbidden
 from datetime import date
 from core.models import *
 from evaluacion.models import Evaluacion
@@ -25,15 +26,18 @@ class PeriodoContextMixin():
 class EvaluacionEstadoMixin():
     estado = ""
 
-    def get(self, request, pk):
-        try:
-            evaluacion = Evaluacion.objects.get(pk=pk)
-        except:
+    def get(self, request, **kwargs):
+        if kwargs.get('evaluacion'):
+            evaluacion = Evaluacion.objects.get(pk=kwargs.get('evaluacion'))
+        elif(kwargs.get('pk')):
+            evaluacion = Evaluacion.objects.get(pk=kwargs.get('pk'))
+        else:
             evaluacion = Evaluacion.objects.get(evaluado=self.request.user.datos_personal.get(activo=True), periodo=self.get_periodo())
-
 
         if(evaluacion.estado == self.estado):
             return render(request, self.template_name, context=self.get_context_data())
+        else:
+            return HttpResponseForbidden()
 
 class Login(PeriodoContextMixin, View):
     template_name = 'core/login.html'

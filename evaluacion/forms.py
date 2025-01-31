@@ -18,6 +18,23 @@ class FormularioRespuestasEmpleado(forms.ModelForm):
             'pregunta': forms.HiddenInput(),
         }
 
+class FormularioRespuestasSupervisor(forms.ModelForm):
+    def clean(self):
+        cleaned_data = super().clean()
+        respuesta_supervisor = cleaned_data.get("respuesta_supervisor")
+        comentario_supervisor = cleaned_data.get("comentario_supervisor")
+
+        if respuesta_supervisor == -1 and not comentario_supervisor:
+            msg = "Si no se ha seleccionado una respuesta, debe ingresar un comentario."
+            self.add_error("comentario_supervisor", msg)
+
+    class Meta:
+        model = Respuesta
+        fields = ('respuesta_supervisor', 'comentario_supervisor', 'pregunta')
+        widgets = {
+            'pregunta': forms.HiddenInput(),
+        }
+
 class FormularioFormacion(forms.ModelForm):
     competencias_genericas = forms.ModelMultipleChoiceField(
         queryset=Competencias.objects.filter(tipo="G"),
