@@ -14,8 +14,11 @@
     <div class="w-25"></div>
 </div>
 <hr>
-
-<form method="post">
+{% if anadido_por == 'E' %}
+<form method="post" hx-select="main" hx-target="main" hx-post="{% url 'metas' pk=evaluacion.pk %}">
+{% else %}
+<form method="post" hx-target="closest .tab-content" hx-post="{% url 'metas_supervisado' pk=evaluacion.pk %}">
+{% endif %}
     {% csrf_token %}
     <div class="my-4">       
             <div class="my-2 max-w-screen">
@@ -120,5 +123,5 @@
     </div>
 </form>
 
-<script src="{% static 'js/dynamic-form.js' %}"></script>
+<script src="{% static 'js/dynamic-forms.js' %}"></script>
 {% endblock %}

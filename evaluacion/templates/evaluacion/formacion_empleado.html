@@ -6,7 +6,10 @@
 
 <div class="flex justify-evenly items-center p-3">
     <div class="w-25">
-        <a href="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
+        {% if supervisado %}
+        {% else %}
+        <a href="#"  hx-select="main" hx-target="main" hx-get="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
+        {% endif %}
     </div>
     <div class="w-50">
         <h1 class="text-center text-2xl">{{titulo}}</h1>
@@ -14,8 +17,11 @@
     <div class="w-25"></div>
 </div>
 <hr>
-
+{% if anadido_por == 'S' %}
 <form method="post" hx-post="{% url 'formacion_supervisado' pk=evaluacion.pk %}" hx-target="closest .tab-content">
+{% else %}
+<form method="post" hx-post="{% url 'formacion' pk=evaluacion.pk %}" hx-select="main" hx-target="main">
+{% endif %}
     {% csrf_token %}
     <div class="my-4">       
             <div class="my-2 max-w-screen">
@@ -100,7 +106,7 @@
             <input type="submit" value="Guardar" class="btn btn-error">
         </div>
     </div>
-</form>
 
-<script src="{% static 'js/dynamic-form.js' %}"></script>
+    <script src="{% static 'js/dynamic-forms.js' %}"></script>
+</form>
 {% endblock %}

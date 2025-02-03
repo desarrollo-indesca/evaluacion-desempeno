@@ -57,7 +57,7 @@
             <td>N/A</td>
             <td>N/A</td>
             <td>
-                <a class="btn btn-error" href="{% url 'metas_supervisado' pk=evaluacion.pk %}">Acceder al Instrumento</a>
+                <a class="btn btn-error" href="#" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'metas_supervisado' pk=evaluacion.pk %}">Acceder al Instrumento</a>
             </td>
         </tr>
 

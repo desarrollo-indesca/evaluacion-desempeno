@@ -1,5 +1,5 @@
 // Agrega listeners de eventos a los elementos con las clases especificadas
-const cargarEventListeners = (anadirListeners = true) => {
+cargarEventListeners = (anadirListeners = true) => {
     const anadirElementos = document.querySelectorAll(".anadir");
     const eliminarElementos = document.querySelectorAll(".eliminar");
 
@@ -17,7 +17,7 @@ const cargarEventListeners = (anadirListeners = true) => {
 };
 
 // Reindexa los elementos del formulario para asegurarse de que tengan valores de índice secuenciales
-const reindex = (anadir = false, formClass = "") => {
+reindex = (anadir = false, formClass = "") => {
     const forms = document.querySelectorAll(`.${formClass}`);
     const formRegex = new RegExp(`${formClass}-(\\d)+-`, "g");
 
@@ -44,7 +44,7 @@ const reindex = (anadir = false, formClass = "") => {
 };
 
 // Elimina un elemento del formulario y actualiza los índices
-const eliminar = (e) => {
+eliminar = (e) => {
     const formClass = e.target.closest('tr').classList[0];
     const forms = document.querySelectorAll(`.${formClass}`);
     const formNum = forms.length;
@@ -61,7 +61,7 @@ const eliminar = (e) => {
 };
 
 // Agrega un nuevo elemento del formulario y actualiza los índices
-const anadir = (e) => {
+anadir = (e) => {
     const formClass = e.target.closest('tr').classList[0];
     const forms = document.querySelectorAll(`.${formClass}`);
     const formContainer = document.querySelector(`#${formClass}`);
@@ -105,8 +105,8 @@ document.addEventListener("submit", (e) => {
     }
 });
 
-const idFields = document.querySelectorAll('[id*="-id"]');
+idFields = document.querySelectorAll('[id*="-id"]');
 idFields.forEach(idField => idField.remove());
 
-const initialFormsFields = document.querySelectorAll('[id$="-INITIAL_FORMS"]');
+initialFormsFields = document.querySelectorAll('[id$="-INITIAL_FORMS"]');
 initialFormsFields.forEach(initialField => initialField.value = "0");

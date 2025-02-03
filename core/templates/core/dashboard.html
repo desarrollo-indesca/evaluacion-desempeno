@@ -3,7 +3,7 @@
 {% block content %}
 <div role="tablist" class="tabs tabs-lifted">
     <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="Inicio" checked />
-    <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+    <div id="inicio" role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
         <h1 class="text-3xl text-center font-semibold">Evaluación de Desempeño del Personal</h1>
 
         <div class="grid grid-cols-12">
@@ -148,7 +148,7 @@
                                             </td>
                                             <td>N/A</td>
                                             <td>
-                                                <a class="btn btn-error" href="{% url 'formacion' pk=evaluacion.pk %}">Acceder al Instrumento</a>
+                                                <a class="btn btn-error" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'formacion' pk=evaluacion.pk %}">Acceder al Instrumento</a>
                                             </td>
                                         </tr>
                                         <tr>
@@ -162,7 +162,7 @@
                                             </td>
                                             <td>N/A</td>
                                             <td>
-                                                <a class="btn btn-error" href="{% url 'metas' pk=evaluacion.pk %}">Acceder al Instrumento</a>
+                                                <a class="btn btn-error" hx-get="{% url 'metas' pk=evaluacion.pk %}" hx-select="main" hx-target="closest .tab-content" href="#">Acceder al Instrumento</a>
                                             </td>
                                         </tr>
 

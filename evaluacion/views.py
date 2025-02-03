@@ -132,10 +132,7 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, 
                                 context
                             )
                         
-                        print(total)
-
                     total = round(total, 2)
-                    print(total)
 
                     if(seccion.calculo == 'S'):
                         if(total > 0):
@@ -172,6 +169,10 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, 
 class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     template_name = "evaluacion/formacion_empleado.html"
     estado = "E"
+    anadido_por = 'E'
+
+    def get_success_url(self):
+        return redirect('dashboard')
 
     def get_queryset(self, evaluacion):
         return evaluacion.formaciones.all()
@@ -190,6 +191,7 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 
         context['titulo'] = "Detección de Necesidades de Formación"
         context['evaluacion'] = evaluacion
+        context['anadido_por'] = self.anadido_por
 
         return context
     
@@ -205,7 +207,7 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
                 evaluacion.formaciones.all().delete()
                 for form in formset:
                     form.instance.evaluacion = evaluacion
-                    form.instance.anadido_por = "E"
+                    form.instance.anadido_por = self.anadido_por
                     form.save()
 
                     competencias_tecnicas = form.cleaned_data.get('competencias_tecnicas')
@@ -222,7 +224,7 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
             raise Exception(str(formset.errors))
 
         messages.success(request, 'Respuestas de Formación almacenadas correctamente.')
-        return redirect('dashboard')
+        return self.get_success_url()
     
 class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     template_name = "evaluacion/metas_empleado.html"
@@ -250,10 +252,10 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
         return formset_actual, formset_proximo
 
     def queryset_actual(self, evaluacion):
-        return evaluacion.logros_y_metas.filter(periodo = "A")
+        return evaluacion.logros_y_metas.filter(periodo = "A", anadido_por="E")
     
     def queryset_proximo(self, evaluacion):
-        return evaluacion.logros_y_metas.filter(periodo = "P")
+        return evaluacion.logros_y_metas.filter(periodo = "P", anadido_por="E")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -261,8 +263,13 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
         context['formset_actual'], context['formset_proximo'] = self.get_formsets(True, self.queryset_actual(evaluacion), self.queryset_proximo(evaluacion))
         context['titulo'] = "Formulario de Logros y Metas"
+        context['anadido_por'] = self.anadido_por
+        context['evaluacion'] = evaluacion
 
         return context
+
+    def get_success_url(self):
+        return redirect('dashboard')
 
     def post(self, request, pk, *args, **kwargs):
         evaluacion = Evaluacion.objects.get(pk=pk)
@@ -291,7 +298,7 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
                     form.instance.anadido_por = self.anadido_por
                     form.save()
         
-        return redirect('dashboard')
+        return self.get_success_url()
     
 class ResultadosPorInstrumentoYVersion(View):
     template_name = 'evaluacion/resultados_por_inst_y_version.html'
@@ -612,6 +619,9 @@ class FormacionSupervisor(FormacionEmpleado):
     estado = "S"
     anadido_por = "S"
 
+    def get_success_url(self):
+        return redirect('revisar_evaluacion', pk=self.kwargs['pk'])
+
     def get_queryset(self, evaluacion):
         qs = evaluacion.formaciones.filter(anadido_por = "S", activo = True)
         
@@ -623,6 +633,9 @@ class FormacionSupervisor(FormacionEmpleado):
 class LogrosYMetasSupervisor(MetasEmpleado):
     estado = "S"
     anadido_por = "S"
+
+    def get_success_url(self):
+        return redirect('revisar_evaluacion', pk=self.kwargs['pk'])
 
     def queryset_actual(self, evaluacion):
         qs = evaluacion.logros_y_metas.filter(anadido_por="S", periodo = "A")
@@ -639,7 +652,7 @@ class LogrosYMetasSupervisor(MetasEmpleado):
             return qs
         else:
             return evaluacion.logros_y_metas.filter(periodo="P")
-        
+
 class EnviarEvaluacionGerente(View):
     def post(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
