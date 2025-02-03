@@ -1,11 +1,16 @@
-<h3 class="text-center text-2xl">Revisión de la Evaluación de: {{evaluacion.evaluado.user.get_full_name.upper}}</h3>
+<div class="flex justify-between items-center">
+    <a hx-target="closest .tab-content" hx-get="{% url 'consultar_supervisados' %}" class="btn btn-teal-500">Regresar</a>
+    <h3 class="text-center text-2xl">Revisión de la Evaluación de: {{evaluacion.evaluado.user.get_full_name.upper}}</h3>
+    <div></div>
+</div>
 
 <table class="table w-full text-center">
     <thead>
         <tr>
             <th>Instrumento</th>
             <th>Estado</th>
-            <th>Total</th>
+            <th>Total Empleado</th>
+            <th>Total Supervisor</th>
             <th>Editar</th>
         </tr>
     </thead>
@@ -20,7 +25,8 @@
                 <span class="badge badge-error">Por Revisar</span>
                 {% endif %}
             </td>
-            <td>{{instrumento.resultado|default:"-"}} / {{instrumento.peso|floatformat:2}}</td>
+            <td>{{instrumento.resultado_empleado|default:"-"}} / {{instrumento.peso|floatformat:2}}</td>
+            <td>{{instrumento.resultado_supervisor|default:"-"}} / {{instrumento.peso|floatformat:2}}</td>
             <td><a class="btn btn-error" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'revision_instrumento' pk=instrumento.pk evaluacion=evaluacion.pk %}">Acceder al Instrumento</a></td>
         </tr>
         {% endfor %}
@@ -57,6 +63,7 @@
             <td colspan="2" class="text-center">
                 <b>TOTAL</b>
             </td>
+            <td>{{evaluacion.total|default:"-"}} / {{evaluacion.peso|floatformat:2}}</td>
             <td>{{evaluacion.total_supervisor|default:"-"}} / {{evaluacion.peso|floatformat:2}}</td>
         </tr>
 

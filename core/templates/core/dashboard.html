@@ -209,7 +209,7 @@
   
     <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="Revisar" />
     <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
-        <div hx-trigger="intersect" hx-get="{% url 'consultar_supervisados' pk=request.user.pk %}"></div>
+        <div hx-trigger="intersect" hx-get="{% url 'consultar_supervisados' %}"></div>
     </div>
   </div>
 {% endblock %}

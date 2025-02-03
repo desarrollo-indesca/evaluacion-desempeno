@@ -3,7 +3,7 @@
 <h3 class="text-center text-2xl">Consulta de Supervisados (Periodo Actual)</h3>
 <hr>
 
-<form hx-get="{% url 'consultar_supervisados' pk=request.user.pk %}" hx-select="#supervisados" hx-target="#supervisados" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
+<form hx-get="{% url 'consultar_supervisados' %}" hx-select="#supervisados" hx-target="#supervisados" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
     <div>
         {{filter.form.ficha.label_tag}} <br>
         {% render_field filter.form.ficha class="input input-bordered w-full" %}
@@ -40,7 +40,7 @@
             <td>
                 {% if evaluacion %}
                 {% if evaluacion.estado == 'S' %}
-                <a for="modal-{{evaluacion.pk}}" class="btn btn-error" href="#" hx-get="{% url 'revisar_evaluacion' pk=evaluacion.pk %}" hx-target="closest .tab-content">Revisar Evaluación Actual</a>
+                <a for="modal-{{evaluacion.pk}}" class="btn btn-error" hx-confirm="¿Desea Revisar la Evaluación Actual? Recuerde que esto debe hacerse en reunión con su supervisado, a menos que este no haya respondido a su evaluación en el plazo acordado." hx-target="closest .tab-content" href="#" hx-get="{% url 'revisar_evaluacion' pk=evaluacion.pk %}" hx-target="closest .tab-content">Revisar Evaluación Actual</a>
                 {% else %}
                 <label for="modal-{{evaluacion.pk}}" class="btn btn-error">Revisar Evaluación Actual</label>
                 {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with evaluacion=evaluacion include_others=True finish=False id=evaluacion.pk %}

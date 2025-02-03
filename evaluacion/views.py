@@ -462,6 +462,7 @@ class FormularioInstrumentoSupervisor(PeriodoContextMixin, EvaluacionEstadoMixin
             context['instrumento'].append({'preguntas': preguntas_data, 'seccion': seccion})
 
         context['titulo'] = instrumento.nombre.title()
+        context['pk'] = instrumento.pk
         context['evaluacion'] = evaluacion
 
         return context
@@ -471,11 +472,12 @@ class FormularioInstrumentoSupervisor(PeriodoContextMixin, EvaluacionEstadoMixin
 
         with transaction.atomic():
                 evaluacion = Evaluacion.objects.get(
-                    evaluado=evaluacion, periodo=self.get_periodo(), fecha_fin__isnull=True)
+                    pk=evaluacion
+                )
                 resultado_instrumento = ResultadoInstrumento.objects.get(
                     evaluacion=evaluacion, 
                     instrumento=instrumento
-                )[0]
+                )
 
                 total_instrumento = 0 if instrumento.calculo != 'M' else 1e9
                 max_instrumento = 0 if instrumento.calculo == 'S' else 1e9 if instrumento.calculo == 'M' else instrumento.secciones.count()     
@@ -493,14 +495,14 @@ class FormularioInstrumentoSupervisor(PeriodoContextMixin, EvaluacionEstadoMixin
                             form.instance.evaluacion = evaluacion
                             form.save()
 
-                            if(seccion.calculo == 'S' and form.instance.respuesta_empleado >= 0):
+                            if(seccion.calculo == 'S' and form.instance.respuesta_supervisor >= 0):
                                 max_seccion += form.instance.pregunta.peso
-                                total += form.instance.pregunta.peso * form.instance.respuesta_empleado / 2
+                                total += form.instance.pregunta.peso * form.instance.respuesta_supervisor / 2
                             elif(seccion.calculo == 'P'):
-                                total += form.instance.respuesta_empleado
+                                total += form.instance.respuesta_supervisor
                                 max_seccion += 1
                             elif(seccion.calculo == 'M'):
-                                total = min(total, form.instance.respuesta_empleado)
+                                total = min(total, form.instance.respuesta_supervisor)
                         else:
                             context = {} 
                             context['instrumento'] = [{
@@ -513,6 +515,10 @@ class FormularioInstrumentoSupervisor(PeriodoContextMixin, EvaluacionEstadoMixin
                                     'seccion': seccion
                                 } for seccion in instrumento.secciones.all()
                             ]
+
+                            context['titulo'] = instrumento.nombre.title()
+                            context['pk'] = instrumento.pk
+                            context['evaluacion'] = evaluacion
 
                             return render(
                                 request, self.template_name,
@@ -534,25 +540,26 @@ class FormularioInstrumentoSupervisor(PeriodoContextMixin, EvaluacionEstadoMixin
                     elif(seccion.calculo == 'M'):
                         total_instrumento += total
 
-                    ResultadoSeccion.objects.update(
+                    resultado_seccion = ResultadoSeccion.objects.get(
                         seccion=seccion, 
-                        resultado_instrumento=resultado_instrumento,
-                        evaluacion=evaluacion,
-                        defaults={
-                            'resultado_supervisor': total,
-                        }
+                        resultado_instrumento=resultado_instrumento
                     )
+
+                    resultado_seccion.resultado_supervisor = total
+                    resultado_seccion.save()
 
                 if(instrumento.calculo == 'S'):
                     total_instrumento = total_instrumento*instrumento.peso/max_instrumento
                 elif(instrumento.calculo == 'P'):
                     total_instrumento = total_instrumento / max_instrumento
                
-                resultado_instrumento.resultado_empleado = total_instrumento
+                resultado_instrumento.resultado_supervisor = total_instrumento
                 resultado_instrumento.save()
+
+                print(resultado_instrumento.resultado_supervisor)
         
         messages.success(request, 'Respuestas del Instrumento almacenadas correctamente.')
-        return redirect('dashboard')
+        return redirect('revisar_evaluacion', pk=evaluacion.pk)
 
 class RevisionEvaluacion(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     estado = "S"
@@ -574,7 +581,8 @@ class RevisionEvaluacion(PeriodoContextMixin, EvaluacionEstadoMixin, View):
             {
                 'nombre': instrumento.nombre,
                 'completado': instrumento.resultados.filter(evaluacion = evaluacion, resultado_supervisor__isnull=False).exists(),
-                'resultado': instrumento.resultados.filter(evaluacion = evaluacion).first().resultado_supervisor if instrumento.resultados.filter(evaluacion = evaluacion).exists() else None,
+                'resultado_empleado': instrumento.resultados.filter(evaluacion = evaluacion).first().resultado_empleado if instrumento.resultados.filter(evaluacion = evaluacion).exists() else None,
+                'resultado_supervisor': instrumento.resultados.filter(evaluacion = evaluacion).first().resultado_supervisor if instrumento.resultados.filter(evaluacion = evaluacion).exists() else None,
                 'peso': instrumento.peso,
                 'pk': instrumento.pk
             } for instrumento in evaluacion.formulario.instrumentos.all()

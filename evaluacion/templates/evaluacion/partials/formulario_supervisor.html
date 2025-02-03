@@ -14,7 +14,7 @@
 </div>
 <hr>
 
-<form method="post">
+<form method="post" hx-target="closest .tab-content" hx-post="{% url 'revision_instrumento' pk=pk evaluacion=evaluacion.pk %}">
     {% csrf_token %}
     {% for seccion in instrumento %}
     <div class="my-4">       
@@ -73,13 +73,10 @@
                     </div>
                     </tbody>
                 </table>
-            </div>
     </div>
     {% endfor %}
-    <div class="flex justify-center items-center w-full max-w-lg">
-        <div>
-            <input type="submit" value="Guardar" class="btn btn-error">
-        </div>
+    <div class="flex justify-center items-center w-full">
+        <input type="submit" value="Guardar" class="btn btn-error">
     </div>
 </form>
 

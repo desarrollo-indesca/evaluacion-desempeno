@@ -19,15 +19,6 @@ class FormularioRespuestasEmpleado(forms.ModelForm):
         }
 
 class FormularioRespuestasSupervisor(forms.ModelForm):
-    def clean(self):
-        cleaned_data = super().clean()
-        respuesta_supervisor = cleaned_data.get("respuesta_supervisor")
-        comentario_supervisor = cleaned_data.get("comentario_supervisor")
-
-        if respuesta_supervisor == -1 and not comentario_supervisor:
-            msg = "Si no se ha seleccionado una respuesta, debe ingresar un comentario."
-            self.add_error("comentario_supervisor", msg)
-
     class Meta:
         model = Respuesta
         fields = ('respuesta_supervisor', 'comentario_supervisor', 'pregunta')
