@@ -62,7 +62,7 @@
             <div class="collapse collapse-arrow bg-base-200 mb-2">
                 <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
                 <div class="collapse-title text-xl font-medium">
-                    {{resultado.instrumento}} ({{resultado.resultado_empleado}} / {{resultado.instrumento.peso}})
+                    {{resultado.instrumento}} ({% if tipo == "E" %}{{resultado.resultado_empleado}}{% elif tipo == "S" %}{{resultado.resultado_supervisor}}{% endif %} / {{resultado.instrumento.peso}})
                 </div>
                 <div class="collapse-content">
                     <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>
@@ -109,7 +109,17 @@
 
         {% if finish %}
         <div class="my-5 text-left">
-            <form class="flex justify-center items-center flex-col" hx-confirm="¿Está seguro que desea enviar la evaluación? No podrá modificarla directamente de nuevo." hx-post="{% url 'finalizar_evaluacion' pk=evaluacion.pk %}" hx-target="body">
+            <form class="flex justify-center items-center flex-col"
+                {% if tipo == "E" %}
+                hx-confirm="¿Está seguro que desea enviar la evaluación? No podrá modificarla directamente de nuevo." 
+                hx-post="{% url 'finalizar_evaluacion' pk=evaluacion.pk %}" 
+                hx-target="body"
+                {% elif tipo == "S" %}
+                hx-confirm="¿Está seguro que desea enviar la evaluación al gerente? No podrá modificarla directamente de nuevo, a menos que sea rechazada." 
+                hx-post="{% url 'enviar_gerente' pk=evaluacion.pk %}" 
+                hx-target="body"
+                {% endif %}
+            >
                 <div class="my-3">
                     <input type="checkbox" name="aceptar" id="aceptar" class="checkbox" required>
                     <label for="aceptar">
@@ -124,7 +134,11 @@
                     <input type="text" class="w-full input input-bordered" placeholder="Ingrese sus comentarios sobre los resultados" name="comentarios">
                 </div>
                 <div class="flex justify-center my-3">
+                    {% if tipo == 'S' %}
+                    <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la Evaluación al Gerente</button>
+                    {% elif tipo == 'E' %}
                     <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la evaluación a mi supervisor</button>
+                    {% endif %}
                 </div>
             </form>
         </div>

@@ -44,7 +44,7 @@
             <td>{{evaluacion.estado_largo}}</td>
             <td>
                 <label for="modal-{{evaluacion.pk}}" class="btn btn-error">Revisar Evaluación</label>
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="E" %}
             </td>
         </tr>
         {% empty %}
