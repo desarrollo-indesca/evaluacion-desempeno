@@ -670,3 +670,9 @@ class EnviarEvaluacionGerente(View):
             return redirect('dashboard')
         
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
+
+# VISTAS DE GERENCIA
+
+# OTROS
+class GenerarModal(View):
+    pass
