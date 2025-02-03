@@ -18,4 +18,5 @@ urlpatterns = [
     path('supervisados/historico/<int:pk>/', HistoricoEvaluacionesSupervisado.as_view(), name="consultar_historico_supervisados"),
     path('supervisados/revisar/<int:pk>/', RevisionEvaluacion.as_view(), name="revisar_evaluacion"),
     path('supervisados/formacion/<int:pk>/', FormacionSupervisor.as_view(), name="formacion_supervisado"),
+    path('supervisados/metas/<int:pk>/', LogrosYMetasSupervisor.as_view(), name="metas_supervisado"),
 ]

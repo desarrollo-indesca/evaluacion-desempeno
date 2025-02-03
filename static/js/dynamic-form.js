@@ -105,10 +105,8 @@ document.addEventListener("submit", (e) => {
     }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-    const idFields = document.querySelectorAll('[id*="-id"]');
-    idFields.forEach(idField => idField.remove());
+const idFields = document.querySelectorAll('[id*="-id"]');
+idFields.forEach(idField => idField.remove());
 
-    const initialFormsFields = document.querySelectorAll('[id$="-INITIAL_FORMS"]');
-    initialFormsFields.forEach(initialField => initialField.value = "0");
-});
+const initialFormsFields = document.querySelectorAll('[id$="-INITIAL_FORMS"]');
+initialFormsFields.forEach(initialField => initialField.value = "0");

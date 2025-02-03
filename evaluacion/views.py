@@ -226,6 +226,7 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     template_name = "evaluacion/metas_empleado.html"
     estado = "E"
+    anadido_por = "E"
 
     def get_formsets(self, add_prefixes = False, qs_actual = None, qs_proximo = None):
         formset_actual = modelformset_factory(
@@ -247,11 +248,17 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 
         return formset_actual, formset_proximo
 
+    def queryset_actual(self, evaluacion):
+        return evaluacion.logros_y_metas.filter(periodo = "A")
+    
+    def queryset_proximo(self, evaluacion):
+        return evaluacion.logros_y_metas.filter(periodo = "P")
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
-        context['formset_actual'], context['formset_proximo'] = self.get_formsets(True, evaluacion.logros_y_metas.filter(periodo = "A"), evaluacion.logros_y_metas.filter(periodo = "P"))
+        context['formset_actual'], context['formset_proximo'] = self.get_formsets(True, self.queryset_actual(evaluacion), self.queryset_proximo(evaluacion))
         context['titulo'] = "Formulario de Logros y Metas"
 
         return context
@@ -265,13 +272,13 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
         formset_proximo = formset_proximo(request.POST, prefix="form-proximo")
 
         with transaction.atomic():
-            evaluacion.logros_y_metas.all().delete()
+            evaluacion.logros_y_metas.filter(anadido_por=self.anadido_por).delete()
 
             formset_actual.is_valid()
             for form in formset_actual:
                 if(form.is_valid()):
                     form.instance.evaluacion = evaluacion
-                    form.instance.anadido_por = "E"
+                    form.instance.anadido_por = self.anadido_por
                     form.instance.periodo = "A"
                     form.save()
 
@@ -280,7 +287,7 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
                 if(form.is_valid()):
                     form.instance.evaluacion = evaluacion
                     form.instance.periodo = "P"
-                    form.instance.anadido_por = "E"
+                    form.instance.anadido_por = self.anadido_por
                     form.save()
         
         return redirect('dashboard')
@@ -600,6 +607,7 @@ class RevisionEvaluacion(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 class FormacionSupervisor(FormacionEmpleado):
     template_name = "evaluacion/formacion_empleado.html"
     estado = "S"
+    anadido_por = "S"
 
     def get_queryset(self, evaluacion):
         qs = evaluacion.formaciones.filter(anadido_por = "S", activo = True)
@@ -608,34 +616,23 @@ class FormacionSupervisor(FormacionEmpleado):
             return qs
         else:
             return evaluacion.formaciones.filter(activo = True)
+
+class LogrosYMetasSupervisor(MetasEmpleado):
+    estado = "S"
+    anadido_por = "S"
+
+    def queryset_actual(self, evaluacion):
+        qs = evaluacion.logros_y_metas.filter(anadido_por="S", periodo = "A")
         
-    def post(self, request, pk):
-        evaluacion = Evaluacion.objects.get(pk=pk)
-
-        formset = modelformset_factory(
-            Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo', 'competencias'),
-        )(request.POST)
-
-        if formset.is_valid():
-            with transaction.atomic():
-                evaluacion.formaciones.filter(anadido_por = "S").delete()
-                for form in formset:
-                    form.instance.evaluacion = evaluacion
-                    form.instance.anadido_por = "S"
-                    form.save()
-
-                    competencias_tecnicas = form.cleaned_data.get('competencias_tecnicas')
-                    competencias_genericas = form.cleaned_data.get('competencias_genericas')
-
-                    for competencia in competencias_tecnicas:
-                        form.instance.competencias.add(competencia)
-
-                    for competencia in competencias_genericas:
-                        form.instance.competencias.add(competencia)
-
+        if(qs.exists()):
+            return qs
         else:
-            print(formset.errors)
-            raise Exception(str(formset.errors))
-
-        messages.success(request, 'Respuestas de Formación almacenadas correctamente.')
-        return redirect('revisar_evaluacion', pk=evaluacion.pk)
+            return evaluacion.logros_y_metas.filter(periodo="A")
+    
+    def queryset_proximo(self, evaluacion):
+        qs = evaluacion.logros_y_metas.filter(anadido_por="S", periodo = "P")
+        
+        if(qs.exists()):
+            return qs
+        else:
+            return evaluacion.logros_y_metas.filter(periodo="P")
