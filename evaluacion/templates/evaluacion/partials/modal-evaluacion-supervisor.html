@@ -58,7 +58,7 @@
             <div class="collapse collapse-arrow bg-base-200 mb-2">
                 <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
                 <div class="collapse-title text-xl font-medium">
-                    {{resultado.instrumento}} ({{resultado.resultado_empleado}} / {{resultado.instrumento.peso}})
+                    {{resultado.instrumento}} ({{resultado.resultado_supervisor}} / {{resultado.instrumento.peso}})
                 </div>
                 <div class="collapse-content">
                     <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>
@@ -105,7 +105,7 @@
 
         {% if finish %}
         <div class="my-5 text-left">
-            <form class="flex justify-center items-center flex-col" hx-post="{% url 'finalizar_evaluacion' pk=evaluacion.pk %}" hx-target="body">
+            <form class="flex justify-center items-center flex-col" hx-post="{% url 'enviar_gerente' pk=evaluacion.pk %}" hx-target="body">
                 <div class="my-3">
                     <input type="checkbox" name="aceptar" id="aceptar" class="checkbox" required>
                     <label for="aceptar">
@@ -119,7 +119,7 @@
                 <div class="w-full">
                     <input type="text" class="w-full input input-bordered"placeholder="Ingrese sus comentarios sobre los resultados" name="comentarios">
                 </div>
-                <div class="flex justify-center my-3">
+                <div class="flex justify-center my-3 w-full">
                     <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la evaluación a mi supervisor</button>
                 </div>
             </form>

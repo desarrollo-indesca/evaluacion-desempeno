@@ -69,7 +69,7 @@
         {% for seccion in secciones %}
         <tr class="text-center">
             <td>{{seccion.seccion}}</td>
-            <td>{{seccion.resultado}}</td>
+            <td>{{seccion.resultado}} {% if instrumento.instrumento.calculo == "S" %}→ {{seccion.valor_ponderado|floatformat:2}}{% endif %}</td>
             <td>{{seccion.peso}}</td>
         </tr>
         {% endfor %}
@@ -79,7 +79,13 @@
                 {% if instrumento.instrumento.calculo == 'S' %}Sumatoria Ponderada{% elif instrumento.instrumento.calculo == 'M' %}Mínimo{% elif instrumento.instrumento.calculo == 'P' %}Promedio{% endif %}
             </td>
             <td>
+                {% if version == "E" %}
                 {{instrumento.resultado_empleado}}
+                {% elif version == "S" %}
+                {{instrumento.resultado_supervisor}}
+                {% else %}
+                {{instrumento.resultado_gghh}}
+                {% endif %}
             </td>
             <td>
                 {{instrumento.instrumento.peso}}

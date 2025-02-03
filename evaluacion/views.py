@@ -309,17 +309,19 @@ class ResultadosPorInstrumentoYVersion(View):
                     if(respuesta >= 0):
                         max_relativo += pregunta.peso
                         valor_relativo += respuesta*pregunta.peso/2
+
+                resultado = seccion.resultado_empleado if valor == 'E' else seccion.resultado_supervisor if valor == 'S' else seccion.resultado_final
                 
                 secciones.append(
                     {
                         'nombre': seccion.seccion.titulo(),
                         'peso': seccion.seccion.peso,
                         'max_relativo': max_relativo,
-                        'resultado': seccion.resultado_empleado if valor == 'E' else seccion.resultado_supervisor if valor == 'S' else seccion.resultado_final,
+                        'resultado': resultado,
                         'calculo': seccion.seccion.calculo,
                         'seccion': seccion.seccion,
                         'valor_relativo': valor_relativo,
-                        'valor_ponderado': (float(seccion.seccion.instrumento.peso) * float(max_seccion) / 100) * float(seccion.resultado_empleado / seccion.seccion.peso)  if seccion.seccion.calculo == 'S' else float(seccion.seccion.instrumento.peso) * float(seccion.resultado_empleado),
+                        'valor_ponderado': (float(seccion.seccion.instrumento.peso) * float(max_seccion) / 100) * float(resultado / seccion.seccion.peso)  if seccion.seccion.calculo == 'S' else float(seccion.seccion.instrumento.peso) * float(resultado),
                         'preguntas': []
                     } 
                 )               
@@ -345,7 +347,7 @@ class ResultadosPorInstrumentoYVersion(View):
                 {
                     'secciones': secciones,
                     'instrumento': instrumento,
-                    
+                    'version': valor                    
                 }
             )
 
@@ -390,6 +392,7 @@ class ConsultaEvaluaciones(ListView):
             evaluado=self.request.user.datos_personal.get(activo=True)
         )
 
+# VISTAS SUPERVISIÓN
 class RevisionSupervisados(PeriodoContextMixin, ListView):
     template_name = "evaluacion/partials/lista_evaluaciones_supervisores.html"
     model = DatosPersonal
@@ -429,7 +432,6 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
     def get_queryset(self):
         return super().get_queryset().filter(evaluado__pk=self.kwargs['pk'])
 
-# VISTAS SUPERVISIÓN
 class FormularioInstrumentoSupervisor(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     estado = "S"
     template_name = "evaluacion/partials/formulario_supervisor.html"
@@ -636,3 +638,26 @@ class LogrosYMetasSupervisor(MetasEmpleado):
             return qs
         else:
             return evaluacion.logros_y_metas.filter(periodo="P")
+        
+class EnviarEvaluacionGerente(View):
+    def post(self, request, pk):
+        evaluacion = Evaluacion.objects.get(pk=pk)
+
+        print(evaluacion.resultados.filter(resultado_supervisor__isnull=False))
+        print(evaluacion.formulario.instrumentos.count())
+        print(evaluacion.formaciones.filter(anadido_por = "S").count())
+        print(evaluacion.logros_y_metas.filter(anadido_por = "S").count())
+
+        if(evaluacion.estado == 'S' and (
+            evaluacion.resultados.filter(resultado_supervisor__isnull=False).count() == evaluacion.formulario.instrumentos.count() and
+            evaluacion.formaciones.filter(anadido_por = "S").count() and evaluacion.logros_y_metas.filter(anadido_por = "S").count()
+        )):
+            evaluacion.estado = 'G'
+            evaluacion.fecha_revision = datetime.datetime.now()
+            evaluacion.comentario_supervisor = request.POST.get('comentarios')
+            evaluacion.save()
+
+            messages.success(request, f"Ha sido enviada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()}")
+            return redirect('dashboard')
+        
+        return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
