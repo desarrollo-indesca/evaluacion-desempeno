@@ -19,6 +19,7 @@ class ComenzarEvaluacion(View):
 
         if(evaluacion.estado == 'P'):
             evaluacion.estado = 'E'
+            evaluacion.fecha_inicio = datetime.datetime.now()
             evaluacion.save()
             return redirect('dashboard')
         
@@ -642,11 +643,6 @@ class LogrosYMetasSupervisor(MetasEmpleado):
 class EnviarEvaluacionGerente(View):
     def post(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
-
-        print(evaluacion.resultados.filter(resultado_supervisor__isnull=False))
-        print(evaluacion.formulario.instrumentos.count())
-        print(evaluacion.formaciones.filter(anadido_por = "S").count())
-        print(evaluacion.logros_y_metas.filter(anadido_por = "S").count())
 
         if(evaluacion.estado == 'S' and (
             evaluacion.resultados.filter(resultado_supervisor__isnull=False).count() == evaluacion.formulario.instrumentos.count() and

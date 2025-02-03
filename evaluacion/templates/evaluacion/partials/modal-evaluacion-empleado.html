@@ -36,15 +36,19 @@
                 </tr>
                 <tr>
                     <th>Fecha de Inicio</th>
-                    <td class="text-center">{{evaluacion.fecha_envio|default:'-'}}</td>
+                    <td class="text-center">{{evaluacion.fecha_inicio|default:'-'}}</td>
                 </tr>
                 <tr>
                     <th>Fecha Envío a Supervisor</th>
-                    <td class="text-center">{{evaluacion.fecha_fin|default:'-'}}</td>
+                    <td class="text-center">{{evaluacion.fecha_envio|default:'-'}}</td>
                 </tr>
                 <tr>
                     <th>Fecha Revisión por Supervisor</th>
                     <td class="text-center">{{evaluacion.fecha_revision|default:'-'}}</td>
+                </tr>
+                <tr>
+                    <th>Fecha Entrega a Gestión Humana</th>
+                    <td class="text-center">{{evaluacion.fecha_entrega|default:'-'}}</td>
                 </tr>
                 <tr>
                     <th>Fecha Aprobación</th>
@@ -105,7 +109,7 @@
 
         {% if finish %}
         <div class="my-5 text-left">
-            <form class="flex justify-center items-center flex-col" hx-post="{% url 'finalizar_evaluacion' pk=evaluacion.pk %}" hx-target="body">
+            <form class="flex justify-center items-center flex-col" hx-confirm="¿Está seguro que desea enviar la evaluación? No podrá modificarla directamente de nuevo." hx-post="{% url 'finalizar_evaluacion' pk=evaluacion.pk %}" hx-target="body">
                 <div class="my-3">
                     <input type="checkbox" name="aceptar" id="aceptar" class="checkbox" required>
                     <label for="aceptar">
@@ -117,7 +121,7 @@
                     </label>
                 </div>
                 <div class="w-full">
-                    <input type="text" class="w-full input input-bordered"placeholder="Ingrese sus comentarios sobre los resultados" name="comentarios">
+                    <input type="text" class="w-full input input-bordered" placeholder="Ingrese sus comentarios sobre los resultados" name="comentarios">
                 </div>
                 <div class="flex justify-center my-3">
                     <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la evaluación a mi supervisor</button>

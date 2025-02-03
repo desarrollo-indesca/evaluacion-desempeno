@@ -91,11 +91,11 @@ class Opciones(models.Model):
 class Evaluacion(models.Model):
     periodo = models.ForeignKey(Periodo, on_delete=models.CASCADE, related_name="evaluaciones")
     evaluado = models.ForeignKey(DatosPersonal, on_delete=models.CASCADE, related_name="evaluaciones")
-    fecha_inicio = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    fecha_fin = models.DateTimeField(null=True, blank=True)
-    fecha_revision = models.DateTimeField(null=True, blank=True)
-    fecha_envio = models.DateTimeField(null=True, blank=True)
-    fecha_aprobacion = models.DateTimeField(null=True, blank=True)
+    fecha_inicio = models.DateTimeField(auto_now_add=True, null=True, blank=True) # Inicio de la Evaluación
+    fecha_envio = models.DateTimeField(null=True, blank=True) # Envio al Supervisor
+    fecha_revision = models.DateTimeField(null=True, blank=True) # Revisión
+    fecha_entrega = models.DateTimeField(null=True, blank=True) # Entrega GH
+    fecha_fin = models.DateTimeField(null=True, blank=True) # Fecha al aprobar/rechazar
     formulario = models.ForeignKey(Formulario, on_delete=models.CASCADE, related_name="evaluaciones")
     estado = models.CharField(max_length=1, choices=ESTADOS, default="P")
     comentario_evaluado = models.TextField(null=True, blank=True) 
