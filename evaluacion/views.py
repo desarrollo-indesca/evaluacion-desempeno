@@ -172,6 +172,9 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     template_name = "evaluacion/formacion_empleado.html"
     estado = "E"
 
+    def get_queryset(self, evaluacion):
+        return evaluacion.formaciones.all()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -182,9 +185,10 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
         ) if not evaluacion.formaciones.exists() else modelformset_factory(
             Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo'),
             extra = 0
-        )(queryset = evaluacion.formaciones.all(), initial=[{'competencias_tecnicas': [c.pk for c in form.competencias.filter(tipo='T')]} for form in evaluacion.formaciones.all()])
+        )(queryset = self.get_queryset(evaluacion), initial=[{'competencias_tecnicas': [c.pk for c in form.competencias.filter(tipo='T')]} for form in evaluacion.formaciones.all()])
 
         context['titulo'] = "Detección de Necesidades de Formación"
+        context['evaluacion'] = evaluacion
 
         return context
     
@@ -592,3 +596,46 @@ class RevisionEvaluacion(PeriodoContextMixin, EvaluacionEstadoMixin, View):
         context['logros_y_metas'] = evaluacion.logros_y_metas.filter(anadido_por="S")
 
         return context
+    
+class FormacionSupervisor(FormacionEmpleado):
+    template_name = "evaluacion/formacion_empleado.html"
+    estado = "S"
+
+    def get_queryset(self, evaluacion):
+        qs = evaluacion.formaciones.filter(anadido_por = "S", activo = True)
+        
+        if(qs.exists()):
+            return qs
+        else:
+            return evaluacion.formaciones.filter(activo = True)
+        
+    def post(self, request, pk):
+        evaluacion = Evaluacion.objects.get(pk=pk)
+
+        formset = modelformset_factory(
+            Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo', 'competencias'),
+        )(request.POST)
+
+        if formset.is_valid():
+            with transaction.atomic():
+                evaluacion.formaciones.filter(anadido_por = "S").delete()
+                for form in formset:
+                    form.instance.evaluacion = evaluacion
+                    form.instance.anadido_por = "S"
+                    form.save()
+
+                    competencias_tecnicas = form.cleaned_data.get('competencias_tecnicas')
+                    competencias_genericas = form.cleaned_data.get('competencias_genericas')
+
+                    for competencia in competencias_tecnicas:
+                        form.instance.competencias.add(competencia)
+
+                    for competencia in competencias_genericas:
+                        form.instance.competencias.add(competencia)
+
+        else:
+            print(formset.errors)
+            raise Exception(str(formset.errors))
+
+        messages.success(request, 'Respuestas de Formación almacenadas correctamente.')
+        return redirect('revisar_evaluacion', pk=evaluacion.pk)

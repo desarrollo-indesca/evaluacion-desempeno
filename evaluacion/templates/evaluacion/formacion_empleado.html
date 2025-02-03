@@ -15,7 +15,7 @@
 </div>
 <hr>
 
-<form method="post">
+<form method="post" hx-post="{% url 'formacion_supervisado' pk=evaluacion.pk %}" hx-target="closest .tab-content">
     {% csrf_token %}
     <div class="my-4">       
             <div class="my-2 max-w-screen">
