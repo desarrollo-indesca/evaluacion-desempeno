@@ -675,4 +675,21 @@ class EnviarEvaluacionGerente(View):
 
 # OTROS
 class GenerarModal(View):
-    pass
+    def get_context_data(self, **kwargs):
+        tipo = self.request.GET['version']
+        evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+
+        context = {
+            'tipo': tipo,
+            'evaluacion': evaluacion,
+            'id': self.kwargs['pk'],
+        }
+
+        return context
+
+    def get(self, request, pk, *args, **kwargs):
+        return render(
+            request=request, 
+            template_name='evaluacion/partials/modal-evaluacion-empleado.html',
+            context=self.get_context_data()
+        )

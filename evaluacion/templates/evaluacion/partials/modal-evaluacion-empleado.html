@@ -3,7 +3,7 @@
     <div class="modal-box w-11/12 max-w-5xl">
         <div class="flex justify-center items-center">
             <h3 class="text-lg font-bold">Evaluación &nbsp;</h3>
-            <select name="version" id="version">
+            <select name="version" id="version" hx-select=".modal" hx-target="closest .modal" hx-trigger="change" hx-get="{% url 'generar_modal' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML">
                 {% if tipo != 'S' %}
                 <option value="E">Empleado</option>
                 {% if include_others %}
