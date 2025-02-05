@@ -29,6 +29,10 @@
                     </ul>
                 </td>
             </tr>
+        {% empty %}
+            <tr>
+                <th colspan="5">No se han cargado formaciones.</th>
+            </tr>
         {% endfor %}
     </tbody>
 </table>

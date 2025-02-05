@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponseForbidden
 from datetime import date
 from core.models import *
-from evaluacion.models import Evaluacion
+from evaluacion.models import Evaluacion, Instrumento
 
 # Create your views here.
 
@@ -29,9 +29,10 @@ class EvaluacionEstadoMixin():
     def get(self, request, **kwargs):
         if kwargs.get('evaluacion'):
             evaluacion = Evaluacion.objects.get(pk=kwargs.get('evaluacion'))
-        elif(kwargs.get('pk')):
-            evaluacion = Evaluacion.objects.get(pk=kwargs.get('pk'))
-        else:
+        elif kwargs.get('pk'):
+            evaluacion = Evaluacion.objects.get(pk=kwargs.get('pk')) if kwargs.get('pk') else Evaluacion.objects.get(evaluado=self.request.user.datos_personal.get(activo=True), periodo=self.get_periodo())
+        
+        if(not evaluacion):
             evaluacion = Evaluacion.objects.get(evaluado=self.request.user.datos_personal.get(activo=True), periodo=self.get_periodo())
 
         if(evaluacion.estado == self.estado):

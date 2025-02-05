@@ -1,6 +1,6 @@
 from django.views import View
 from django.views.generic import ListView
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
 from django.forms import modelformset_factory
 from django.shortcuts import render, redirect
 from django.db import transaction, models 
@@ -204,7 +204,7 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 
         if formset.is_valid():
             with transaction.atomic():
-                evaluacion.formaciones.all().delete()
+                evaluacion.formaciones.filter(anadido_por=self.anadido_por).delete()
                 for form in formset:
                     form.instance.evaluacion = evaluacion
                     form.instance.anadido_por = self.anadido_por
@@ -218,7 +218,6 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 
                     for competencia in competencias_genericas:
                         form.instance.competencias.add(competencia)
-
         else:
             print(formset.errors)
             raise Exception(str(formset.errors))
@@ -308,56 +307,59 @@ class ResultadosPorInstrumentoYVersion(View):
             valor = request.GET['version']
 
             secciones = []
-            for seccion in instrumento.resultados_secciones.all(): 
-                max_seccion = seccion.seccion.preguntas.aggregate(models.Sum('peso')).get('peso__sum')
-                max_relativo = 0 
-                valor_relativo = 0               
-                for pregunta in seccion.seccion.preguntas.all():
-                    respuesta = pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado if valor == 'E' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_supervisor if valor == 'S' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_final
-                    if(respuesta >= 0):
-                        max_relativo += pregunta.peso
-                        valor_relativo += respuesta*pregunta.peso/2
+            try:
+                for seccion in instrumento.resultados_secciones.all(): 
+                    max_seccion = seccion.seccion.preguntas.aggregate(models.Sum('peso')).get('peso__sum')
+                    max_relativo = 0 
+                    valor_relativo = 0               
+                    for pregunta in seccion.seccion.preguntas.all():
+                        respuesta = pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado if valor == 'E' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_supervisor if valor == 'S' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_definitiva
+                        if(respuesta != None and respuesta >= 0):
+                            max_relativo += pregunta.peso
+                            valor_relativo += respuesta*pregunta.peso/2
 
-                resultado = seccion.resultado_empleado if valor == 'E' else seccion.resultado_supervisor if valor == 'S' else seccion.resultado_final
-                
-                secciones.append(
-                    {
-                        'nombre': seccion.seccion.titulo(),
-                        'peso': seccion.seccion.peso,
-                        'max_relativo': max_relativo,
-                        'resultado': resultado,
-                        'calculo': seccion.seccion.calculo,
-                        'seccion': seccion.seccion,
-                        'valor_relativo': valor_relativo,
-                        'valor_ponderado': (float(seccion.seccion.instrumento.peso) * float(max_seccion) / 100) * float(resultado / seccion.seccion.peso)  if seccion.seccion.calculo == 'S' else float(seccion.seccion.instrumento.peso) * float(resultado),
-                        'preguntas': []
-                    } 
-                )               
-
-                for pregunta in seccion.seccion.preguntas.all():
-                    secciones[-1]['preguntas'].append(
+                    resultado = seccion.resultado_empleado if valor == 'E' else seccion.resultado_supervisor if valor == 'S' else seccion.resultado_final
+                    
+                    secciones.append(
                         {
-                            'pregunta': pregunta.pregunta,
-                            'peso': pregunta.peso,
-                            'respuesta_ponderada': pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado / 2 * float(pregunta.peso) if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,
-                            'respuesta': next((opcion for opcion in pregunta.opciones.all() if opcion.valor == (pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado if valor == 'E' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_supervisor if valor == 'S' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_final)), None),
-                            'comentario': {
-                                'empleado': pregunta.respuestas.get(evaluacion=evaluacion).comentario_empleado if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,
-                                'supervisor': pregunta.respuestas.get(evaluacion=evaluacion).comentario_supervisor if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,
-                                'gghh': pregunta.respuestas.get(evaluacion=evaluacion).comentario_gghh if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,   
-                            },
-                        }
-                    )
+                            'nombre': seccion.seccion.titulo(),
+                            'peso': seccion.seccion.peso,
+                            'max_relativo': max_relativo,
+                            'resultado': resultado,
+                            'calculo': seccion.seccion.calculo,
+                            'seccion': seccion.seccion,
+                            'valor_relativo': valor_relativo,
+                            'valor_ponderado': ((float(seccion.seccion.instrumento.peso) * float(max_seccion) / 100) * float(resultado / seccion.seccion.peso)  if seccion.seccion.calculo == 'S' else float(seccion.seccion.instrumento.peso) * float(resultado)) if resultado else '-',
+                            'preguntas': []
+                        } 
+                    )               
 
-            return render(
-                request, 
-                self.template_name,
-                {
-                    'secciones': secciones,
-                    'instrumento': instrumento,
-                    'version': valor                    
-                }
-            )
+                    for pregunta in seccion.seccion.preguntas.all():
+                        secciones[-1]['preguntas'].append(
+                            {
+                                'pregunta': pregunta.pregunta,
+                                'peso': pregunta.peso,
+                                'respuesta_ponderada': pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado / 2 * float(pregunta.peso) if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,
+                                'respuesta': next((opcion for opcion in pregunta.opciones.all() if opcion.valor == (pregunta.respuestas.get(evaluacion=evaluacion).respuesta_empleado if valor == 'E' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_supervisor if valor == 'S' else pregunta.respuestas.get(evaluacion=evaluacion).respuesta_definitiva)), None),
+                                'comentario': {
+                                    'empleado': pregunta.respuestas.get(evaluacion=evaluacion).comentario_empleado if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,
+                                    'supervisor': pregunta.respuestas.get(evaluacion=evaluacion).comentario_supervisor if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,
+                                    'gghh': pregunta.respuestas.get(evaluacion=evaluacion).comentario_gghh if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None,   
+                                },
+                            }
+                        )
+
+                return render(
+                    request, 
+                    self.template_name,
+                    {
+                        'secciones': secciones,
+                        'instrumento': instrumento,
+                        'version': valor                    
+                    }
+                )
+            except:
+                return HttpResponse("No se han cargado resultados en esta versión.")
 
 class ConsultaFormacionesEvaluacion(View):
     template_name = "evaluacion/partials/consulta_formacion.html"
@@ -683,6 +685,7 @@ class GenerarModal(View):
             'tipo': tipo,
             'evaluacion': evaluacion,
             'id': self.kwargs['pk'],
+            'include_others': True
         }
 
         return context

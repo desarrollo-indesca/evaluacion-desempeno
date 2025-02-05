@@ -44,7 +44,13 @@
             <td>{{evaluacion.estado_largo}}</td>
             <td>
                 <label for="modal-{{evaluacion.pk}}" class="btn btn-error">Revisar Evaluación</label>
+                {% if evaluacion.estado == 'E' or evaluacion.estatus == 'S' %}
                 {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="E" %}
+                {% elif evaluacion.estado == 'G' or evaluacion.estatus == 'H' %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="S" %}
+                {% elif evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="G" %}
+                {% endif %}
             </td>
         </tr>
         {% empty %}

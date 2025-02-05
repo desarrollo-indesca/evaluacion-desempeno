@@ -3,16 +3,21 @@
     <div class="modal-box w-11/12 max-w-5xl">
         <div class="flex justify-center items-center">
             <h3 class="text-lg font-bold">Evaluación &nbsp;</h3>
-            <select name="version" id="version" hx-select=".modal" hx-target="closest .modal" hx-trigger="change" hx-get="{% url 'generar_modal' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML">
-                {% if tipo != 'S' %}
-                <option value="E">Empleado</option>
-                {% if include_others %}
-                <option value="S">Supervisor</option>
-                <option value="H">Gestión Humana</option>
-                {% endif %}
+            <select name="version" id="version" hx-select=".modal-box" hx-target="closest .modal-box" hx-trigger="change" hx-get="{% url 'generar_modal' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML">
+                {% if not include_others and tipo == 'H' %}
+                <option value="H" {% if tipo == 'H' %}selected{% endif %}>Gestión Humana</option>
+                {% elif not include_others and tipo == 'S' %}
+                <option value="S" {% if tipo == 'S' %}selected{% endif %}>Supervisor</option>
                 {% else %}
-                <option value="S">Supervisor</option>
-                <option value="E">Empleado</option>
+                <option value="E" {% if tipo == 'E' %}selected{% endif %}>Empleado</option>
+                {% if include_others %}
+                {% if tipo == "S" or evaluacion.estado == "S" or evaluacion.estado == "G" or evaluacion.estado == "H" or evaluacion.estatus == "A" or evaluacion.estatus == "R" %}
+                <option value="S" {% if tipo == 'S' %}selected{% endif %}>Supervisor</option>
+                {% endif %}
+                {% if tipo == "H" or evaluacion.estado == "H" or evaluacion.estatus == "A" or evaluacion.estatus == "R" %}
+                <option value="H" {% if tipo == 'H' %}selected{% endif %}>Gestión Humana</option>
+                {% endif %}
+                {% endif %}
                 {% endif %}
             </select>
         </div>
@@ -97,14 +102,22 @@
             {% endif %}
         </div>
 
+        {% if evaluacion.total %}
         {% if evaluacion.estado != 'P' and evaluacion.estado != 'R' %}
         <div class="stats shadow">
             <div class="stat bg-gray-900 text-white">
               <div class="stat-title text-white">Resultado de la Evaluación</div>
-              <div class="stat-value">{{evaluacion.total|floatformat:2}}</div>
+              <div class="stat-value">
+                {% if tipo == "E" %}
+                {{evaluacion.total|floatformat:2}}
+                {% elif tipo == "S" %}
+                {{evaluacion.total_supervisor|floatformat:2}}
+                {% endif %}
+              </div>
               <div class="stat-desc text-white">de {{evaluacion.peso|floatformat:2}} puntos.</div>
             </div>
         </div>
+        {% endif %}
         {% endif %}
 
         {% if finish %}

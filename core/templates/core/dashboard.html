@@ -100,7 +100,13 @@
                                         <tr>
                                             <td colspan="2" class="text-center">
                                                 <label for="modal-evaluacion" class="btn btn-error">Ver Evaluación</label>
+                                                {% if evaluacion.estado == 'S' %}
                                                 {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id="evaluacion" tipo="E" %}
+                                                {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' %}
+                                                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id="evaluacion" tipo="S" %}
+                                                {% elif evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
+                                                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id="evaluacion" tipo="G" %}
+                                                {% endif %}
                                             </td>
                                         </tr>
                                     </tbody>
