@@ -5,7 +5,7 @@
 {% else %}
 <div class="flex justify-center items-center my-3">
     <div class="w-1/3 text-center">
-        <a href="#" class="btn btn-teal-500" hx-trigger="click" hx-target="closest .tab-content" hx-get="{% url 'consultar_supervisados' %}">Regresar</a>
+        <a href="#" class="btn btn-teal-500" hx-trigger="click" hx-target="closest .tab-content" hx-get="{{previous_url}}">Regresar</a>
     </div>
     <div class="w-1/3">
         <h3 class="text-center text-2xl">Evaluaciones de: {{datos_personal.user.get_full_name.upper}}</h3>

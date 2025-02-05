@@ -21,5 +21,7 @@ urlpatterns = [
     path('supervisados/metas/<int:pk>/', LogrosYMetasSupervisor.as_view(), name="metas_supervisado"),
     path('supervisados/enviar/<int:pk>/', EnviarEvaluacionGerente.as_view(), name="enviar_gerente"),
 
+    path('gerencia/', RevisionGerencia.as_view(), name="consultar_gerencia"),
+
     path("modal/<int:pk>/", GenerarModal.as_view(), name="generar_modal")
 ]

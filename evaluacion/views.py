@@ -404,7 +404,6 @@ class ConsultaEvaluaciones(ListView):
 
 # VISTAS SUPERVISIÓN
 class RevisionSupervisados(PeriodoContextMixin, ListView):
-    template_name = "evaluacion/partials/lista_evaluaciones_supervisores.html"
     model = DatosPersonal
     template_name = "evaluacion/partials/revision_supervisados.html"
     filter_class = DatosPersonalFilter
@@ -429,12 +428,19 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
         context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
         context['datos_personal'] = DatosPersonal.objects.get(pk=self.kwargs['pk'])
         context['supervisado'] = True
+        context['previous_url'] = self.GET.get('previous_url')
         return context
     
     def get(self, request, *args, **kwargs):
-        if(request.user.datos_personal.get(
-                activo=True
-            ).supervisados.filter(pk=self.kwargs['pk']).exists()):
+        """
+        Verificar si el usuario puede ver esta evaluación
+        """
+        datos_personal = request.user.datos_personal.get(activo=True)
+        evaluado = DatosPersonal.objects.get(pk=self.kwargs['pk'])
+
+        if (datos_personal.supervisados.filter(pk=evaluado.pk).exists()
+                or request.user.is_superuser
+                or (request.user.is_staff and datos_personal.gerencia == evaluado.gerencia)):
             return super().get(request, *args, **kwargs)
         else:
             return HttpResponseForbidden()
@@ -674,6 +680,37 @@ class EnviarEvaluacionGerente(View):
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
 
 # VISTAS DE GERENCIA
+class RevisionGerencia(PeriodoContextMixin, ListView):
+    model = DatosPersonal
+    template_name = "evaluacion/partials/revision_supervisados.html"
+    filter_class = DatosPersonalFilter
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return HttpResponseForbidden("Acceso denegado: solo los gerentes pueden acceder a esta vista.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
+        context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
+        return context
+
+    def get_queryset(self):
+        return super().get_queryset().filter(gerencia=self.request.user.datos_personal.get(activo=True).gerencia, activo=True)
+
+class EnviarEvaluacionesGestionHumana(View):
+    # TODO: Validar que todas las evaluaciones esten en estado 'G' y funcione
+    def post(self, request):
+        periodo_actual = Periodo.objects.get(activo=True)
+        evaluaciones = Evaluacion.objects.filter(periodo=periodo_actual, estado='G')
+
+        if evaluaciones.count() == Evaluacion.objects.filter(periodo=periodo_actual).count():
+            evaluaciones.update(estado='H', fecha_revision=datetime.datetime.now())
+            messages.success(request, f"Ha sido enviada la evaluación de todos los empleados de la gerencia para el período {periodo_actual.nombre} a la Gerencia de Gestión Humana.")
+            return redirect('dashboard')
+        
+        return HttpResponseForbidden("No todas las evaluaciones están en el estado 'G'")
 
 # OTROS
 class GenerarModal(View):
