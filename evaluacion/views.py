@@ -715,6 +715,8 @@ class EnviarEvaluacionesGestionHumana(View):
         
         return HttpResponseForbidden("No todas las evaluaciones están en estado ENVIADO A LA GERENCIA.")
 
+# VISTAS DE GESTIÓN HUMANA / SUPERUSUARIO
+
 # OTROS
 class GenerarModal(View):
     def get_context_data(self, **kwargs):

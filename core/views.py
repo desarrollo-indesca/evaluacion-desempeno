@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponseForbidden
 from datetime import date
 from core.models import *
-from evaluacion.models import Evaluacion, Instrumento
+from evaluacion.models import Evaluacion
 
 # Create your views here.
 
@@ -98,3 +98,31 @@ class Dashboard(LoginRequiredMixin, View, PeriodoContextMixin):
 
     def get(self, request):
         return render(request, 'core/dashboard.html', context=self.get_context_data())
+
+class PanelDeControl(LoginRequiredMixin, View, PeriodoContextMixin):
+    template_name = 'core/panel_control.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        evaluaciones_periodo = Evaluacion.objects.filter(periodo=context['periodo'])
+        evaluaciones = {
+            'evaluaciones_pendientes': {'count': evaluaciones_periodo.filter(estado='P').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='P').count() / evaluaciones_periodo.count()) * 100},
+            'evaluaciones_iniciadas': {'count': evaluaciones_periodo.filter(estado='E').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='E').count() / evaluaciones_periodo.count()) * 100},
+            'evaluaciones_enviadas_supervisor': {'count': evaluaciones_periodo.filter(estado='S').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='S').count() / evaluaciones_periodo.count()) * 100},
+            'evaluaciones_revisadas': {'count': evaluaciones_periodo.filter(estado='G').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='G').count() / evaluaciones_periodo.count()) * 100},
+            'evaluaciones_enviadas_gghh': {'count': evaluaciones_periodo.filter(estado='H').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='H').count() / evaluaciones_periodo.count()) * 100},
+            'evaluaciones_aprobadas': {'count': evaluaciones_periodo.filter(estado='A').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='A').count() / evaluaciones_periodo.count()) * 100},
+            'evaluaciones_rechazadas': {'count': evaluaciones_periodo.filter(estado='R').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='R').count() / evaluaciones_periodo.count()) * 100},
+        }
+        context['evaluaciones'] = evaluaciones
+
+        context['personal_evaluado'] = DatosPersonal.objects.filter(activo=True, evaluaciones__periodo=context['periodo']).count()
+        context['personal_finalizado'] = DatosPersonal.objects.filter(activo=True, evaluaciones__periodo=context['periodo'], evaluaciones__estado='A').count()
+        context['porcentaje_finalizado'] = (context['personal_finalizado'] / context['personal_evaluado']) * 100
+        return context
+
+    def get(self, request):
+        if not request.user.is_superuser:
+            return redirect('dashboard')
+        
+        return render(request, self.template_name, self.get_context_data())
