@@ -715,6 +715,17 @@ class EnviarEvaluacionesGestionHumana(View):
         
         return HttpResponseForbidden("No todas las evaluaciones están en estado ENVIADO A LA GERENCIA.")
 
+class DevolverEvaluacionSupervisor(View):
+    def post(self, request, pk):
+        if(request.user.is_staff):
+            evaluacion = Evaluacion.objects.get(pk=pk, estado='G')
+            evaluacion.estado = 'S'
+            evaluacion.save()
+            messages.success(request, "La evaluación ha sido devuelta al estado 'Revisión por Supervisor'.")
+            return redirect('consultar_gerencia')
+        else:
+            return HttpResponseForbidden("No se puede devolver la evaluación al estado 'S'. Por favor comunique al supervisor las rrazones para la devolución.")
+
 # VISTAS DE GESTIÓN HUMANA / SUPERUSUARIO
 
 # OTROS
