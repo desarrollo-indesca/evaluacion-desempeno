@@ -14,7 +14,7 @@
                 {% if tipo == "S" or evaluacion.estado == "S" or evaluacion.estado == "G" or evaluacion.estado == "H" or evaluacion.estatus == "A" or evaluacion.estatus == "R" %}
                 <option value="S" {% if tipo == 'S' %}selected{% endif %}>Supervisor</option>
                 {% endif %}
-                {% if tipo == "H" or evaluacion.estado == "H" or evaluacion.estatus == "A" or evaluacion.estatus == "R" %}
+                {% if tipo == "H" or evaluacion.estado == "A" or evaluacion.estado == "R" %}
                 <option value="H" {% if tipo == 'H' %}selected{% endif %}>Gestión Humana</option>
                 {% endif %}
                 {% endif %}

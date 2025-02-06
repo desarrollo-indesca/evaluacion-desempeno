@@ -22,6 +22,7 @@ urlpatterns = [
     path('supervisados/enviar/<int:pk>/', EnviarEvaluacionGerente.as_view(), name="enviar_gerente"),
 
     path('gerencia/', RevisionGerencia.as_view(), name="consultar_gerencia"),
+    path('gerencia/revisar/', EnviarEvaluacionesGestionHumana.as_view(), name="enviar_gghh"),
 
     path("modal/<int:pk>/", GenerarModal.as_view(), name="generar_modal")
 ]

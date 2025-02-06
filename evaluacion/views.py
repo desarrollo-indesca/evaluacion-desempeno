@@ -428,7 +428,8 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
         context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
         context['datos_personal'] = DatosPersonal.objects.get(pk=self.kwargs['pk'])
         context['supervisado'] = True
-        context['previous_url'] = self.GET.get('previous_url')
+        print(self.request.GET)
+        context['previous_url'] = self.request.GET.get('previous_url')
         return context
     
     def get(self, request, *args, **kwargs):
@@ -694,23 +695,25 @@ class RevisionGerencia(PeriodoContextMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
+        context['url_regreso'] = f'evaluacion/gerencia/'
+        context['puede_enviarse_gghh'] = self.request.user.is_staff and (Evaluacion.objects.filter(periodo=self.get_periodo(), estado='G', evaluado__gerencia=self.request.user.datos_personal.get(activo=True).gerencia).count() == self.get_queryset().count())
+        context['gerencia'] = self.request.user.datos_personal.get(activo=True).gerencia
         return context
 
     def get_queryset(self):
         return super().get_queryset().filter(gerencia=self.request.user.datos_personal.get(activo=True).gerencia, activo=True)
 
 class EnviarEvaluacionesGestionHumana(View):
-    # TODO: Validar que todas las evaluaciones esten en estado 'G' y funcione
     def post(self, request):
         periodo_actual = Periodo.objects.get(activo=True)
-        evaluaciones = Evaluacion.objects.filter(periodo=periodo_actual, estado='G')
+        evaluaciones = Evaluacion.objects.filter(periodo=periodo_actual, estado='G', evaluado__gerencia=request.user.datos_personal.get(activo=True).gerencia)
 
-        if evaluaciones.count() == Evaluacion.objects.filter(periodo=periodo_actual).count():
+        if evaluaciones.count() == DatosPersonal.objects.filter(gerencia=request.user.datos_personal.get(activo=True).gerencia, activo=True).count():
             evaluaciones.update(estado='H', fecha_revision=datetime.datetime.now())
-            messages.success(request, f"Ha sido enviada la evaluación de todos los empleados de la gerencia para el período {periodo_actual.nombre} a la Gerencia de Gestión Humana.")
-            return redirect('dashboard')
+            messages.success(request, f"Ha sido enviada la evaluación de todos los empleados de la gerencia para el período {periodo_actual.fecha_inicio} - {periodo_actual.fecha_fin} a la Gerencia de Gestión Humana.")
+            return redirect('consultar_gerencia')
         
-        return HttpResponseForbidden("No todas las evaluaciones están en el estado 'G'")
+        return HttpResponseForbidden("No todas las evaluaciones están en estado ENVIADO A LA GERENCIA.")
 
 # OTROS
 class GenerarModal(View):
