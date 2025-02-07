@@ -13,6 +13,35 @@ from core.views import PeriodoContextMixin, EvaluacionEstadoMixin
 
 # Create your views here.
 
+class EscalafonMixin():
+    def calcular_escalafon(self, resultado_instrumento: ResultadoInstrumento):
+        niveles_escalafon = resultado_instrumento.instrumento.escalafon.niveles_escalafon.all()
+        calculo = resultado_instrumento.instrumento.calculo_escalafon
+
+        if(calculo == 'M'):
+            nivel_alcanzado = min(seccion.resultado_empleado for seccion in resultado_instrumento.resultados_secciones.all())
+        elif(calculo == 'P'):
+            nivel_alcanzado = sum(seccion.resultado_empleado for seccion in resultado_instrumento.resultados_secciones.all()) / len(resultado_instrumento.resultados_secciones.all())
+        elif(calculo == 'S'):
+            nivel_alcanzado = sum(seccion.resultado_empleado * seccion.seccion.peso for seccion in resultado_instrumento.resultados_secciones.all()) / resultado_instrumento.instrumento.peso
+
+        highest_nivel = None
+        for nivel in niveles_escalafon:
+            if highest_nivel is None or nivel_alcanzado > highest_nivel.valor_requerido:
+                highest_nivel = nivel
+
+        if highest_nivel:
+            ResultadoEscalafon.objects.filter(
+                evaluacion=resultado_instrumento.evaluacion,
+                asignado_por="E"
+            ).delete()
+
+            ResultadoEscalafon.objects.create(
+                evaluacion=resultado_instrumento.evaluacion,
+                escalafon=highest_nivel,
+                asignado_por=self.estado
+            )
+
 class ComenzarEvaluacion(View):
     def post(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
@@ -41,7 +70,7 @@ class FinalizarEvaluacion(View):
         
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
 
-class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
+class FormularioInstrumentoEmpleado(PeriodoContextMixin, EscalafonMixin, EvaluacionEstadoMixin, View):
     template_name = 'evaluacion/formulario_generico.html'
     estado = "E"
 
@@ -83,34 +112,6 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, 
 
         return context
     
-    def calcular_escalafon(self, resultado_instrumento: ResultadoInstrumento):
-        niveles_escalafon = resultado_instrumento.instrumento.escalafon.niveles_escalafon.all()
-        calculo = resultado_instrumento.instrumento.calculo_escalafon
-
-        if(calculo == 'M'):
-            nivel_alcanzado = min(seccion.resultado_empleado for seccion in resultado_instrumento.resultados_secciones.all())
-        elif(calculo == 'P'):
-            nivel_alcanzado = sum(seccion.resultado_empleado for seccion in resultado_instrumento.resultados_secciones.all()) / len(resultado_instrumento.resultados_secciones.all())
-        elif(calculo == 'S'):
-            nivel_alcanzado = sum(seccion.resultado_empleado * seccion.seccion.peso for seccion in resultado_instrumento.resultados_secciones.all()) / resultado_instrumento.instrumento.peso
-
-        highest_nivel = None
-        for nivel in niveles_escalafon:
-            if highest_nivel is None or nivel_alcanzado > highest_nivel.valor_requerido:
-                highest_nivel = nivel
-
-        if highest_nivel:
-            ResultadoEscalafon.objects.filter(
-                evaluacion=resultado_instrumento.evaluacion,
-                asignado_por="E"
-            ).delete()
-
-            ResultadoEscalafon.objects.create(
-                evaluacion=resultado_instrumento.evaluacion,
-                escalafon=highest_nivel,
-                asignado_por="E"
-            )
-
     def post(self, request, pk):
         instrumento = Instrumento.objects.get(pk=pk)
 
@@ -386,10 +387,12 @@ class ResultadosPorInstrumentoYVersion(View):
                     {
                         'secciones': secciones,
                         'instrumento': instrumento,
-                        'version': valor                    
+                        'version': valor,
+                        'escalafon_obtenido': ResultadoEscalafon.objects.get(evaluacion=evaluacion, asignado_por = valor) if instrumento.instrumento.escalafon else None                 
                     }
                 )
-            except:
+            except Exception as e:
+                print(str(e))
                 return HttpResponse("No se han cargado resultados en esta versión.")
 
 class ConsultaFormacionesEvaluacion(View):
@@ -480,7 +483,7 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
     def get_queryset(self):
         return super().get_queryset().filter(evaluado__pk=self.kwargs['pk'])
 
-class FormularioInstrumentoSupervisor(PeriodoContextMixin, EvaluacionEstadoMixin, View):
+class FormularioInstrumentoSupervisor(PeriodoContextMixin, EscalafonMixin, EvaluacionEstadoMixin, View):
     estado = "S"
     template_name = "evaluacion/partials/formulario_supervisor.html"
 
@@ -617,7 +620,8 @@ class FormularioInstrumentoSupervisor(PeriodoContextMixin, EvaluacionEstadoMixin
                 resultado_instrumento.resultado_supervisor = total_instrumento
                 resultado_instrumento.save()
 
-                print(resultado_instrumento.resultado_supervisor)
+                if(instrumento.escalafon):
+                    self.calcular_escalafon(resultado_instrumento)
         
         messages.success(request, 'Respuestas del Instrumento almacenadas correctamente.')
         return redirect('revisar_evaluacion', pk=evaluacion.pk)

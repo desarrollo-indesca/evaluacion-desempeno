@@ -194,3 +194,6 @@ class ResultadoEscalafon(models.Model):
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="escalafones")
     escalafon = models.ForeignKey(NivelEscalafon, on_delete=models.CASCADE, related_name="escalafones")
     asignado_por = models.CharField(max_length=1, choices=ROLES)
+
+    def __str__(self):
+        return self.escalafon.nivel

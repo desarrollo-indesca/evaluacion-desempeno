@@ -91,5 +91,19 @@
                 {{instrumento.instrumento.peso}}
             </td>
         </tr>
+        {% if instrumento.instrumento.escalafon %}
+        <tr>
+            <tr class="text-center">
+                <td colspan="2">
+                    <b>Nivel de Escalafón</b>
+                </td>
+                <td>
+                    <b>
+                        {{escalafon_obtenido}}
+                    </b>
+                </td>
+            </tr>
+        </tr>
+        {% endif %}
     </tbody>
 </table>

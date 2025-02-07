@@ -72,8 +72,8 @@
         {% if puede_finalizar %}
         <tr>
             <td colspan="4" class="text-center">
-                <label for="modal-evaluacion" class="btn btn-error">Enviar al Gerente del Departamento</label>
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=False finish=True id="evaluacion" tipo="S" %}
+                <label for="modal-revision-eval" class="btn btn-error">Enviar al Gerente del Departamento</label>
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=False finish=True id="revision-eval" tipo="S" %}
             </td>
         </tr>
         {% endif %}
