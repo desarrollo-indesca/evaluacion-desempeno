@@ -19,11 +19,26 @@ class EscalafonMixin():
         calculo = resultado_instrumento.instrumento.calculo_escalafon
 
         if(calculo == 'M'):
-            nivel_alcanzado = min(seccion.resultado_empleado for seccion in resultado_instrumento.resultados_secciones.all())
+            if(self.estado == "E"):
+                nivel_alcanzado = min(seccion.resultado_empleado for seccion in resultado_instrumento.resultados_secciones.all())
+            elif(self.estado == "S"):
+                nivel_alcanzado = min(seccion.resultado_supervisor for seccion in resultado_instrumento.resultados_secciones.all())
+            elif(self.estado == "H"):
+                nivel_alcanzado = min(seccion.resultado_final for seccion in resultado_instrumento.resultados_secciones.all())
         elif(calculo == 'P'):
-            nivel_alcanzado = sum(seccion.resultado_empleado for seccion in resultado_instrumento.resultados_secciones.all()) / len(resultado_instrumento.resultados_secciones.all())
+            if self.estado == "E":
+                nivel_alcanzado = sum(seccion.resultado_empleado for seccion in resultado_instrumento.resultados_secciones.all()) / len(resultado_instrumento.resultados_secciones.all())
+            elif self.estado == "S":
+                nivel_alcanzado = sum(seccion.resultado_supervisor for seccion in resultado_instrumento.resultados_secciones.all()) / len(resultado_instrumento.resultados_secciones.all())
+            elif self.estado == "H":
+                nivel_alcanzado = sum(seccion.resultado_final for seccion in resultado_instrumento.resultados_secciones.all()) / len(resultado_instrumento.resultados_secciones.all())
         elif(calculo == 'S'):
-            nivel_alcanzado = sum(seccion.resultado_empleado * seccion.seccion.peso for seccion in resultado_instrumento.resultados_secciones.all()) / resultado_instrumento.instrumento.peso
+            if self.estado == "E":
+                nivel_alcanzado = sum(seccion.resultado_empleado * seccion.seccion.peso for seccion in resultado_instrumento.resultados_secciones.all()) / resultado_instrumento.instrumento.peso
+            elif self.estado == "S":
+                nivel_alcanzado = sum(seccion.resultado_supervisor * seccion.seccion.peso for seccion in resultado_instrumento.resultados_secciones.all()) / resultado_instrumento.instrumento.peso
+            elif self.estado == "H":
+                nivel_alcanzado = sum(seccion.resultado_final * seccion.seccion.peso for seccion in resultado_instrumento.resultados_secciones.all()) / resultado_instrumento.instrumento.peso
 
         highest_nivel = None
         for nivel in niveles_escalafon:
@@ -33,13 +48,13 @@ class EscalafonMixin():
         if highest_nivel:
             ResultadoEscalafon.objects.filter(
                 evaluacion=resultado_instrumento.evaluacion,
-                asignado_por="E"
+                asignado_por=self.estado
             ).delete()
 
             ResultadoEscalafon.objects.create(
                 evaluacion=resultado_instrumento.evaluacion,
-                escalafon=highest_nivel,
-                asignado_por=self.estado
+                asignado_por=self.estado,
+                escalafon=highest_nivel
             )
 
 class ComenzarEvaluacion(View):
