@@ -83,6 +83,34 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, 
 
         return context
     
+    def calcular_escalafon(self, resultado_instrumento: ResultadoInstrumento):
+        niveles_escalafon = resultado_instrumento.instrumento.escalafon.niveles_escalafon.all()
+        calculo = resultado_instrumento.instrumento.calculo_escalafon
+
+        if(calculo == 'M'):
+            nivel_alcanzado = min(seccion.resultado_empleado for seccion in resultado_instrumento.resultados_secciones.all())
+        elif(calculo == 'P'):
+            nivel_alcanzado = sum(seccion.resultado_empleado for seccion in resultado_instrumento.resultados_secciones.all()) / len(resultado_instrumento.resultados_secciones.all())
+        elif(calculo == 'S'):
+            nivel_alcanzado = sum(seccion.resultado_empleado * seccion.seccion.peso for seccion in resultado_instrumento.resultados_secciones.all()) / resultado_instrumento.instrumento.peso
+
+        highest_nivel = None
+        for nivel in niveles_escalafon:
+            if highest_nivel is None or nivel_alcanzado > highest_nivel.valor_requerido:
+                highest_nivel = nivel
+
+        if highest_nivel:
+            ResultadoEscalafon.objects.filter(
+                evaluacion=resultado_instrumento.evaluacion,
+                asignado_por="E"
+            ).delete()
+
+            ResultadoEscalafon.objects.create(
+                evaluacion=resultado_instrumento.evaluacion,
+                escalafon=highest_nivel,
+                asignado_por="E"
+            )
+
     def post(self, request, pk):
         instrumento = Instrumento.objects.get(pk=pk)
 
@@ -162,6 +190,9 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, 
                
                 resultado_instrumento.resultado_empleado = total_instrumento
                 resultado_instrumento.save()
+
+                if(instrumento.escalafon):
+                    self.calcular_escalafon(resultado_instrumento)
         
         messages.success(request, 'Respuestas del Instrumento almacenadas correctamente.')
         return redirect('dashboard')

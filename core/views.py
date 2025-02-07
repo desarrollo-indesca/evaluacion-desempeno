@@ -27,10 +27,15 @@ class EvaluacionEstadoMixin():
     estado = ""
 
     def get(self, request, **kwargs):
+        print(kwargs)
         if kwargs.get('evaluacion'):
             evaluacion = Evaluacion.objects.get(pk=kwargs.get('evaluacion'))
         elif kwargs.get('pk'):
-            evaluacion = Evaluacion.objects.get(pk=kwargs.get('pk')) if kwargs.get('pk') else Evaluacion.objects.get(evaluado=self.request.user.datos_personal.get(activo=True), periodo=self.get_periodo())
+            evaluacion = Evaluacion.objects.filter(pk=kwargs.get('pk')) 
+            if(evaluacion.exists()):
+                evaluacion = evaluacion.first()
+            else:
+                evaluacion = None
         
         if(not evaluacion):
             evaluacion = Evaluacion.objects.get(evaluado=self.request.user.datos_personal.get(activo=True), periodo=self.get_periodo())

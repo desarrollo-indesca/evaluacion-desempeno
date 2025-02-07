@@ -51,6 +51,8 @@ class Instrumento(models.Model):
     nombre = models.CharField(max_length=50)
     peso = models.SmallIntegerField()
     calculo = models.CharField(max_length=1, choices=ROLES, default="S")
+    escalafon = models.ForeignKey("evaluacion.Escalafon", on_delete=models.SET_NULL, null=True, blank=True)
+    calculo_escalafon = models.CharField(max_length=1, choices=CALCULOS, null=True, blank=True)
     formulario = models.ForeignKey(Formulario, on_delete=models.CASCADE, related_name="instrumentos")
 
     def __str__(self):
@@ -116,6 +118,7 @@ class Evaluacion(models.Model):
     
     class Meta:
         ordering = ("periodo","fecha_inicio",)
+
 class ResultadoInstrumento(models.Model):
     resultado_empleado = models.DecimalField(decimal_places=2, max_digits=5, null=True, blank=True)
     resultado_supervisor = models.DecimalField(decimal_places=2, max_digits=5, null=True, blank=True)
@@ -176,14 +179,18 @@ class Formacion(models.Model):
     competencias = models.ManyToManyField(Competencias, related_name="formaciones")
 
 class Escalafon(models.Model):
-    nivel = models.CharField(max_length=80)
     tipo_personal = models.ForeignKey(TipoPersonal, on_delete=models.CASCADE, related_name="escalafones")
+    activo = models.BooleanField(default=True)
+
+class NivelEscalafon(models.Model):
+    nivel = models.CharField(max_length=80)
     valor_requerido = models.IntegerField()
+    escalafon = models.ForeignKey("evaluacion.Escalafon", on_delete=models.CASCADE, null=True, blank=True, related_name="niveles_escalafon")
 
     def __str__(self):
         return self.nivel
     
 class ResultadoEscalafon(models.Model):
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="escalafones")
-    escalafon = models.ForeignKey(Escalafon, on_delete=models.CASCADE, related_name="escalafones")
+    escalafon = models.ForeignKey(NivelEscalafon, on_delete=models.CASCADE, related_name="escalafones")
     asignado_por = models.CharField(max_length=1, choices=ROLES)
