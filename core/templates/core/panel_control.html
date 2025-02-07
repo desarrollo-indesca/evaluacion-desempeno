@@ -73,7 +73,7 @@
                 <h2 class="card-title">Evaluaciones del Personal</h2>
                 <p>Accede a las evaluaciones realizadas por el personal de la organización.</p>
                 <div class="card-actions justify-end">
-                    <a href="#" class="btn btn-error">Ir</a>
+                    <a href="#" hx-target="closest .tab-content" hx-swap="innerHTML" hx-get="{% url 'consulta_general' %}" class="btn btn-error">Ir</a>
                 </div>
             </div>
         </div>

@@ -727,6 +727,18 @@ class DevolverEvaluacionSupervisor(View):
             return HttpResponseForbidden("No se puede devolver la evaluación al estado 'S'. Por favor comunique al supervisor las rrazones para la devolución.")
 
 # VISTAS DE GESTIÓN HUMANA / SUPERUSUARIO
+class ConsultaGeneralEvaluaciones(RevisionGerencia):
+    model = DatosPersonal
+    template_name = "evaluacion/partials/revision_supervisados.html"
+    filter_class = DatosPersonalFilter
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['general'] = True
+        return context
+
+    def get_queryset(self):
+        return DatosPersonal.objects.filter(activo=True)
 
 # OTROS
 class GenerarModal(View):
