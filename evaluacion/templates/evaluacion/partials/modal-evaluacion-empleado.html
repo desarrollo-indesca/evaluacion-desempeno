@@ -156,6 +156,14 @@
             </form>
         </div>
         {% endif %}
+
+        {% if evaluacion.estado == 'G' and evaluacion.evaluado.gerencia == datos_personal.gerencia %}
+        <div class="d-flex justify-center mt-3">
+            <button class="btn btn-error" hx-confirm="¿Desea devolver la evaluación al supervisor? Asegúrese de indicarle las observaciones para realizarle las modificaciones correspondiente." hx-swap="innerHTML" hx-target="closest .tab-content" hx-post="{% url 'devolver_evaluacion_supervisor' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML">
+                Devolver al supervisor
+            </button>
+        </div>
+        {% endif %}
     </div>
     <label class="modal-backdrop" for="modal-{{id}}">Close</label>
 </div>

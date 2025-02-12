@@ -771,10 +771,10 @@ class DevolverEvaluacionSupervisor(View):
             evaluacion = Evaluacion.objects.get(pk=pk, estado='G')
             evaluacion.estado = 'S'
             evaluacion.save()
-            messages.success(request, "La evaluación ha sido devuelta al estado 'Revisión por Supervisor'.")
+            messages.success(request, "La evaluación ha sido devuelta al estado 'Revisión por Supervisor'. Por favor comunique al supervisor las rrazones para la devolución.")
             return redirect('consultar_gerencia')
         else:
-            return HttpResponseForbidden("No se puede devolver la evaluación al estado 'S'. Por favor comunique al supervisor las rrazones para la devolución.")
+            return HttpResponseForbidden("No se puede devolver la evaluación al estado 'S'.")
 
 # VISTAS DE GESTIÓN HUMANA / SUPERUSUARIO
 class ConsultaGeneralEvaluaciones(RevisionGerencia):
