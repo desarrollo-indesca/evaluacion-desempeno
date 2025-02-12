@@ -808,6 +808,39 @@ class RevisionTodoPersonal(PeriodoContextMixin, ListView):
     def get_queryset(self):
         return super().get_queryset().filter(activo=True)
 
+class RevisionEvaluacionFinal(PeriodoContextMixin, EvaluacionEstadoMixin, View):
+    estado = "H"
+    template_name = 'evaluacion/partials/revision_evaluacion_final.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+
+        context['evaluacion'] = evaluacion
+
+        context['puede_finalizar'] = evaluacion.resultados.filter(resultado_supervisor__isnull=False).count() == evaluacion.formulario.instrumentos.count() and (
+            evaluacion.formaciones.filter(anadido_por="H").exists() 
+            and 
+            evaluacion.logros_y_metas.filter(anadido_por="H").exists() 
+        ) if evaluacion else False
+
+        context['instrumentos'] = [
+            {
+                'nombre': instrumento.nombre,
+                'completado': instrumento.resultados.filter(evaluacion = evaluacion, resultado_final__isnull=False).exists(),
+                'resultado_empleado': instrumento.resultados.filter(evaluacion = evaluacion).first().resultado_empleado if instrumento.resultados.filter(evaluacion = evaluacion).exists() else None,
+                'resultado_supervisor': instrumento.resultados.filter(evaluacion = evaluacion).first().resultado_supervisor if instrumento.resultados.filter(evaluacion = evaluacion).exists() else None,
+                'resultado_final': instrumento.resultados.filter(evaluacion = evaluacion).first().resultado_final if instrumento.resultados.filter(evaluacion = evaluacion).exists() else None,
+                'peso': instrumento.peso,
+                'pk': instrumento.pk
+            } for instrumento in evaluacion.formulario.instrumentos.all()
+        ] if evaluacion else None
+
+        context['formaciones'] = evaluacion.formaciones.filter(anadido_por="H")
+        context['logros_y_metas'] = evaluacion.logros_y_metas.filter(anadido_por="H")
+
+        return context
+
 # OTROS
 class GenerarModal(View):
     def get_context_data(self, **kwargs):

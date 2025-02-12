@@ -1,6 +1,6 @@
 <div class="flex justify-between items-center">
-    <a hx-target="closest .tab-content" hx-get="{% url 'consultar_supervisados' %}" class="btn btn-teal-500">Regresar</a>
-    <h3 class="text-center text-2xl">Revisión de la Evaluación de: {{evaluacion.evaluado.user.get_full_name.upper}}</h3>
+    <a hx-target="closest .tab-content" hx-get="{% url 'revision_general' %}" class="btn btn-teal-500">Regresar</a>
+    <h3 class="text-center text-2xl">Revisión Definitiva de la Evaluación de: {{evaluacion.evaluado.user.get_full_name.upper}}</h3>
     <div></div>
 </div>
 

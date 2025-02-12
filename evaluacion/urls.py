@@ -27,6 +27,7 @@ urlpatterns = [
 
     path('consulta-general/', ConsultaGeneralEvaluaciones.as_view(), name="consulta_general"),
     path('revision-general/', RevisionTodoPersonal.as_view(), name="revision_general"),
+    path('evaluar-final/revisar/<int:pk>/', RevisionEvaluacionFinal.as_view(), name="revisar_evaluacion_final"),
 
     path("modal/<int:pk>/", GenerarModal.as_view(), name="generar_modal")
 ]
