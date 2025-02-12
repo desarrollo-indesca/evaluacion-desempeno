@@ -6,41 +6,41 @@
         <table class="table table-xs w-full">
             <thead class="text-center">
                 <tr>
-                    <th colspan="2">Resumen de Evaluaciones</th>
+                    <th class="border" colspan="2">Resumen de Evaluaciones</th>
                 </tr>
                 <tr>
-                    <th>Estado</th>
-                    <th>Número de Evaluaciones</th>
+                    <th class="border">Estado</th>
+                    <th class="border">Número de Evaluaciones</th>
                 </tr>
             </thead>
             <tbody class="text-center">
                 <tr>
-                    <td>Pendientes</td>
-                    <td>{{evaluaciones.evaluaciones_pendientes.count}} ({{evaluaciones.evaluaciones_pendientes.porcentaje|floatformat:2}} %)</td>
+                    <td class="border">Pendientes</td>
+                    <td class="border">{{evaluaciones.evaluaciones_pendientes.count}} ({{evaluaciones.evaluaciones_pendientes.porcentaje|floatformat:2}} %)</td>
                 </tr>
                 <tr>
-                    <td>Iniciadas por el Empleado</td>
-                    <td>{{evaluaciones.evaluaciones_iniciadas.count}} ({{evaluaciones.evaluaciones_iniciadas.porcentaje|floatformat:2}} %)</td>
+                    <td class="border">Iniciadas por el Empleado</td>
+                    <td class="border">{{evaluaciones.evaluaciones_iniciadas.count}} ({{evaluaciones.evaluaciones_iniciadas.porcentaje|floatformat:2}} %)</td>
                 </tr>
                 <tr>
-                    <td>Enviadas al Supervisor</td>
-                    <td>{{evaluaciones.evaluaciones_enviadas_supervisor.count}} ({{evaluaciones.evaluaciones_enviadas_supervisor.porcentaje|floatformat:2}} %)</td>
+                    <td class="border">Enviadas al Supervisor</td>
+                    <td class="border">{{evaluaciones.evaluaciones_enviadas_supervisor.count}} ({{evaluaciones.evaluaciones_enviadas_supervisor.porcentaje|floatformat:2}} %)</td>
                 </tr>
                 <tr>
-                    <td>Revisadas por el Supervisor</td>
-                    <td>{{evaluaciones.evaluaciones_revisadas.count}} ({{evaluaciones.evaluaciones_revisadas.porcentaje|floatformat:2}} %)</td>
+                    <td class="border">Revisadas por el Supervisor</td>
+                    <td class="border">{{evaluaciones.evaluaciones_revisadas.count}} ({{evaluaciones.evaluaciones_revisadas.porcentaje|floatformat:2}} %)</td>
                 </tr>
                 <tr>
-                    <td>Enviadas a Gestión Humana</td>
-                    <td>{{evaluaciones.evaluaciones_enviadas_gghh.count}} ({{evaluaciones.evaluaciones_enviadas_gghh.porcentaje|floatformat:2}} %)</td>
+                    <td class="border">Enviadas a Gestión Humana</td>
+                    <td class="border">{{evaluaciones.evaluaciones_enviadas_gghh.count}} ({{evaluaciones.evaluaciones_enviadas_gghh.porcentaje|floatformat:2}} %)</td>
                 </tr>
                 <tr>
-                    <td>Aprobadas</td>
-                    <td>{{evaluaciones.evaluaciones_aprobadas.count}} ({{evaluaciones.evaluaciones_aprobadas.porcentaje|floatformat:2}} %)</td>
+                    <td class="border">Aprobadas</td>
+                    <td class="border">{{evaluaciones.evaluaciones_aprobadas.count}} ({{evaluaciones.evaluaciones_aprobadas.porcentaje|floatformat:2}} %)</td>
                 </tr>
                 <tr>
-                    <td>Rechazadas</td>
-                    <td>{{evaluaciones.evaluaciones_rechazadas.count}} ({{evaluaciones.evaluaciones_rechazadas.porcentaje|floatformat:2}} %)</td>
+                    <td class="border">Rechazadas</td>
+                    <td class="border">{{evaluaciones.evaluaciones_rechazadas.count}} ({{evaluaciones.evaluaciones_rechazadas.porcentaje|floatformat:2}} %)</td>
                 </tr>
             </tbody>
         </table>
@@ -49,22 +49,24 @@
         <table class="table table-xs w-full">
             <thead>
                 <tr class="text-center">
-                    <th colspan="2">Resumen del Personal</th>
+                    <th class="border" colspan="2">Resumen del Personal</th>
                 </tr>
             </thead>
             <tbody class="text-center">
                 <tr>
-                    <td>Personal Evaluado</td>
-                    <td>{{personal_evaluado}}</td>
+                    <td class="border">Personal Pendiente por Finalizar</td>
+                    <td class="border">{{personal_evaluado}}</td>
                 </tr>
                 <tr>
-                    <td>Personal Finalizado</td>
-                    <td>{{personal_finalizado}}</td>
+                    <td class="border">Personal Finalizado</td>
+                    <td class="border">{{personal_finalizado}}</td>
                 </tr>
             </tbody>
         </table>
     </div>
 </div>
+
+<hr>
 
 <div class="flex justify-center items-center my-10">
     <div class="w-1/3 p-4">
@@ -73,7 +75,7 @@
                 <h2 class="card-title">Evaluaciones del Personal</h2>
                 <p>Accede a las evaluaciones realizadas por el personal de la organización.</p>
                 <div class="card-actions justify-end">
-                    <a href="#" hx-target="closest .tab-content" hx-swap="innerHTML" hx-get="{% url 'consulta_general' %}" class="btn btn-error">Ir</a>
+                    <a href="#" hx-target="closest .tab-content" hx-swap="innerHTML" hx-get="{% url 'revision_general' %}" class="btn btn-error">Ir</a>
                 </div>
             </div>
         </div>

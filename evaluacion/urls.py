@@ -26,6 +26,7 @@ urlpatterns = [
     path('gerencia/devolver-evaluacion/<int:pk>/', DevolverEvaluacionSupervisor.as_view(), name="devolver_evaluacion_supervisor"),
 
     path('consulta-general/', ConsultaGeneralEvaluaciones.as_view(), name="consulta_general"),
+    path('revision-general/', RevisionTodoPersonal.as_view(), name="revision_general"),
 
     path("modal/<int:pk>/", GenerarModal.as_view(), name="generar_modal")
 ]

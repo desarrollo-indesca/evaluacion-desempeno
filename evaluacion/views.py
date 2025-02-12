@@ -790,6 +790,24 @@ class ConsultaGeneralEvaluaciones(RevisionGerencia):
     def get_queryset(self):
         return DatosPersonal.objects.filter(activo=True)
 
+class RevisionTodoPersonal(PeriodoContextMixin, ListView):
+    model = DatosPersonal
+    template_name = "evaluacion/partials/revision_gghh.html"
+    filter_class = DatosPersonalFilter
+
+    def get(self, request, *args, **kwargs):
+        if(request.user.is_superuser): # Gerente de Gestión Humana
+            return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
+        context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
+        return context
+
+    def get_queryset(self):
+        return super().get_queryset().filter(activo=True)
+
 # OTROS
 class GenerarModal(View):
     def get_context_data(self, **kwargs):
