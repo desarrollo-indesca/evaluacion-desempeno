@@ -276,6 +276,7 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     template_name = "evaluacion/metas_empleado.html"
     estado = "E"
     anadido_por = "E"
+    anadido_previo = "E"
 
     def get_formsets(self, add_prefixes = False, qs_actual = None, qs_proximo = None):
         formset_actual = modelformset_factory(
@@ -298,10 +299,26 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
         return formset_actual, formset_proximo
 
     def queryset_actual(self, evaluacion):
-        return evaluacion.logros_y_metas.filter(periodo = "A", anadido_por="E")
+        qs = evaluacion.logros_y_metas.filter(anadido_por=self.anadido_por, periodo = "A")
+        
+        if(qs.exists()):
+            return qs
+        else:
+            if(self.anadido_previo):
+                return evaluacion.logros_y_metas.filter(periodo="A", anadido_por=self.anadido_previo)
+            else:
+                return evaluacion.logros_y_metas.filter(periodo="A")
     
     def queryset_proximo(self, evaluacion):
-        return evaluacion.logros_y_metas.filter(periodo = "P", anadido_por="E")
+        qs = evaluacion.logros_y_metas.filter(anadido_por=self.anadido_por, periodo = "P")
+        
+        if(qs.exists()):
+            return qs
+        else:
+            if(self.anadido_previo):
+                return evaluacion.logros_y_metas.filter(periodo="P", anadido_por=self.anadido_previo)
+            else:
+                return evaluacion.logros_y_metas.filter(periodo="P")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -477,7 +494,6 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
         context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
         context['datos_personal'] = DatosPersonal.objects.get(pk=self.kwargs['pk'])
         context['supervisado'] = True
-        print(self.request.GET)
         context['previous_url'] = self.request.GET.get('previous_url')
         return context
     
@@ -699,22 +715,6 @@ class LogrosYMetasSupervisor(MetasEmpleado):
 
     def get_success_url(self):
         return redirect('revisar_evaluacion', pk=self.kwargs['pk'])
-
-    def queryset_actual(self, evaluacion):
-        qs = evaluacion.logros_y_metas.filter(anadido_por="S", periodo = "A")
-        
-        if(qs.exists()):
-            return qs
-        else:
-            return evaluacion.logros_y_metas.filter(periodo="A")
-    
-    def queryset_proximo(self, evaluacion):
-        qs = evaluacion.logros_y_metas.filter(anadido_por="S", periodo = "P")
-        
-        if(qs.exists()):
-            return qs
-        else:
-            return evaluacion.logros_y_metas.filter(periodo="P")
 
 class EnviarEvaluacionGerente(View):
     def post(self, request, pk):
@@ -952,6 +952,34 @@ class FormularioEvaluacionDefinitiva(FormularioInstrumentoSupervisor):
         messages.success(request, 'Respuestas del Instrumento almacenadas correctamente.')
         return redirect('revisar_evaluacion_final', pk=evaluacion.pk)
 
+class FormularioMetasDefinitivos(MetasEmpleado):
+    anadido_por = "H"
+    estado = "H"
+    anadido_previo = "S"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["definitiva"] = True
+        return context
+
+    def get_success_url(self):
+        return redirect('revisar_evaluacion_final', pk=self.kwargs['pk'])
+
+class FormacionDefinitiva(FormacionEmpleado):
+    template_name = "evaluacion/formacion_empleado.html"
+    estado = "H"
+    anadido_por = "H"
+
+    def get_success_url(self):
+        return redirect('revisar_evaluacion_final', pk=self.kwargs['pk'])
+
+    def get_queryset(self, evaluacion):
+        qs = evaluacion.formaciones.filter(anadido_por = "H", activo = True)
+        
+        if(qs.exists()):
+            return qs
+        else:
+            return evaluacion.formaciones.filter(activo = True)
 
 # OTROS
 class GenerarModal(View):

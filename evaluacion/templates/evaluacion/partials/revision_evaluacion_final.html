@@ -51,7 +51,7 @@
             <td>N/A</td>
             <td>N/A</td>
             <td>
-                <a class="btn btn-error" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'formacion_supervisado' pk=evaluacion.pk %}" href="#">Acceder al Instrumento</a>
+                <a class="btn btn-error" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'formacion_definitiva' pk=evaluacion.pk %}" href="{% url 'formacion_definitiva' pk=evaluacion.pk %}">Acceder al Instrumento</a>
             </td>
         </tr>
         <tr>
@@ -67,7 +67,7 @@
             <td>N/A</td>
             <td>N/A</td>
             <td>
-                <a class="btn btn-error" href="#" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'metas_supervisado' pk=evaluacion.pk %}">Acceder al Instrumento</a>
+                <a class="btn btn-error" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'metas_definitivas' pk=evaluacion.pk %}" href="#">Acceder al Instrumento</a>
             </td>
         </tr>
 
@@ -87,8 +87,8 @@
         {% if puede_finalizar %}
         <tr>
             <td colspan="4" class="text-center">
-                <label for="modal-revision-eval" class="btn btn-error">Enviar al Gerente del Departamento</label>
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=False finish=True id="revision-eval" tipo="S" %}
+                <label for="modal-revision-eval" class="btn btn-error">Cerrar Evaluación</label>
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=False finish=True id="revision-eval" tipo="H" %}
             </td>
         </tr>
         {% endif %}

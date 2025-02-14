@@ -16,6 +16,8 @@
 <hr>
 {% if anadido_por == 'E' %}
 <form method="post" hx-select="main" hx-target="main" hx-post="{% url 'metas' pk=evaluacion.pk %}">
+{% elif anadido_por == 'H' %}
+<form method="post" hx-target="closest .tab-content" hx-post="{% url 'metas_definitivas' pk=evaluacion.pk %}">
 {% else %}
 <form method="post" hx-target="closest .tab-content" hx-post="{% url 'metas_supervisado' pk=evaluacion.pk %}">
 {% endif %}
