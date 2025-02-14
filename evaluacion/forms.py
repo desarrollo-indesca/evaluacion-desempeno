@@ -26,6 +26,14 @@ class FormularioRespuestasSupervisor(forms.ModelForm):
             'pregunta': forms.HiddenInput(),
         }
 
+class FormularioRespuestasFinales(forms.ModelForm):
+    class Meta:
+        model = Respuesta
+        fields = ('respuesta_definitiva', 'comentario_gghh', 'pregunta')
+        widgets = {
+            'pregunta': forms.HiddenInput(),
+        }
+
 class FormularioFormacion(forms.ModelForm):
     competencias_genericas = forms.ModelMultipleChoiceField(
         queryset=Competencias.objects.filter(tipo="G"),

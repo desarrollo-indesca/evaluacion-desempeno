@@ -1,6 +1,6 @@
 <div class="flex justify-between items-center">
     <a hx-target="closest .tab-content" hx-get="{% url 'revision_general' %}" class="btn btn-teal-500">Regresar</a>
-    <h3 class="text-center text-2xl">Revisión Definitiva de la Evaluación de: {{evaluacion.evaluado.user.get_full_name.upper}}</h3>
+    <h3 class="text-center text-2xl">Revisión Definitiva  de la Evaluación de: {{evaluacion.evaluado.user.get_full_name.upper}}</h3>
     <div></div>
 </div>
 
@@ -11,6 +11,7 @@
             <th>Estado</th>
             <th>Total Empleado</th>
             <th>Total Supervisor</th>
+            <th>Total Definitivo</th>
             <th>Editar</th>
         </tr>
     </thead>
@@ -27,7 +28,14 @@
             </td>
             <td>{{instrumento.resultado_empleado|default:"-"}} / {{instrumento.peso|floatformat:2}}</td>
             <td>{{instrumento.resultado_supervisor|default:"-"}} / {{instrumento.peso|floatformat:2}}</td>
-            <td><a class="btn btn-error" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'revision_instrumento' pk=instrumento.pk evaluacion=evaluacion.pk %}">Acceder al Instrumento</a></td>
+            <td>
+                {% if instrumento.resultado_final %}
+                <span class="badge badge-success">{{instrumento.resultado_final}} / {{instrumento.peso|floatformat:2}}</span>
+                {% else %}
+                {{instrumento.resultado_final|default:"-"}} / {{instrumento.peso|floatformat:2}}
+                {% endif %}
+            </td>
+            <td><a class="btn btn-error" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'formulario_evaluacion_definitiva' pk=instrumento.pk evaluacion=evaluacion.pk %}">Acceder al Instrumento</a></td>
         </tr>
         {% endfor %}
         <tr>
@@ -39,6 +47,7 @@
                 <span class="badge badge-error">Por Revisar</span>
                 {% endif %}
             </td>
+            <td>N/A</td>
             <td>N/A</td>
             <td>N/A</td>
             <td>
@@ -56,6 +65,7 @@
             </td>
             <td>N/A</td>
             <td>N/A</td>
+            <td>N/A</td>
             <td>
                 <a class="btn btn-error" href="#" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'metas_supervisado' pk=evaluacion.pk %}">Acceder al Instrumento</a>
             </td>
@@ -67,6 +77,11 @@
             </td>
             <td>{{evaluacion.total|default:"-"}} / {{evaluacion.peso|floatformat:2}}</td>
             <td>{{evaluacion.total_supervisor|default:"-"}} / {{evaluacion.peso|floatformat:2}}</td>
+            <td>
+                <span class="badge badge-success">
+                    {{evaluacion.total_definitivo|default:"-"}} / {{evaluacion.peso|floatformat:2}}
+                </span>
+            </td>
         </tr>
 
         {% if puede_finalizar %}

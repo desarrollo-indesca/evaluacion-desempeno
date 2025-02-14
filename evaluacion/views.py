@@ -501,6 +501,14 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
 class FormularioInstrumentoSupervisor(PeriodoContextMixin, EscalafonMixin, EvaluacionEstadoMixin, View):
     estado = "S"
     template_name = "evaluacion/partials/formulario_supervisor.html"
+    form_class = FormularioRespuestasFinales
+
+    def define_initial_data(self, pregunta, respuesta):
+        return {
+            'pregunta': pregunta,
+            'respuesta_supervisor': respuesta.respuesta_empleado if not respuesta.respuesta_supervisor else respuesta.respuesta_supervisor,
+            'comentario_supervisor': respuesta.comentario_supervisor
+        }
 
     def get_context_data(self, post=False, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -522,16 +530,12 @@ class FormularioInstrumentoSupervisor(PeriodoContextMixin, EscalafonMixin, Evalu
             preguntas_data = []
             for pregunta in seccion.preguntas.all():
                 respuesta = pregunta.respuestas.get(evaluacion=evaluacion)
-                initial_data = {
-                    'pregunta': pregunta,
-                    'respuesta_supervisor': respuesta.respuesta_empleado if not respuesta.respuesta_supervisor else respuesta.respuesta_supervisor,
-                    'comentario_supervisor': respuesta.comentario_supervisor
-                }
-                form = FormularioRespuestasSupervisor(
+                initial_data = self.define_initial_data(pregunta, respuesta)
+                form = self.form_class(
                     instance=respuesta, 
                     prefix=pregunta.pk, 
                     initial=initial_data
-                ) if not post else FormularioRespuestasSupervisor(
+                ) if not post else self.form_class(
                     self.request.POST, 
                     prefix=pregunta.pk
                 )
@@ -840,6 +844,114 @@ class RevisionEvaluacionFinal(PeriodoContextMixin, EvaluacionEstadoMixin, View):
         context['logros_y_metas'] = evaluacion.logros_y_metas.filter(anadido_por="H")
 
         return context
+
+class FormularioEvaluacionDefinitiva(FormularioInstrumentoSupervisor):
+    estado = "H"
+    template_name = "evaluacion/partials/formulario_definitiva.html"
+    form_class = FormularioRespuestasFinales
+
+    def define_initial_data(self, pregunta, respuesta):
+        return {
+            'pregunta': pregunta,
+            'respuesta_definitiva': respuesta.respuesta_supervisor if not respuesta.respuesta_definitiva else respuesta.respuesta_definitiva,
+            'comentario_gghh': respuesta.comentario_gghh
+        }
+
+    def post(self, request, pk, evaluacion):
+        instrumento = Instrumento.objects.get(pk=pk)
+
+        with transaction.atomic():
+                evaluacion = Evaluacion.objects.get(
+                    pk=evaluacion
+                )
+                resultado_instrumento = ResultadoInstrumento.objects.get(
+                    evaluacion=evaluacion, 
+                    instrumento=instrumento
+                )
+
+                total_instrumento = 0 if instrumento.calculo != 'M' else 1e9
+                max_instrumento = 0 if instrumento.calculo == 'S' else 1e9 if instrumento.calculo == 'M' else instrumento.secciones.count()     
+                for seccion in instrumento.secciones.all():
+                    max_seccion = 0
+                    total = 0 if seccion.calculo != 'M' else 1e9
+                    for pregunta in seccion.preguntas.all():
+                        form = self.form_class(
+                            request.POST, 
+                            instance=pregunta.respuestas.get(evaluacion=evaluacion) if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None, 
+                            prefix=pregunta.pk
+                        )
+
+                        if form.is_valid():
+                            form.instance.evaluacion = evaluacion
+                            form.save()
+
+                            if(seccion.calculo == 'S' and form.instance.respuesta_definitiva >= 0):
+                                max_seccion += form.instance.pregunta.peso
+                                total += form.instance.pregunta.peso * form.instance.respuesta_definitiva / 2
+                            elif(seccion.calculo == 'P'):
+                                total += form.instance.respuesta_definitiva
+                                max_seccion += 1
+                            elif(seccion.calculo == 'M'):
+                                total = min(total, form.instance.respuesta_definitiva)
+                        else:
+                            context = {} 
+                            context['instrumento'] = [{
+                                    'preguntas': [{
+                                        'form': self.form_class(request.POST, prefix=pregunta.pk, initial={
+                                            'pregunta': pregunta
+                                        }),
+                                        'pregunta': pregunta,
+                                    } for pregunta in seccion.preguntas.all()],
+                                    'seccion': seccion
+                                } for seccion in instrumento.secciones.all()
+                            ]
+
+                            context['titulo'] = instrumento.nombre.title()
+                            context['pk'] = instrumento.pk
+                            context['evaluacion'] = evaluacion
+
+                            return render(
+                                request, self.template_name,
+                                context
+                            )
+                        
+                    total = round(total, 2)
+
+                    if(seccion.calculo == 'S'):
+                        if(total > 0):
+                            total = total*seccion.peso/max_seccion
+                            total_instrumento += total
+                            max_instrumento += seccion.peso
+                        else:
+                            total = None
+                    elif(seccion.calculo == 'P'):
+                        total = total / max_seccion
+                        total_instrumento += total
+                    elif(seccion.calculo == 'M'):
+                        total_instrumento += total
+
+                    resultado_seccion = ResultadoSeccion.objects.get(
+                        seccion=seccion, 
+                        resultado_instrumento=resultado_instrumento
+                    )
+
+                    resultado_seccion.resultado_final = total
+                    resultado_seccion.save()
+
+                if(instrumento.calculo == 'S'):
+                    total_instrumento = total_instrumento*instrumento.peso/max_instrumento
+                elif(instrumento.calculo == 'P'):
+                    total_instrumento = total_instrumento / max_instrumento
+               
+                resultado_instrumento.resultado_final = total_instrumento
+                resultado_instrumento.save()
+
+                if(instrumento.escalafon):
+                    self.calcular_escalafon(resultado_instrumento)
+        
+        messages.success(request, 'Respuestas del Instrumento almacenadas correctamente.')
+        return redirect('revisar_evaluacion_final', pk=evaluacion.pk)
+
 
 # OTROS
 class GenerarModal(View):

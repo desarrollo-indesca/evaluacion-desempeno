@@ -107,6 +107,9 @@ class Evaluacion(models.Model):
     def estado_largo(self):
         return list(filter(lambda x: x[0] == self.estado, ESTADOS))[0][1]
     
+    def total_definitivo(self):
+        return self.resultados.aggregate(models.Sum('resultado_final')).get('resultado_final__sum')
+    
     def total_supervisor(self):
         return self.resultados.aggregate(models.Sum('resultado_supervisor')).get('resultado_supervisor__sum')
 
