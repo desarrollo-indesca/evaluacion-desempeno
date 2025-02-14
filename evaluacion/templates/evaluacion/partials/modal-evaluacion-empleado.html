@@ -67,7 +67,7 @@
             <div class="collapse collapse-arrow bg-base-200 mb-2">
                 <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
                 <div class="collapse-title text-xl font-medium">
-                    {{resultado.instrumento}} ({% if tipo == "E" %}{{resultado.resultado_empleado}}{% elif tipo == "S" %}{{resultado.resultado_supervisor}}{% endif %} / {{resultado.instrumento.peso}})
+                    {{resultado.instrumento}} ({% if tipo == "E" %}{{resultado.resultado_empleado}}{% elif tipo == "S" %}{{resultado.resultado_supervisor}} {% else %} {{resultado.resultado_final}} {% endif %} / {{resultado.instrumento.peso}})
                 </div>
                 <div class="collapse-content">
                     <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>
@@ -112,6 +112,8 @@
                 {{evaluacion.total|floatformat:2}}
                 {% elif tipo == "S" %}
                 {{evaluacion.total_supervisor|floatformat:2}}
+                {% else %}
+                {{evaluacion.total_definitivo|floatformat:2}}
                 {% endif %}
               </div>
               <div class="stat-desc text-white">de {{evaluacion.peso|floatformat:2}} puntos.</div>
@@ -131,6 +133,10 @@
                 hx-confirm="¿Está seguro que desea enviar la evaluación al gerente? No podrá modificarla directamente de nuevo, a menos que sea rechazada." 
                 hx-post="{% url 'enviar_gerente' pk=evaluacion.pk %}" 
                 hx-target="body"
+                {% elif tipo == "H" %}
+                hx-confirm="Una vez enviada la evaluación esta será archivada, y no podrá ser modificada a menos que informática intervenga. ¿Está de acuerdo con la decisión tomada de acuerdo a los resultados de esta evaluación?" 
+                hx-post="#" 
+                hx-target="body"
                 {% endif %}
             >
                 <div class="my-3">
@@ -138,6 +144,8 @@
                     <label for="aceptar">
                         {% if tipo == 'S' %}
                         &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en la autoevaluación por mi supervisado: {{evaluacion.evaluado.user.get_full_name.upper}}, con quien me he reunido para modificar elementos de su autoevaluación, y apruebo que estas sean enviadas al gerente de {{evaluacion.evaluado.gerencia.nombre.upper}}. 
+                        {% elif tipo == 'H' %}
+                        &nbsp;Yo, {{request.user.get_full_name.upper}}, he revisado la autoevaluación y revisión de su respectivo supervisor de la evaluación de desempeño de {{evaluacion.evaluado.user.get_full_name.upper}}, y en mi caracter de GERENTE DE GESTIÓN HUMANA, decido que esta sea:
                         {% else %}
                         &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y estoy de acuerdo en que sea enviada a mi supervisor. 
                         {% endif %}
@@ -151,6 +159,9 @@
                     <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la Evaluación al Gerente</button>
                     {% elif tipo == 'E' %}
                     <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la evaluación a mi supervisor</button>
+                    {% elif tipo == 'H' %}
+                    <button id="enviar-evaluacion" value="A" type="submit" class="btn btn-success">Aprobada</button>&nbsp;
+                    <button id="enviar-evaluacion" value="R" type="submit" class="btn btn-error">Rechazada</button>
                     {% endif %}
                 </div>
             </form>
