@@ -19,7 +19,6 @@ class TipoPersonal(NombreMixin, models.Model):
 
 class Cargo(NombreMixin, models.Model):
     nombre = models.CharField(max_length=50)
-    nivel = models.SmallIntegerField()
 
 class Gerencia(NombreMixin, models.Model):
     nombre = models.CharField(max_length=50)
