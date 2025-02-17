@@ -31,6 +31,7 @@ urlpatterns = [
     path('evaluar-final/revision/<int:pk>/<int:evaluacion>/', FormularioEvaluacionDefinitiva.as_view(), name="formulario_evaluacion_definitiva"),
     path('evaluar-final/metas/<int:pk>/', FormularioMetasDefinitivos.as_view(), name="metas_definitivas"),
     path('evaluar-final/formacion/<int:pk>/', FormacionDefinitiva.as_view(), name="formacion_definitiva"),
+    path('evaluar-final/cerrar/<int:pk>/', CerrarEvaluacion.as_view(), name="cerrar_evaluacion_final"),
 
     path("modal/<int:pk>/", GenerarModal.as_view(), name="generar_modal")
 ]

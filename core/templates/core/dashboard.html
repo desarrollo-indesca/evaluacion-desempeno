@@ -67,7 +67,13 @@
                                     <li class="step {% if evaluacion.estado != 'P' and evaluacion.estado != 'E' %}{% if evaluacion.estado != 'S' %}step-error{% else %}step-error{% endif %}{% endif %}">Revisión por Supervisor</li>
                                     <li class="step {%  if evaluacion.estado == 'G' or evaluacion.estado == 'H' or evaluacion.estado == 'A' %}{% if evaluacion.estado == 'G' %}step-error{% else %}step-error{% endif %}{% endif %}">Revisión por Gerencia</li>
                                     <li class="step {% if evaluacion.estado == 'H' or evaluacion.estado == 'A' %}step-error{% endif %}">Revisión por Gestión Humana</li>
-                                    <li class="step {% if evaluacion.estado == 'A' or evaluacion.estado == 'R' %}step-error{% endif %}">Aprobada</li>
+                                    <li class="step {% if evaluacion.estado == 'A' or evaluacion.estado == 'R' %}step-error{% endif %}">
+                                        {% if evaluacion.estado != 'R' %}
+                                        Aprobada 
+                                        {% else %}
+                                        Rechazada
+                                        {% endif %}
+                                    </li>
                                 </ul>
 
                                 {% if evaluacion.estado != 'P' and evaluacion.estado != 'E' %}

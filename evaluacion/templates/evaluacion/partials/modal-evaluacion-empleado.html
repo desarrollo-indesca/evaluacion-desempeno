@@ -56,8 +56,8 @@
                     <td class="text-center">{{evaluacion.fecha_entrega|default:'-'}}</td>
                 </tr>
                 <tr>
-                    <th>Fecha Aprobación</th>
-                    <td class="text-center">{{evaluacion.fecha_aprobacion|default:'-'}}</td>
+                    <th>{% if evaluacion.estado != 'R' %}Fecha Aprobación{% else %}Fecha Rechazo{% endif %}</th>
+                    <td class="text-center">{{evaluacion.fecha_fin|default:'-'}}</td>
                 </tr>
             </tbody>
         </table>
@@ -135,10 +135,14 @@
                 hx-target="body"
                 {% elif tipo == "H" %}
                 hx-confirm="Una vez enviada la evaluación esta será archivada, y no podrá ser modificada a menos que informática intervenga. ¿Está de acuerdo con la decisión tomada de acuerdo a los resultados de esta evaluación?" 
-                hx-post="#" 
-                hx-target="body"
+                hx-post="{% url 'cerrar_evaluacion_final' pk=evaluacion.pk %}" 
+                hx-target="closest .tab-content"
                 {% endif %}
             >
+                <div class="w-full">
+                    <input type="text" class="w-full input input-bordered" placeholder="Ingrese sus comentarios sobre los resultados" name="comentarios">
+                </div>
+
                 <div class="my-3">
                     <input type="checkbox" name="aceptar" id="aceptar" class="checkbox" required>
                     <label for="aceptar">
@@ -151,17 +155,15 @@
                         {% endif %}
                     </label>
                 </div>
-                <div class="w-full">
-                    <input type="text" class="w-full input input-bordered" placeholder="Ingrese sus comentarios sobre los resultados" name="comentarios">
-                </div>
+                
                 <div class="flex justify-center my-3">
                     {% if tipo == 'S' %}
                     <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la Evaluación al Gerente</button>
                     {% elif tipo == 'E' %}
                     <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la evaluación a mi supervisor</button>
                     {% elif tipo == 'H' %}
-                    <button id="enviar-evaluacion" value="A" type="submit" class="btn btn-success">Aprobada</button>&nbsp;
-                    <button id="enviar-evaluacion" value="R" type="submit" class="btn btn-error">Rechazada</button>
+                    <button id="enviar-evaluacion" name="tipo_evaluacion" value="A" type="submit" class="btn btn-success">Aprobada</button>&nbsp;
+                    <button id="enviar-evaluacion" hx-confirm="¿Está seguro que desea rechazar la evaluación? En este caso deberá indicar en un comentario las razones de la misma." name="tipo_evaluacion" value="R" type="submit" class="btn btn-error">Rechazada</button>
                     {% endif %}
                 </div>
             </form>

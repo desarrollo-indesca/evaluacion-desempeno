@@ -981,6 +981,46 @@ class FormacionDefinitiva(FormacionEmpleado):
         else:
             return evaluacion.formaciones.filter(activo = True)
 
+class CerrarEvaluacion(View):
+    def post(self, request, pk, *args, **kwargs):
+        evaluacion = Evaluacion.objects.get(pk=pk)
+
+        with transaction.atomic():        
+            evaluacion.estado = request.POST.get('tipo_evaluacion')
+            evaluacion.comentario_gghh = request.POST.get('comentarios')
+            evaluacion.fecha_fin = datetime.datetime.now()
+            evaluacion.save()
+
+            if(evaluacion.estado == 'R' and evaluacion.comentario_gghh):
+                evaluacion_previa = evaluacion
+                resultados_instrumentos = evaluacion_previa.resultados.all()
+
+                evaluacion.pk = None
+                evaluacion.estado = 'S'
+                evaluacion.fecha_fin = None
+                evaluacion.fecha_revision = None
+                evaluacion.save()
+                for resultado_previo in resultados_instrumentos:
+                    nuevo_resultado_instrumento = resultado_previo
+                    nuevo_resultado_instrumento.pk = None
+                    nuevo_resultado_instrumento.save()
+                    for resultado_seccion_previo in resultado_previo.resultados_secciones.all():
+                        nuevo_resultado_seccion = resultado_seccion_previo
+                        nuevo_resultado_seccion.pk = None
+                        nuevo_resultado_seccion.resultado_final = None
+                        nuevo_resultado_seccion.resultado_instrumento = nuevo_resultado_instrumento
+                        nuevo_resultado_seccion.save()
+                        for respuesta_previo in resultado_seccion_previo.seccion.preguntas.all():
+                            nueva_respuesta_previo = respuesta_previo.respuestas.get(evaluacion=evaluacion_previa)
+                            nueva_respuesta = nueva_respuesta_previo
+                            nueva_respuesta.pk = None
+                            nueva_respuesta.respuesta_definitiva = None
+                            nueva_respuesta.evaluacion = evaluacion
+                            nueva_respuesta.save()
+
+        messages.success(request, 'Evaluación cerrada correctamente.')
+        return redirect('revision_general')
+
 # OTROS
 class GenerarModal(View):
     def get_context_data(self, **kwargs):
