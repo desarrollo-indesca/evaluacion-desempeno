@@ -1,0 +1,42 @@
+{% load widget_tweaks %}
+<h1 class="text-3xl font-bold text-center">Crear Periodo</h1>
+
+<form method="post" hx-post="{% url 'periodo_crear' %}" hx-target="closest .tab-content" hx-swap="innerHTML">
+    {% csrf_token %}
+    <div class="flex">
+        <div class="w-1/2 p-3">
+            {{form.fecha_inicio.label_tag}} <br>
+            {% render_field form.fecha_inicio type="date" class="input input-bordered w-full" %} <br>
+            {% if form.fecha_inicio.errors %}
+            <ul class="text-red-600">
+            {% for error in form.fecha_inicio.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+            
+        </div>
+        <div class="w-1/2 p-3">
+            {{form.fecha_fin.label_tag}} <br>
+            {% render_field form.fecha_fin type="date" class="input input-bordered w-full" %} <br>
+            {% if form.fecha_fin.errors %}
+            <ul class="text-red-600">
+            {% for error in form.fecha_fin.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+    {% if form.errors %}
+    <ul class="text-red-600 m-3">
+    {% for error in form.errors %}
+        <li>{{ error }}</li>
+
+    {% endfor %}
+    </ul>
+    {% endif %}
+    <div class="flex justify-center">
+        <button type="submit" class="btn btn-error">Crear Periodo</button>
+    </div>
+</form>

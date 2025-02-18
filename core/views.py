@@ -1,19 +1,24 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import FormView
+from django.urls import reverse_lazy
+from .forms import PeriodoForm
+from django.views.generic.list import ListView
+from django.db.models import Q
 from django.db import transaction
 from django.contrib import messages
 from django.views import View
 from django.shortcuts import render, redirect
 from django.http import HttpResponseForbidden
-from datetime import date
+from datetime import date, datetime, timedelta
 from core.models import *
-from evaluacion.models import Evaluacion
+from evaluacion.models import Evaluacion, Formulario
 
 # Create your views here.
 
 class PeriodoContextMixin():
     def get_periodo(self):
-        return Periodo.objects.get(activo=True)
+        return Periodo.objects.get(activo=True) if Periodo.objects.filter(activo=True).exists() else None
 
     def get_context_data(self, **kwargs):
         context = {}
@@ -109,21 +114,24 @@ class PanelDeControl(LoginRequiredMixin, View, PeriodoContextMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        evaluaciones_periodo = Evaluacion.objects.filter(periodo=context['periodo'])
-        evaluaciones = {
-            'evaluaciones_pendientes': {'count': evaluaciones_periodo.filter(estado='P').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='P').count() / evaluaciones_periodo.count()) * 100},
-            'evaluaciones_iniciadas': {'count': evaluaciones_periodo.filter(estado='E').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='E').count() / evaluaciones_periodo.count()) * 100},
-            'evaluaciones_enviadas_supervisor': {'count': evaluaciones_periodo.filter(estado='S').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='S').count() / evaluaciones_periodo.count()) * 100},
-            'evaluaciones_revisadas': {'count': evaluaciones_periodo.filter(estado='G').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='G').count() / evaluaciones_periodo.count()) * 100},
-            'evaluaciones_enviadas_gghh': {'count': evaluaciones_periodo.filter(estado='H').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='H').count() / evaluaciones_periodo.count()) * 100},
-            'evaluaciones_aprobadas': {'count': evaluaciones_periodo.filter(estado='A').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='A').count() / evaluaciones_periodo.count()) * 100},
-            'evaluaciones_rechazadas': {'count': evaluaciones_periodo.filter(estado='R').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='R').count() / evaluaciones_periodo.count()) * 100},
-        }
-        context['evaluaciones'] = evaluaciones
+        if(context['periodo']):
+            evaluaciones_periodo = Evaluacion.objects.filter(periodo=context['periodo'])
 
-        context['personal_evaluado'] = DatosPersonal.objects.filter(activo=True, evaluaciones__periodo=context['periodo']).count()
-        context['personal_finalizado'] = DatosPersonal.objects.filter(activo=True, evaluaciones__periodo=context['periodo'], evaluaciones__estado='A').count()
-        context['porcentaje_finalizado'] = (context['personal_finalizado'] / context['personal_evaluado']) * 100
+            evaluaciones = {
+                'evaluaciones_pendientes': {'count': evaluaciones_periodo.filter(estado='P').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='P').count() / evaluaciones_periodo.count()) * 100},
+                'evaluaciones_iniciadas': {'count': evaluaciones_periodo.filter(estado='E').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='E').count() / evaluaciones_periodo.count()) * 100},
+                'evaluaciones_enviadas_supervisor': {'count': evaluaciones_periodo.filter(estado='S').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='S').count() / evaluaciones_periodo.count()) * 100},
+                'evaluaciones_revisadas': {'count': evaluaciones_periodo.filter(estado='G').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='G').count() / evaluaciones_periodo.count()) * 100},
+                'evaluaciones_enviadas_gghh': {'count': evaluaciones_periodo.filter(estado='H').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='H').count() / evaluaciones_periodo.count()) * 100},
+                'evaluaciones_aprobadas': {'count': evaluaciones_periodo.filter(estado='A').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='A').count() / evaluaciones_periodo.count()) * 100},
+                'evaluaciones_rechazadas': {'count': evaluaciones_periodo.filter(estado='R').count(), 'porcentaje': (evaluaciones_periodo.filter(estado='R').count() / evaluaciones_periodo.count()) * 100},
+            }
+            context['evaluaciones'] = evaluaciones
+
+            context['personal_evaluado'] = DatosPersonal.objects.filter(activo=True, evaluaciones__periodo=context['periodo']).count()
+            context['personal_finalizado'] = DatosPersonal.objects.filter(activo=True, evaluaciones__periodo=context['periodo'], evaluaciones__estado='A').count()
+            context['porcentaje_finalizado'] = (context['personal_finalizado'] / context['personal_evaluado']) * 100
+        
         return context
 
     def get(self, request):
@@ -131,3 +139,43 @@ class PanelDeControl(LoginRequiredMixin, View, PeriodoContextMixin):
             return redirect('dashboard')
         
         return render(request, self.template_name, self.get_context_data())
+    
+class PeriodoListView(ListView):
+    model = Periodo
+    template_name = 'core/periodo_list.html'
+    context_object_name = 'periodos'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['periodo'] = Periodo.objects.filter(activo=True).exists()
+
+        return context
+
+class PeriodoCreateView(FormView):
+    template_name = 'core/periodo_form.html'
+    form_class = PeriodoForm
+    success_url = reverse_lazy('periodo_lista')
+
+    def form_valid(self, form):
+        form.save()
+
+        six_months_from_inicio = form.instance.fecha_inicio - timedelta(days=183)
+        personal = DatosPersonal.objects.filter(
+            fecha_ingreso__lte=six_months_from_inicio, 
+            activo=True
+        )
+
+        for dp in personal:
+            Evaluacion.objects.get_or_create(evaluado=dp, 
+                periodo=form.instance, 
+                formulario = Formulario.objects.get(
+                    tipo_personal=dp.tipo_personal, 
+                    activo=True
+                ), 
+            )
+
+        return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        print(form.errors)
+        return super().form_invalid(form)

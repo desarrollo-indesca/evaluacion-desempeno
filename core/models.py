@@ -13,6 +13,9 @@ class Periodo(models.Model):
 
     def __str__(self):
         return f"PERIODO {self.fecha_inicio} - {self.fecha_fin}"
+    
+    class Meta:
+        ordering = ("-activo", "-fecha_inicio",)
 
 class TipoPersonal(NombreMixin, models.Model):
     nombre = models.CharField(max_length=50)
