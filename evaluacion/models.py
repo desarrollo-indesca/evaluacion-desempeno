@@ -181,6 +181,9 @@ class Formacion(models.Model):
     activo = models.BooleanField(default=True)
     competencias = models.ManyToManyField(Competencias, related_name="formaciones")
 
+    class Meta:
+        ordering = ["prioridad"]
+
 class Escalafon(models.Model):
     tipo_personal = models.ForeignKey(TipoPersonal, on_delete=models.CASCADE, related_name="escalafones")
     activo = models.BooleanField(default=True)
