@@ -37,8 +37,11 @@
             </td>
             <td>
                 <a href="#" class="btn btn-error">Ver Evaluaciones del Periodo</a>
-                {% if periodo.activo %}
-                <a href="#" class="btn btn-warning">Cerrar Periodo</a>
+                {% if periodo.activo and periodo.todas_evaluaciones_terminadas %}
+                <form hx-target="closest .tab-content" hx-swap="innerHTML" hx-confirm="¿Está seguro que desea cerrar el periodo?" hx-post="{% url 'periodo_cerrar' pk=periodo.pk %}" hx-target="closest tr" hx-swap="outerHTML" class="inline-block">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">Cerrar Periodo</button>
+                </form>
                 {% endif %}
             </td>
         </tr>

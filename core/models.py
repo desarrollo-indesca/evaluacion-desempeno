@@ -14,6 +14,9 @@ class Periodo(models.Model):
     def __str__(self):
         return f"PERIODO {self.fecha_inicio} - {self.fecha_fin}"
     
+    def todas_evaluaciones_terminadas(self):
+        return self.evaluaciones.filter(estado__in=("A", "R")).count() == self.evaluaciones.count()
+    
     class Meta:
         ordering = ("-activo", "-fecha_inicio",)
 

@@ -179,3 +179,12 @@ class PeriodoCreateView(FormView):
     def form_invalid(self, form):
         print(form.errors)
         return super().form_invalid(form)
+
+class CerrarPeriodoView(View):
+    def post(self, request, pk):
+        periodo = Periodo.objects.get(pk=pk)
+        if periodo.activo and request.user.is_superuser:
+            periodo.activo = False
+            periodo.save()
+
+        return redirect('periodo_lista')
