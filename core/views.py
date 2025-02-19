@@ -13,6 +13,7 @@ from django.http import HttpResponseForbidden
 from datetime import date, datetime, timedelta
 from core.models import *
 from evaluacion.models import Evaluacion, Formulario
+from core.reportes.generate_reports import create_dnf
 
 # Create your views here.
 
@@ -188,3 +189,13 @@ class CerrarPeriodoView(View):
             periodo.save()
 
         return redirect('periodo_lista')
+
+class GenerarDNF(View):
+    def get(self, request):
+        periodos = Periodo.objects.filter(activo=False).order_by('-fecha_inicio')
+        return render(request, 'core/dnf.html', context={'periodos': periodos})
+    
+    def post(self, request):
+        periodo = Periodo.objects.get(pk=request.POST.get('periodo'))
+
+        return create_dnf(periodo)

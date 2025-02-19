@@ -99,7 +99,7 @@
                 <h2 class="card-title">Extracción de DNF</h2>
                 <p>Extrae los datos de detección de necesidades de formación de los periodos.</p>
                 <div class="card-actions justify-end">
-                    <a href="#" class="btn btn-error">Ir</a>
+                    <a hx-get="{% url 'generar_dnf' %}" hx-target="closest .tab-content" hx-swap="innerHTML" href="#" class="btn btn-error">Ir</a>
                 </div>
             </div>
         </div>
