@@ -13,7 +13,7 @@ from django.http import HttpResponseForbidden
 from datetime import date, datetime, timedelta
 from core.models import *
 from evaluacion.models import Evaluacion, Formulario
-from core.reportes.generate_reports import create_dnf
+from core.reportes.generate_reports import create_dnf, fill_resumen_periodo
 
 # Create your views here.
 

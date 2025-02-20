@@ -38,6 +38,7 @@ class DatosPersonal(models.Model):
     supervisor = models.ForeignKey("self", on_delete=models.CASCADE, related_name="supervisados", null=True, blank=True)
     gerencia = models.ForeignKey("Gerencia", on_delete=models.CASCADE, related_name="personal_gerencia")
     fecha_ingreso = models.DateField()
+    escalafon = models.ForeignKey("evaluacion.NivelEscalafon", on_delete=models.CASCADE, default=1)
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}"

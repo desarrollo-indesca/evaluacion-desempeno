@@ -70,8 +70,120 @@ def create_dnf(periodo, file_path='core/reportes/bases/plan-anual-formacion.xlsx
     worksheet.add_image(img)
     
     # Return the report as a file response
-    return HttpResponse(
+    response = HttpResponse(
         output,
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
+    response['Content-Disposition'] = f'attachment; filename="dnf_{periodo.fecha_inicio.strftime("%Y-%m-%d")}_{periodo.fecha_fin.strftime("%Y-%m-%d")}.xlsx"'
+    return response
+
+def obtener_accion_a_tomar_desempeno(escala):
+    if(escala <= 2):
+        return "2.00 - Observación directa máximo de seis meses."
+    elif(escala > 2 and escala <= 2.75):
+        return "2.01 a 2.75 - Observación de un año."
+    elif(escala > 2.75 and escala <= 3.5):
+        return "2.76 a 3.50 - Ofrecerle oportunidades  de crecimiento  dentro  de su cargo o área de trabajo."
+    elif(escala > 3.5 and escala <= 4.25):
+        return "3.51 a 4.25 - Califica para  promociones  (tanto en el escalafón como en la estructura administrativa,  previo cumplimiento de todos los requisitos del cargo o nivel)."
+    else:
+        return "4.26 hasta 5 - Califica para promociones (tanto en el escalafón como en la estructura  administrativa,  previo  cumplimiento de todos los requisitos del cargo o nivel)."
+
+def obtener_accion_a_tomar_ct_operativos(escala):
+    if(escala <= 2.5):
+        return "< 2,50 - Cerrar brecha existente a través de formación.  Se requiere de una observación directa por parte del supervisor."
+    elif(escala > 2.5 and escala <= 2.99):
+        return "2,51 a 2,99 - Cerrar brecha existente a través de formación.  Se requiere de una observación directa por parte del supervisor."
+    elif(escala > 2.99 and escala <= 3.49):
+        return "2,00 a 3,49 - Cerrar brecha existente a través de formación.  "
+    elif(escala > 3.49 and escala <= 4.50):
+        return "3,50 a 4,50 - Cerrar brecha existente a través de formación.  "
+    else:
+        return "4,51 hasta 5,00 - El haber alcanzado este puntaje  no significa que no tenga brechas ya que cada nivel es distinto y  las prioridades  serán  subsanar  los aspectos  más rezagados, ya que no todo puede resolverse en un solo periodo.  Se observa que mantenga su posición alcanzada."
+
+def obtener_accion_a_tomar_ct_apoyo(escala):
+    if(escala <= 2.5):
+        return "< 2,50 - Cerrar brecha existente a través de formación.  Se requiere de una observación directa por parte del supervisor."
+    elif(escala > 2.5 and escala <= 2.99):
+        return "2,51 a 2,99 - Cerrar brecha existente a través de formación.  Se requiere de una observación directa por parte del supervisor."
+    elif(escala > 2.99 and escala <= 3.49):
+        return "2,00 a 3,49 - Cerrar brecha existente a través de formación."
+    elif(escala > 3.49 and escala <= 4.50):
+        return "3,50 a 4,50 - Cerrar brecha existente a través de formación."
+    else:
+        return "4,51 hasta 5,00 - Si  la  brecha  se  cerró  no  se  tomarán   acciones. Se observa  que mantenga su posición alcanzado."
+
+def obtener_accion_a_tomar_genericas(escala):
+    if(escala <= 2.5):
+        return "< 2,50 - Cerrar brecha existente a través de formación."
+    elif(escala > 2.5 and escala <= 2.99):
+        return "2,51 a 2,99 - Cerrar brecha existente a través de formación."
+    elif(escala > 2.99 and escala <= 3.49):
+        return "2,00 a 3,49 - Cerrar brecha existente a través de formación."
+    elif(escala > 3.49 and escala <= 4.50):
+        return "3,50 a 4,50 - Cerrar brecha existente a través de formación."
+    else:
+        return "4,51 hasta 5,00 - Si la brecha se cerró no se tomarán acciones."
+
+def fill_resumen_periodo(periodo):
+    # fetch all the evaluations of the period
+    evaluaciones = Evaluacion.objects.filter(
+        periodo=periodo,
+        estado='A'
+    ).order_by('evaluado__user__first_name')
+        
+    # Load the Excel workbook
+    workbook = openpyxl.load_workbook('core/reportes/bases/resumen.xlsx')
+
+    # Access the first worksheet
+    worksheet = workbook.active
+    
+    # Fill the worksheet with the resumen data
+    row = 8
+    for i,evaluacion in enumerate(evaluaciones, start=1):
+        datos_personal = evaluacion.evaluado
+
+        worksheet.cell(row=row, column=1, value=i)
+        worksheet.cell(row=row, column=2, value=datos_personal.ficha)
+        worksheet.cell(row=row, column=3, value=datos_personal.user.get_full_name())
+        worksheet.cell(row=row, column=4, value=datos_personal.fecha_ingreso.strftime("%d/%m/%Y"))
+        worksheet.cell(row=row, column=5, value=round((datetime.date.today() - datos_personal.fecha_ingreso).days / 365, 2))
+        worksheet.cell(row=row, column=6, value=datos_personal.tipo_personal.nombre)
+        worksheet.cell(row=row, column=7, value=datos_personal.gerencia.nombre)
+        worksheet.cell(row=row, column=8, value=datos_personal.cargo.nombre)
+        worksheet.cell(row=row, column=9, value=datos_personal.escalafon.nivel)
+        resultado_instrumento = evaluacion.resultados.filter(instrumento__nombre__icontains='Evaluación del Desempeño').first()
+        print(resultado_instrumento)
+        worksheet.cell(row=row, column=10, value=resultado_instrumento.resultado_final if resultado_instrumento else '')
+        worksheet.cell(row=row, column=11, value=obtener_accion_a_tomar_desempeno(resultado_instrumento.resultado_final) if resultado_instrumento else '')
+        resultado_ct_tecnicas = evaluacion.resultados.filter(instrumento__nombre__icontains='Competencias Técnicas').first()
+        worksheet.cell(row=row, column=12, value=resultado_ct_tecnicas.resultado_final if resultado_ct_tecnicas else '')
+        tipo_personal = datos_personal.tipo_personal
+        if tipo_personal.nombre == 'APOYO':
+            worksheet.cell(row=row, column=13, value=obtener_accion_a_tomar_ct_apoyo(resultado_ct_tecnicas.resultado_final) if resultado_ct_tecnicas else '')
+        else:
+            worksheet.cell(row=row, column=13, value=obtener_accion_a_tomar_ct_operativos(resultado_ct_tecnicas.resultado_final) if resultado_ct_tecnicas else '')
+        resultado_ct_genericas = evaluacion.resultados.filter(instrumento__nombre__icontains='Competencias Genérica').first()
+        worksheet.cell(row=row, column=14, value=resultado_ct_genericas.resultado_final if resultado_ct_genericas else '')
+        worksheet.cell(row=row, column=15, value=obtener_accion_a_tomar_genericas(resultado_ct_genericas.resultado_final) if resultado_ct_genericas else '')
+        
+        row += 1
+    
+    # Save the workbook to a file
+    output = BytesIO()
+    workbook.save(output)
+    output.seek(0)
+
+    # add the picture in static/img/LogoDeIndesca.png
+    img = openpyxl.drawing.image.Image('static/img/LogoDeIndesca.png')
+    img.anchor = 'A3'
+    worksheet.add_image(img)
+    
+    # Return the report as a file response
+    response = HttpResponse(
+        output,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="resumen_{periodo.fecha_inicio.strftime("%Y-%m-%d")}_{periodo.fecha_fin.strftime("%Y-%m-%d")}.xlsx"'
+    return response
 
