@@ -12,5 +12,6 @@ urlpatterns = [
     path('periodo/crear/', PeriodoCreateView.as_view(), name="periodo_crear"),
     path('periodo/cerrar/<int:pk>/', CerrarPeriodoView.as_view(), name="periodo_cerrar"),
 
-    path('dnf/', GenerarDNF.as_view(), name="generar_dnf"),
+    path('generar-reportes/', GenerarReportesPeriodo.as_view(), name="generar_reportes"),
+    path('reporte-final/<int:pk>/', GenerarReporteFinal.as_view(), name="reporte_final_evaluacion")
 ]

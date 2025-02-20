@@ -190,12 +190,22 @@ class CerrarPeriodoView(View):
 
         return redirect('periodo_lista')
 
-class GenerarDNF(View):
+class GenerarReportesPeriodo(View):
     def get(self, request):
         periodos = Periodo.objects.filter(activo=False).order_by('-fecha_inicio')
         return render(request, 'core/dnf.html', context={'periodos': periodos})
     
     def post(self, request):
         periodo = Periodo.objects.get(pk=request.POST.get('periodo'))
+        tipo = request.POST.get('tipo')
 
-        return fill_resultado_operativo(Evaluacion.objects.filter(estado="A", evaluado__tipo_personal__pk = 2).first())
+        if(tipo == 'dnf'):
+            return create_dnf(periodo)
+        elif(tipo == 'resumen'):
+            return fill_resumen_periodo(periodo)
+    
+class GenerarReporteFinal(View):
+    def get(self, request, pk):
+        evaluacion = Evaluacion.objects.get(pk=pk)
+
+        return fill_resultado_apoyo(evaluacion) if evaluacion.evaluado.tipo_personal.nombre == "APOYO" else fill_resultado_operativo(evaluacion)

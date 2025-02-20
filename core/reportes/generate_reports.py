@@ -21,7 +21,7 @@ def create_dnf(periodo, file_path='core/reportes/bases/plan-anual-formacion.xlsx
     # Write data to the worksheet
     row = 10
     for evaluacion in evaluaciones:
-        for j,formacion in enumerate(evaluacion.formaciones.filter(activo=True), start=1):            
+        for j,formacion in enumerate(evaluacion.formaciones.filter(anadido_por='H'), start=1):            
             formacion_sugerida = formacion.necesidad_formacion.upper()
             formacion_especifica = ''
             ente_didactico = ''
@@ -147,7 +147,7 @@ def fill_resumen_periodo(periodo):
         worksheet.cell(row=row, column=2, value=datos_personal.ficha)
         worksheet.cell(row=row, column=3, value=datos_personal.user.get_full_name())
         worksheet.cell(row=row, column=4, value=datos_personal.fecha_ingreso.strftime("%d/%m/%Y"))
-        worksheet.cell(row=row, column=5, value=round((datetime.date.today() - datos_personal.fecha_ingreso).days / 365, 2))
+        worksheet.cell(row=row, column=5, value=(datetime.date.today() - datos_personal.fecha_ingreso).days // 365)
         worksheet.cell(row=row, column=6, value=datos_personal.tipo_personal.nombre)
         worksheet.cell(row=row, column=7, value=datos_personal.gerencia.nombre)
         worksheet.cell(row=row, column=8, value=datos_personal.cargo.nombre)

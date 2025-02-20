@@ -198,6 +198,14 @@
             </button>
         </div>
         {% endif %}
+
+        {% if evaluacion.estado == 'A' %}
+        <div class="d-flex justify-center mt-3">
+            <a class="btn btn-danger" href="{% url 'reporte_final_evaluacion' pk=evaluacion.pk %}">
+                Descargar Reporte XLSX
+            </a>
+        </div>
+        {% endif %}
     </div>
     <label class="modal-backdrop" for="modal-{{id}}">Close</label>
 </div>

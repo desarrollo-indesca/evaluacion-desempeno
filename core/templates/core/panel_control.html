@@ -96,10 +96,10 @@
     <div class="w-1/3 p-4">
         <div class="card bg-base-100 shadow-xl border">
             <div class="card-body">
-                <h2 class="card-title">Extracción de DNF</h2>
-                <p>Extrae los datos de detección de necesidades de formación de los periodos.</p>
+                <h2 class="card-title">Generación de Reportes</h2>
+                <p>Extrae los reportes correspondientes a los periodos cerrados.</p>
                 <div class="card-actions justify-end">
-                    <a hx-get="{% url 'generar_dnf' %}" hx-target="closest .tab-content" hx-swap="innerHTML" href="#" class="btn btn-error">Ir</a>
+                    <a hx-get="{% url 'generar_reportes' %}" hx-target="closest .tab-content" hx-swap="innerHTML" href="#" class="btn btn-error">Ir</a>
                 </div>
             </div>
         </div>
