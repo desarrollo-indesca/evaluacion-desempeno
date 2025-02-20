@@ -517,7 +517,7 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
 class FormularioInstrumentoSupervisor(PeriodoContextMixin, EscalafonMixin, EvaluacionEstadoMixin, View):
     estado = "S"
     template_name = "evaluacion/partials/formulario_supervisor.html"
-    form_class = FormularioRespuestasFinales
+    form_class = FormularioRespuestasSupervisor
 
     def define_initial_data(self, pregunta, respuesta):
         return {
@@ -979,7 +979,7 @@ class FormacionDefinitiva(FormacionEmpleado):
         if(qs.exists()):
             return qs
         else:
-            return evaluacion.formaciones.filter(activo = True)
+            return evaluacion.formaciones.filter(anadido_por = 'S')
 
 class CerrarEvaluacion(View):
     def post(self, request, pk, *args, **kwargs):

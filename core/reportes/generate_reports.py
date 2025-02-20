@@ -152,17 +152,20 @@ def fill_resumen_periodo(periodo):
         worksheet.cell(row=row, column=7, value=datos_personal.gerencia.nombre)
         worksheet.cell(row=row, column=8, value=datos_personal.cargo.nombre)
         worksheet.cell(row=row, column=9, value=datos_personal.escalafon.nivel)
+        
         resultado_instrumento = evaluacion.resultados.filter(instrumento__nombre__icontains='Evaluación del Desempeño').first()
-        print(resultado_instrumento)
         worksheet.cell(row=row, column=10, value=resultado_instrumento.resultado_final if resultado_instrumento else '')
         worksheet.cell(row=row, column=11, value=obtener_accion_a_tomar_desempeno(resultado_instrumento.resultado_final) if resultado_instrumento else '')
+        
         resultado_ct_tecnicas = evaluacion.resultados.filter(instrumento__nombre__icontains='Competencias Técnicas').first()
         worksheet.cell(row=row, column=12, value=resultado_ct_tecnicas.resultado_final if resultado_ct_tecnicas else '')
+        
         tipo_personal = datos_personal.tipo_personal
         if tipo_personal.nombre == 'APOYO':
             worksheet.cell(row=row, column=13, value=obtener_accion_a_tomar_ct_apoyo(resultado_ct_tecnicas.resultado_final) if resultado_ct_tecnicas else '')
         else:
             worksheet.cell(row=row, column=13, value=obtener_accion_a_tomar_ct_operativos(resultado_ct_tecnicas.resultado_final) if resultado_ct_tecnicas else '')
+        
         resultado_ct_genericas = evaluacion.resultados.filter(instrumento__nombre__icontains='Competencias Genérica').first()
         worksheet.cell(row=row, column=14, value=resultado_ct_genericas.resultado_final if resultado_ct_genericas else '')
         worksheet.cell(row=row, column=15, value=obtener_accion_a_tomar_genericas(resultado_ct_genericas.resultado_final) if resultado_ct_genericas else '')
@@ -187,3 +190,256 @@ def fill_resumen_periodo(periodo):
     response['Content-Disposition'] = f'attachment; filename="resumen_{periodo.fecha_inicio.strftime("%Y-%m-%d")}_{periodo.fecha_fin.strftime("%Y-%m-%d")}.xlsx"'
     return response
 
+def fill_resultado_operativo(evaluacion):
+    workbook = openpyxl.load_workbook('core/reportes/bases/resultados-operativos.xlsx')
+    worksheet = workbook.active
+
+    worksheet.cell(row=6, column=1, value=f"EVALUACIÓN DE DESEMPEÑO")
+    worksheet.cell(row=6, column=1, value=f"PERÍODO DE EVALUACIÓN DEL {evaluacion.periodo.fecha_inicio.strftime('%d/%m/%Y')} AL {evaluacion.periodo.fecha_fin.strftime('%d/%m/%Y')}")
+
+    worksheet.cell(row=8, column=2, value=evaluacion.evaluado.user.get_full_name())
+    worksheet.cell(row=8, column=18, value=evaluacion.evaluado.ficha)
+    worksheet.cell(row=9, column=2, value=evaluacion.evaluado.cargo.nombre)
+    
+    resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Evaluación del Desempeño')
+    worksheet.cell(row=13, column=2, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').resultado_final)
+    worksheet.cell(row=13, column=3, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').resultado_final)
+    worksheet.cell(row=13, column=4, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').resultado_final)
+    worksheet.cell(row=13, column=5, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').resultado_final)
+    worksheet.cell(row=13, column=6, value=resultado_instrumento.resultado_final)    
+    
+    resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Competencias Técnicas')
+    worksheet.cell(row=13, column=7, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Capacidades Operativas').resultado_final)
+    worksheet.cell(row=13, column=8, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Capacidades Analíticas y de Síntesis').resultado_final)
+    worksheet.cell(row=13, column=9, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Capacidades de Negociación y Relación').resultado_final)
+    worksheet.cell(row=13, column=10, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Capacidades de Gestión').resultado_final)
+    worksheet.cell(row=13, column=11, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Desarrollo').resultado_final)
+    worksheet.cell(row=13, column=12, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Otros').resultado_final)
+    worksheet.cell(row=13, column=13, value=resultado_instrumento.resultado_final)
+
+    resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Competencias Genérica')
+    worksheet.cell(row=13, column=14, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Liderazgo:').resultado_final)
+    worksheet.cell(row=13, column=15, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Adaptabilidad:').resultado_final)
+    worksheet.cell(row=13, column=16, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Relaciones:').resultado_final)
+    worksheet.cell(row=13, column=17, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Realización de Tareas:').resultado_final)
+    worksheet.cell(row=13, column=18, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Producción:').resultado_final)
+    worksheet.cell(row=13, column=19, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Desarrollo de los demás:').resultado_final)
+    worksheet.cell(row=13, column=20, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Desarrollo Personal:').resultado_final)
+    worksheet.cell(row=13, column=21, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Comunicación:').resultado_final)
+    worksheet.cell(row=13, column=22, value=resultado_instrumento.resultado_final)
+
+    logros = evaluacion.logros_y_metas.filter(anadido_por="H", periodo="A")
+    formaciones = evaluacion.formaciones.filter(anadido_por="H")
+
+    tecnico_cientificas = formaciones.filter(clasificacion__clasificacion__icontains='Tecno-Cientifica').count()
+    supervisoria_formativa = formaciones.filter(clasificacion__clasificacion__icontains='Supervisoria Formativa').count()
+    tecnica_administrativa = formaciones.filter(clasificacion__clasificacion__icontains='Tecnica Administrativa').count()
+    seguridad_industrial = formaciones.filter(clasificacion__clasificacion__icontains='Seguridad Industrial').count()
+    total_cursos = formaciones.count()
+
+    worksheet.cell(row=40, column=3, value=tecnico_cientificas)
+    worksheet.cell(row=41, column=3, value=supervisoria_formativa)
+    worksheet.cell(row=40, column=12, value=tecnica_administrativa)
+    worksheet.cell(row=40, column=12, value=seguridad_industrial)
+    worksheet.cell(row=40, column=21, value=total_cursos)
+    for i, logro in enumerate(logros, start=17):
+        worksheet.cell(row=i, column=1, value=logro.descripcion)
+        worksheet.cell(row=i, column=16, value=logro.porc_cumplimiento)
+
+    for i, formacion in enumerate(formaciones, start=31):
+        worksheet.cell(row=i, column=1, value=formacion.necesidad_formacion)
+        worksheet.cell(row=i, column=5, value=formacion.prioridad)
+        worksheet.cell(row=i, column=7, value=formacion.clasificacion.clasificacion)
+        col = 13
+        if formacion.competencias.filter(nombre__icontains='Capacidades Operativas').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Capacidades de Negociación y Relación').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Capacidades de Gestión').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Desarrollo').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Liderazgo').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Adaptabilidad').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Relaciones').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Realización de Tareas').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Producción').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Desarrollo de los demás').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Desarrollo del Personal').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Comunicación').exists():
+            worksheet.cell(row=i, column=col, value='X')
+
+    metas = evaluacion.logros_y_metas.filter(periodo="P", anadido_por="H")[:5]
+    for i, meta in enumerate(metas, start=44):
+        worksheet.cell(row=i, column=1, value=meta.descripcion)
+        worksheet.cell(row=i, column=16, value=meta.prioridad_larga())
+
+    worksheet.cell(row=53, column=1, value=f'Comentarios del evaluado: {evaluacion.comentario_evaluado}')
+    worksheet.cell(row=54, column=1, value=f'Comentarios del supervisor: {evaluacion.comentario_supervisor}')
+    worksheet.cell(row=55, column=1, value=f'Comentarios de la gerencia: {evaluacion.comentario_gghh}')
+
+    output = BytesIO()
+    workbook.save(output)
+    output.seek(0)
+
+    response = HttpResponse(
+        output,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="resultados_operativo_{evaluacion.evaluado.ficha}_{evaluacion.periodo.fecha_inicio}_{evaluacion.periodo.fecha_fin}.xlsx"'
+    return response
+
+def fill_resultado_apoyo(evaluacion):
+    workbook = openpyxl.load_workbook('core/reportes/bases/resultados-apoyo.xlsx')
+    worksheet = workbook.active
+
+    worksheet.cell(row=6, column=1, value=f"EVALUACIÓN DE DESEMPEÑO")
+    worksheet.cell(row=6, column=1, value=f"PERÍODO DE EVALUACIÓN DEL {evaluacion.periodo.fecha_inicio.strftime('%d/%m/%Y')} AL {evaluacion.periodo.fecha_fin.strftime('%d/%m/%Y')}")
+
+    worksheet.cell(row=8, column=2, value=evaluacion.evaluado.user.get_full_name())
+    worksheet.cell(row=8, column=18, value=evaluacion.evaluado.ficha)
+    worksheet.cell(row=9, column=2, value=evaluacion.evaluado.cargo.nombre)
+    
+    resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Evaluación del Desempeño')
+    worksheet.cell(row=13, column=2, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').resultado_final)
+    worksheet.cell(row=13, column=3, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').resultado_final)
+    worksheet.cell(row=13, column=4, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').resultado_final)
+    worksheet.cell(row=13, column=5, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').resultado_final)
+    worksheet.cell(row=13, column=6, value=resultado_instrumento.resultado_final)    
+    
+    resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Competencias Técnicas')
+    worksheet.cell(row=13, column=7, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Capacidades Operativas').resultado_final)
+    worksheet.cell(row=13, column=8, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Capacidades de Negociación y Relación').resultado_final)
+    worksheet.cell(row=13, column=9, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Capacidades de Gestión').resultado_final)
+    worksheet.cell(row=13, column=10, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Desarrollo').resultado_final)
+    worksheet.cell(row=13, column=11, value=resultado_instrumento.resultado_final)
+
+    resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Competencias Genérica')
+    worksheet.cell(row=13, column=12, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Liderazgo:').resultado_final)
+    worksheet.cell(row=13, column=13, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Adaptabilidad:').resultado_final)
+    worksheet.cell(row=13, column=14, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Relaciones:').resultado_final)
+    worksheet.cell(row=13, column=15, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Realización de Tareas:').resultado_final)
+    worksheet.cell(row=13, column=16, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Producción:').resultado_final)
+    worksheet.cell(row=13, column=17, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Desarrollo de los demás:').resultado_final)
+    worksheet.cell(row=13, column=18, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Desarrollo Personal:').resultado_final)
+    worksheet.cell(row=13, column=19, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Comunicación:').resultado_final)
+    worksheet.cell(row=13, column=20, value=resultado_instrumento.resultado_final)
+
+    logros = evaluacion.logros_y_metas.filter(anadido_por="H", periodo="A")
+    formaciones = evaluacion.formaciones.filter(anadido_por="H")
+
+    tecnico_cientificas = formaciones.filter(clasificacion__clasificacion__icontains='Tecno-Cientifica').count()
+    supervisoria_formativa = formaciones.filter(clasificacion__clasificacion__icontains='Supervisoria Formativa').count()
+    tecnica_administrativa = formaciones.filter(clasificacion__clasificacion__icontains='Tecnica Administrativa').count()
+    seguridad_industrial = formaciones.filter(clasificacion__clasificacion__icontains='Seguridad Industrial').count()
+    total_cursos = formaciones.count()
+
+    worksheet.cell(row=40, column=3, value=tecnico_cientificas)
+    worksheet.cell(row=41, column=3, value=supervisoria_formativa)
+    worksheet.cell(row=40, column=12, value=tecnica_administrativa)
+    worksheet.cell(row=40, column=12, value=seguridad_industrial)
+    worksheet.cell(row=40, column=21, value=total_cursos)
+    for i, logro in enumerate(logros, start=17):
+        worksheet.cell(row=i, column=1, value=logro.descripcion)
+        worksheet.cell(row=i, column=16, value=logro.porc_cumplimiento)
+
+    for i, formacion in enumerate(formaciones, start=31):
+        worksheet.cell(row=i, column=1, value=formacion.necesidad_formacion)
+        worksheet.cell(row=i, column=5, value=formacion.prioridad)
+        worksheet.cell(row=i, column=7, value=formacion.clasificacion.clasificacion)
+        col = 13
+        if formacion.competencias.filter(nombre__icontains='Capacidades Operativas').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Capacidades de Negociación y Relación').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Capacidades de Gestión').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Desarrollo').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Liderazgo').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Adaptabilidad').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Relaciones').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Realización de Tareas').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Producción').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Desarrollo de los demás').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Desarrollo del Personal').exists():
+            worksheet.cell(row=i, column=col, value='X')
+        
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Comunicación').exists():
+            worksheet.cell(row=i, column=col, value='X')
+
+    metas = evaluacion.logros_y_metas.filter(periodo="P", anadido_por="H")[:5]
+    for i, meta in enumerate(metas, start=44):
+        worksheet.cell(row=i, column=1, value=meta.descripcion)
+        worksheet.cell(row=i, column=16, value=meta.prioridad_larga())
+
+    worksheet.cell(row=53, column=1, value=f'Comentarios del evaluado: {evaluacion.comentario_evaluado}')
+    worksheet.cell(row=54, column=1, value=f'Comentarios del supervisor: {evaluacion.comentario_supervisor}')
+    worksheet.cell(row=55, column=1, value=f'Comentarios de la gerencia: {evaluacion.comentario_gghh}')
+
+    output = BytesIO()
+    workbook.save(output)
+    output.seek(0)
+
+    response = HttpResponse(
+        output,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="resultados_apoyo_{evaluacion.evaluado.ficha}_{evaluacion.periodo.fecha_inicio}_{evaluacion.periodo.fecha_fin}.xlsx"'
+    return response

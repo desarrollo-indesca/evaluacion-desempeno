@@ -13,7 +13,7 @@ from django.http import HttpResponseForbidden
 from datetime import date, datetime, timedelta
 from core.models import *
 from evaluacion.models import Evaluacion, Formulario
-from core.reportes.generate_reports import create_dnf, fill_resumen_periodo
+from core.reportes.generate_reports import create_dnf, fill_resumen_periodo, fill_resultado_apoyo, fill_resultado_operativo
 
 # Create your views here.
 
@@ -198,4 +198,4 @@ class GenerarDNF(View):
     def post(self, request):
         periodo = Periodo.objects.get(pk=request.POST.get('periodo'))
 
-        return create_dnf(periodo)
+        return fill_resultado_operativo(Evaluacion.objects.filter(estado="A", evaluado__tipo_personal__pk = 2).first())
