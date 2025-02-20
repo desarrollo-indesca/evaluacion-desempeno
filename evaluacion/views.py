@@ -266,8 +266,9 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
                     for competencia in competencias_genericas:
                         form.instance.competencias.add(competencia)
         else:
-            print(formset.errors)
-            raise Exception(str(formset.errors))
+            context = self.get_context_data()
+            context['formset'] = formset
+            return render(request, self.template_name, context)
 
         messages.success(request, 'Respuestas de Formación almacenadas correctamente.')
         return self.get_success_url()
