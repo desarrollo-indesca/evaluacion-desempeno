@@ -160,7 +160,7 @@ class PeriodoCreateView(FormView):
     def form_valid(self, form):
         form.save()
 
-        six_months_from_inicio = form.instance.fecha_inicio - timedelta(days=183)
+        six_months_from_inicio = form.instance.fecha_fin - timedelta(days=183)
         personal = DatosPersonal.objects.filter(
             fecha_ingreso__lte=six_months_from_inicio, 
             activo=True

@@ -68,21 +68,21 @@
                     <tbody id="form">
                         {{formset.management_form}}
                         {% for form in formset %}
-                        <tr class="form hover:bg-gray-100">
+                        <tr class="form border-b hover:bg-gray-100">
                             <td class="text-center w-2/8">
-                                {% render_field form.necesidad_formacion class="input input-bordered w-full" %}
+                                {% render_field form.necesidad_formacion class="input input-bordered w-full" required="true" %}
                                 <small class="text-error">
                                     {% for error in form.necesidad_formacion.errors %}{{error}}<br>{% endfor %}
                                 </small>
                             </td>
                             <td class="text-center w-1/8">
-                                {% render_field form.prioridad class="select select-bordered w-full" %}
+                                {% render_field form.prioridad class="select select-bordered w-full" required="true" %}
                                 <small class="text-error">
                                     {% for error in form.prioridad.errors %}{{error}}<br>{% endfor %}
                                 </small>
                             </td>
                             <td class="text-center w-1/8">
-                                {% render_field form.clasificacion class="select select-bordered w-full" %}                                
+                                {% render_field form.clasificacion class="select select-bordered w-full" required="true" %}                                
                                 <small class="text-error">
                                     {% for error in form.clasificacion.errors %}{{error}}<br>{% endfor %}
                                 </small>
@@ -125,6 +125,6 @@
         </div>
     </div>
 
-    <script src="{% static 'js/dynamic-forms.js' %}"></script>
+    <script src="{% static 'js/dynamic-forms.js' %}"></script>        
 </form>
 {% endblock %}

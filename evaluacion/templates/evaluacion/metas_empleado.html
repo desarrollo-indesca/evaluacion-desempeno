@@ -48,10 +48,10 @@
                                 {% for hidden_field in form.hidden_fields %}
                                 {{hidden_field}}
                                 {% endfor %}
-                                {% render_field form.descripcion class="input input-bordered w-full" placeholder="Meta o Logro en este Período" %}
+                                {% render_field form.descripcion class="input input-bordered w-full" placeholder="Meta o Logro en este Período" required="true" %}
                             </td>
                             <td class="text-center w-1/8">
-                                {% render_field form.porc_cumplimiento class="input input-bordered w-full" placeholder="% Cumplido" %}
+                                {% render_field form.porc_cumplimiento class="input input-bordered w-full" placeholder="% Cumplido" required="true" %}
                             </td>
                             <td class="flex justify-center">
                                 {% if forloop.first %}
@@ -95,10 +95,10 @@
                                 {% for hidden_field in form.hidden_fields %}
                                 {{hidden_field}}
                                 {% endfor %}
-                                {% render_field form.descripcion class="input input-bordered w-full" placeholder="Meta para el siguiente Período" %}
+                                {% render_field form.descripcion class="input input-bordered w-full" placeholder="Meta para el siguiente Período" required="true" %}
                             </td>
                             <td class="text-center w-1/8">
-                                {% render_field form.nivel_prioridad class="select select-bordered w-full" %}
+                                {% render_field form.nivel_prioridad class="select select-bordered w-full" required="true" %}
                             </td>
                             <td class="flex justify-center">
                                 {% if forloop.first %}
