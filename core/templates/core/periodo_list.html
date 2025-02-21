@@ -46,6 +46,10 @@
                 {% endif %}
             </td>
         </tr>
+    {% empty %}
+        <tr>
+            <td colspan="5">No han sido creados periodos de evaluación.</td>
+        </tr>
     {% endfor %}
     </tbody>
 </table>

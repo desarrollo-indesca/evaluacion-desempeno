@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.views import View
 from django.shortcuts import render, redirect
 from django.http import HttpResponseForbidden
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from core.models import *
 from evaluacion.models import Evaluacion, Formulario
 from core.reportes.generate_reports import create_dnf, fill_resumen_periodo, fill_resultado_apoyo, fill_resultado_operativo
@@ -129,7 +129,7 @@ class PanelDeControl(LoginRequiredMixin, View, PeriodoContextMixin):
             }
             context['evaluaciones'] = evaluaciones
 
-            context['personal_evaluado'] = DatosPersonal.objects.filter(activo=True, evaluaciones__periodo=context['periodo']).count()
+            context['personal_evaluado'] = DatosPersonal.objects.filter(activo=True, evaluaciones__periodo=context['periodo']).exclude(evaluaciones__estado='A').count()
             context['personal_finalizado'] = DatosPersonal.objects.filter(activo=True, evaluaciones__periodo=context['periodo'], evaluaciones__estado='A').count()
             context['porcentaje_finalizado'] = (context['personal_finalizado'] / context['personal_evaluado']) * 100
         

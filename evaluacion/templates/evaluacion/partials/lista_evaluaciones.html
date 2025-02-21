@@ -15,6 +15,18 @@
 {% endif %}
 <hr>
 
+{% if messages %} <!-- TODO: Colocar mensajes-->
+        <div class="fixed bottom-0 left-0 right-0 z-10 p-4">
+            <div class="alert alert-warning shadow-lg" id="messages">
+                <div>
+                    {% for message in messages %}
+                    <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+{% endif %}
+
 <form hx-get="{% url 'consultar_evaluaciones' pk=request.user.pk %}" hx-select="#evaluaciones" hx-target="#evaluaciones" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
     <div>
         {{filter.form.periodo.label_tag}} <br>
@@ -41,12 +53,22 @@
         <tr>
             <td>{{evaluacion.id}}</td>
             <td>{{evaluacion.periodo}}</td>
-            <td>{{evaluacion.estado_largo}}</td>
+            <td>
+                {% if evaluacion.estado == 'A' %}
+                <span class="badge badge-success">Aprobada</span>
+                {% elif evaluacion.estado == 'R' %}
+                <span class="badge badge-error">Rechazada</span>
+                {% elif evaluacion.estado == 'P' %}
+                <span class="badge badge-warning">En Proceso</span>
+                {% else %}
+                {{evaluacion.estado_largo}}
+                {% endif %}
+            </td>
             <td>
                 <label for="modal-{{evaluacion.pk}}" class="btn btn-error">Revisar Evaluación</label>
-                {% if evaluacion.estado == 'E' or evaluacion.estatus == 'S' %}
+                {% if  evaluacion.estado == 'P' or evaluacion.estado == 'E' or evaluacion.estado == 'S' %}
                 {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="E" %}
-                {% elif evaluacion.estado == 'G' or evaluacion.estatus == 'H' %}
+                {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' %}
                 {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="S" %}
                 {% elif evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
                 {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="G" %}

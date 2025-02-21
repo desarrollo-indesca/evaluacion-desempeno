@@ -11,10 +11,10 @@
                 {% else %}
                 <option value="E" {% if tipo == 'E' %}selected{% endif %}>Empleado</option>
                 {% if include_others %}
-                {% if tipo == "S" or evaluacion.estado == "S" or evaluacion.estado == "G" or evaluacion.estado == "H" or evaluacion.estatus == "A" or evaluacion.estatus == "R" %}
+                {% if tipo == "S" or evaluacion.estado == "G" or evaluacion.estado == "H" or evaluacion.estado == "A" or evaluacion.estado == "R" %}
                 <option value="S" {% if tipo == 'S' %}selected{% endif %}>Supervisor</option>
                 {% endif %}
-                {% if tipo == "H" or evaluacion.estado == "A" or evaluacion.estado == "R" %}
+                {% if evaluacion.estado == "A" or evaluacion.estado == "R" %}
                 <option value="H" {% if tipo == 'H' %}selected{% endif %}>Gestión Humana</option>
                 {% endif %}
                 {% endif %}
@@ -67,7 +67,7 @@
             <div class="collapse collapse-arrow bg-base-200 mb-2">
                 <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
                 <div class="collapse-title text-xl font-medium">
-                    {{resultado.instrumento}} ({% if tipo == "E" %}{{resultado.resultado_empleado}}{% elif tipo == "S" %}{{resultado.resultado_supervisor}} {% else %} {{resultado.resultado_final}} {% endif %} / {{resultado.instrumento.peso}})
+                    {{resultado.instrumento}} ({% if tipo == "E" %}{{resultado.resultado_empleado|default:'-'}}{% elif tipo == "S" %}{{resultado.resultado_supervisor|default:'-'}} {% else %} {{resultado.resultado_final|default:'-'}} {% endif %} / {{resultado.instrumento.peso}})
                 </div>
                 <div class="collapse-content">
                     <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>

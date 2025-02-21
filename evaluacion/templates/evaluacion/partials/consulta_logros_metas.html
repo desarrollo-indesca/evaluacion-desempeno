@@ -10,9 +10,13 @@
     </thead>
     <tbody>
         {% for meta in metas_periodo_actual %}
-        <tr>
+        <tr class="border-b">
             <td>{{meta.descripcion}}</td>
             <td>{{meta.porc_cumplimiento|floatformat:2}}%</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="2">No se han cargado metas o logros para el periodo actual.</td>
         </tr>
         {% endfor %}
     </tbody>
@@ -31,9 +35,13 @@
     </thead>
     <tbody>
         {% for meta in metas_periodo_proximo %}
-        <tr>
+        <tr class="border-b">
             <td>{{meta.descripcion}}</td>
             <td>{{meta.prioridad_larga}}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="2">No se han cargado metas o logros para el próximo periodo.</td>
         </tr>
         {% endfor %}
     </tbody>

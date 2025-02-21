@@ -197,6 +197,8 @@ def fill_resultado_operativo(evaluacion):
     worksheet.cell(row=6, column=1, value=f"EVALUACIÓN DE DESEMPEÑO")
     worksheet.cell(row=6, column=1, value=f"PERÍODO DE EVALUACIÓN DEL {evaluacion.periodo.fecha_inicio.strftime('%d/%m/%Y')} AL {evaluacion.periodo.fecha_fin.strftime('%d/%m/%Y')}")
 
+    worksheet.cell(row=14, column=11, value=evaluacion.escalafones.get(asignado_por="H").escalafon.nivel.upper())
+
     worksheet.cell(row=8, column=2, value=evaluacion.evaluado.user.get_full_name())
     worksheet.cell(row=8, column=18, value=evaluacion.evaluado.ficha)
     worksheet.cell(row=9, column=2, value=evaluacion.evaluado.cargo.nombre)
@@ -328,6 +330,8 @@ def fill_resultado_apoyo(evaluacion):
     worksheet.cell(row=8, column=2, value=evaluacion.evaluado.user.get_full_name())
     worksheet.cell(row=8, column=18, value=evaluacion.evaluado.ficha)
     worksheet.cell(row=9, column=2, value=evaluacion.evaluado.cargo.nombre)
+
+    worksheet.cell(row=14, column=11, value=evaluacion.escalafones.get(asignado_por="H").escalafon.nivel.upper())
     
     resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Evaluación del Desempeño')
     worksheet.cell(row=13, column=2, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').resultado_final)
