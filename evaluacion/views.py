@@ -361,7 +361,8 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
                     form.instance.periodo = "P"
                     form.instance.anadido_por = self.anadido_por
                     form.save()
-        
+
+        messages.add_message(request, messages.SUCCESS, "Se han almacenado las respuestas de Logros y Metas.")        
         return self.get_success_url()
     
 class ResultadosPorInstrumentoYVersion(View):

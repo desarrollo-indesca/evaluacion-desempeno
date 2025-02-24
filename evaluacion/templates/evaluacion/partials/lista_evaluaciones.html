@@ -15,16 +15,8 @@
 {% endif %}
 <hr>
 
-{% if messages %} <!-- TODO: Colocar mensajes-->
-        <div class="fixed bottom-0 left-0 right-0 z-10 p-4">
-            <div class="alert alert-warning shadow-lg" id="messages">
-                <div>
-                    {% for message in messages %}
-                    <p>{{ message }}</p>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
+{% if messages %}
+    {% include 'messages.html' %}
 {% endif %}
 
 <form hx-get="{% url 'consultar_evaluaciones' pk=request.user.pk %}" hx-select="#evaluaciones" hx-target="#evaluaciones" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">

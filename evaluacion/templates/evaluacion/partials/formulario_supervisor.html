@@ -14,6 +14,10 @@
 </div>
 <hr>
 
+{% if messages %}
+    {% include 'messages.html' %}
+{% endif %}
+
 <form method="post" hx-target="closest .tab-content" hx-post="{% url 'revision_instrumento' pk=pk evaluacion=evaluacion.pk %}">
     {% csrf_token %}
     {% for seccion in instrumento %}
