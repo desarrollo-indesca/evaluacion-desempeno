@@ -14,6 +14,10 @@
 </div>
 <hr>
 
+{% if messages %}
+    {% include 'messages.html' %}
+{% endif %}
+
 <form hx-get="{% url 'consultar_supervisados' %}" hx-select="#supervisados" hx-target="#supervisados" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
     <div>
         {{filter.form.ficha.label_tag}} <br>
@@ -59,8 +63,13 @@
                 {% if evaluacion.estado == 'H' %}
                 <a class="btn btn-error" hx-confirm="¿Desea Revisar la Evaluación Actual? Una vez finalizada la evaluación, no se podrá modificar." hx-target="closest .tab-content" href="#" hx-get="{% url 'revisar_evaluacion_final' pk=evaluacion.pk %}" hx-target="closest .tab-content">Revisar Evaluación Actual</a>
                 {% else %}
-                <label for="modal-{{evaluacion.pk}}" class="btn btn-error">Revisar Evaluación Actual</label>
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with evaluacion=evaluacion include_others=True finish=False id=evaluacion.pk tipo="E" %}
+                {% if  evaluacion.estado == 'P' or evaluacion.estado == 'E' or evaluacion.estado == 'S' %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="E" %}
+                {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="S" %}
+                {% elif evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="G" %}
+                {% endif %}
                 {% endif %}
                 {% endif %}
                 

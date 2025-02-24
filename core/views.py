@@ -53,7 +53,6 @@ class EvaluacionEstadoMixin():
 
 class Login(PeriodoContextMixin, View):
     template_name = 'core/login.html'
-    redirect_authenticated_user = True
     success_url = '/'
 
     def post(self, request, *args, **kwargs):
@@ -80,7 +79,10 @@ class Login(PeriodoContextMixin, View):
             return redirect(self.success_url)
     
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name, context=self.get_context_data())
+        if self.request.user.is_authenticated:
+            return redirect(reverse_lazy('dashboard'))
+        else:
+            return render(request, self.template_name, context=self.get_context_data())
 
 class Dashboard(LoginRequiredMixin, View, PeriodoContextMixin):
     def get_context_data(self, **kwargs):

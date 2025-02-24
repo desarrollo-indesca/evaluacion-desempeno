@@ -732,7 +732,7 @@ class EnviarEvaluacionGerente(View):
             evaluacion.save()
 
             messages.success(request, f"Ha sido enviada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()}")
-            return redirect('dashboard')
+            return redirect('consultar_supervisados')
         
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
 

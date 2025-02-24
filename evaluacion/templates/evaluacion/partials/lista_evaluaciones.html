@@ -51,7 +51,7 @@
                 {% elif evaluacion.estado == 'R' %}
                 <span class="badge badge-error">Rechazada</span>
                 {% elif evaluacion.estado == 'P' %}
-                <span class="badge badge-warning">En Proceso</span>
+                <span class="badge badge-warning">Pendiente</span>
                 {% else %}
                 {{evaluacion.estado_largo}}
                 {% endif %}
