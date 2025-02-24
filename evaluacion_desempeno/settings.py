@@ -11,10 +11,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import ldap
+from django_auth_ldap.config import LDAPSearch
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -26,7 +27,7 @@ with open(BASE_DIR / 'secret-key.txt') as f:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.20.30.38']
+ALLOWED_HOSTS = ['172.20.30.38', '127.0.0.1']
 
 LOGIN_URL = 'login/'
 
@@ -40,10 +41,39 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_filters',
+    'django_auth_ldap', 
 
     'evaluacion',
     'core',
     'widget_tweaks'
+]
+
+# LDAP SETTINGS
+
+AUTH_LDAP_GLOBAL_OPTIONS = {
+    ldap.OPT_X_TLS_REQUIRE_CERT: True,
+    ldap.OPT_X_TLS_DEMAND: True,
+    ldap.OPT_REFERRALS: 0,
+    ldap.OPT_X_TLS_CACERTFILE: '/etc/ssl/certs/mycertfile.pem'
+}
+with open(BASE_DIR / 'ldap-config.txt') as f:
+    AUTH_LDAP_SERVER_URI, AUTH_LDAP_BIND_DN, AUTH_LDAP_BIND_PASSWORD = f.read().splitlines()
+
+AUTH_LDAP_USER_SEARCH = LDAPSearch(
+    "dc=indesca,dc=local", ldap.SCOPE_SUBTREE, "sAMAccountName=%(user)s"
+)
+
+AUTH_LDAP_USER_ATTR_MAP = {
+    "username": "sAMAccountName",
+    "first_name": "givenName",
+    "last_name": "sn",
+    "email": "mail",
+}
+AUTH_LDAP_GROUP_CACHE_TIMEOUT = 1  # 1 hour cache
+
+AUTHENTICATION_BACKENDS = [
+    'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 MIDDLEWARE = [
