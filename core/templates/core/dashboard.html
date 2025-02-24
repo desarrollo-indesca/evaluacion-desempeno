@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div role="tablist" class="tabs tabs-lifted">
+<div role="tablist" class="tabs tabs-lifted text-xs" style="max-width: 100%; overflow-x: auto;">
     <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="Inicio" checked />
     <div id="inicio" role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
         <h1 class="text-3xl text-center font-semibold">Evaluación de Desempeño del Personal</h1>
@@ -11,8 +11,8 @@
         {% endif %}
 
         <div class="grid grid-cols-12">
-            <div class="md:col-span-3 xs:col-span-12">
-                <div class="card border-2 border my-4">
+            <div class="col-span-12 sm:col-span-12 xs:col-span-12 md:col-span-3">
+                <div class="card border-2 border my-4 w-full">
                     <div class="card-content p-4">
                         <h2 class="text-2xl font-semibold text-center">Información del Usuario</h2>
                         <hr>
@@ -58,7 +58,7 @@
                 </div>
             </div>
 
-            <div class="md:col-span-9 xs:col-span-12">
+            <div class="col-span-12 sm:col-span-12 xs:col-span-12 md:col-span-9">
                 <div class="grid grid-cols-12">
                     <div class="col-span-12">
                         <div class="card border-2 border my-4 mx-2 w-full" id="proceso-evaluacion" style="min-width: 100%;">
@@ -66,7 +66,7 @@
                             <div class="card-content p-3">
                                 <h2 class="text-center text-2xl font-semibold">Proceso de Evaluación</h2>
                                 <hr><br>
-                                <ul class="steps steps-horizontal w-full">
+                                <ul class="steps steps-horizontal w-full text-xs">
                                     <li class="step {% if evaluacion.estado != 'P' %}{% if evaluacion.estado != 'E' %}step-error{% else %}step-error{% endif %}{% endif %}">Autoevaluación</li>
                                     <li class="step {% if evaluacion.estado != 'P' and evaluacion.estado != 'E' %}{% if evaluacion.estado != 'S' %}step-error{% else %}step-error{% endif %}{% endif %}">Revisión por Supervisor</li>
                                     <li class="step {%  if evaluacion.estado == 'G' or evaluacion.estado == 'H' or evaluacion.estado == 'A' %}{% if evaluacion.estado == 'G' %}step-error{% else %}step-error{% endif %}{% endif %}">Revisión por Gerencia</li>
@@ -129,76 +129,78 @@
                                     </form>
                                 </div>
                                 {% else %}
-                                <table class="table w-full text-center">
-                                    <thead>
-                                        <tr>
-                                            <th>Instrumento</th>
-                                            <th>Estado</th>
-                                            <th>Total</th>
-                                            <th>Editar</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for instrumento in instrumentos %}
-                                        <tr>
-                                            <td>{{instrumento.nombre}}</td>
-                                            <td>
-                                                {% if instrumento.completado %}
-                                                <span class="badge badge-success">Completado</span>
-                                                {% else %}
-                                                <span class="badge badge-error">Pendiente</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>{{instrumento.resultado|default:"-"}} / {{instrumento.peso|floatformat:2}}</td>
-                                            <td><a class="btn btn-error" href="{% url 'instrumento' pk=instrumento.pk %}">Acceder al Instrumento</a></td>
-                                        </tr>
-                                        {% endfor %}
-                                        <tr>
-                                            <td>Formación</td>
-                                            <td>
-                                                {% if evaluacion.formaciones.all.exists %}
-                                                <span class="badge badge-success">Completado</span>
-                                                {% else %}
-                                                <span class="badge badge-error">Pendiente</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>N/A</td>
-                                            <td>
-                                                <a class="btn btn-error" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'formacion' pk=evaluacion.pk %}">Acceder al Instrumento</a>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Logros y Metas</td>
-                                            <td>
-                                                {% if evaluacion.logros_y_metas.all.exists %}
-                                                <span class="badge badge-success">Completado</span>
-                                                {% else %}
-                                                <span class="badge badge-error">Pendiente</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>N/A</td>
-                                            <td>
-                                                <a class="btn btn-error" hx-get="{% url 'metas' pk=evaluacion.pk %}" hx-select="main" hx-target="closest .tab-content" href="#">Acceder al Instrumento</a>
-                                            </td>
-                                        </tr>
+                                <div class="overflow-x-auto">
+                                    <table class="table w-full text-center">
+                                        <thead>
+                                            <tr>
+                                                <th>Instrumento</th>
+                                                <th>Estado</th>
+                                                <th>Total</th>
+                                                <th>Editar</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for instrumento in instrumentos %}
+                                            <tr>
+                                                <td>{{instrumento.nombre}}</td>
+                                                <td>
+                                                    {% if instrumento.completado %}
+                                                    <span class="badge badge-success">Completado</span>
+                                                    {% else %}
+                                                    <span class="badge badge-error">Pendiente</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{instrumento.resultado|default:"-"}} / {{instrumento.peso|floatformat:2}}</td>
+                                                <td><a class="btn btn-error" href="{% url 'instrumento' pk=instrumento.pk %}">Acceder al Instrumento</a></td>
+                                            </tr>
+                                            {% endfor %}
+                                            <tr>
+                                                <td>Formación</td>
+                                                <td>
+                                                    {% if evaluacion.formaciones.all.exists %}
+                                                    <span class="badge badge-success">Completado</span>
+                                                    {% else %}
+                                                    <span class="badge badge-error">Pendiente</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>N/A</td>
+                                                <td>
+                                                    <a class="btn btn-error" hx-select="main" hx-target="closest .tab-content" hx-get="{% url 'formacion' pk=evaluacion.pk %}">Acceder al Instrumento</a>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Logros y Metas</td>
+                                                <td>
+                                                    {% if evaluacion.logros_y_metas.all.exists %}
+                                                    <span class="badge badge-success">Completado</span>
+                                                    {% else %}
+                                                    <span class="badge badge-error">Pendiente</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>N/A</td>
+                                                <td>
+                                                    <a class="btn btn-error" hx-get="{% url 'metas' pk=evaluacion.pk %}" hx-select="main" hx-target="closest .tab-content" href="#">Acceder al Instrumento</a>
+                                                </td>
+                                            </tr>
 
-                                        <tr>
-                                            <td colspan="2" class="text-center">
-                                                <b>TOTAL</b>
-                                            </td>
-                                            <td>{{evaluacion.total|default:"-"}} / {{evaluacion.peso|floatformat:2}}</td>
-                                        </tr>
+                                            <tr>
+                                                <td colspan="2" class="text-center">
+                                                    <b>TOTAL</b>
+                                                </td>
+                                                <td>{{evaluacion.total|default:"-"}} / {{evaluacion.peso|floatformat:2}}</td>
+                                            </tr>
 
-                                        {% if puede_finalizar %}
-                                        <tr>
-                                            <td colspan="4" class="text-center">
-                                                <label for="modal-evaluacion" class="btn btn-error">Revisar Evaluación para enviar al Supervisor</label>
-                                                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=False finish=True id="evaluacion" tipo="E" %}
-                                            </td>
-                                        </tr>                                        
-                                        {% endif %}
-                                    </tbody>
-                                </table>
+                                            {% if puede_finalizar %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">
+                                                    <label for="modal-evaluacion" class="btn btn-error">Revisar Evaluación para enviar al Supervisor</label>
+                                                    {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=False finish=True id="evaluacion" tipo="E" %}
+                                                </td>
+                                            </tr>                                        
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
                                 <script>
                                     document.addEventListener("htmx:beforeRequest", event => {
                                         if (event.detail.verb === "post" && !confirm("¿Estás seguro de enviar la evaluación? No podrás hacerle cambios directamente de nuevo.")) 
@@ -233,14 +235,14 @@
     </div>
 
     {% if request.user.is_staff %}
-    <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="{{datos_personal.gerencia}}" />
+    <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="GERENCIA" />
     <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
         <div hx-trigger="intersect" hx-get="{% url 'consultar_gerencia' %}"></div>
     </div>
     {% endif %}
 
     {% if request.user.is_superuser %}
-    <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="Panel de Control" />
+    <input type="radio" name="my_tabs_2" role="tab" class="tab" aria-label="Dashboard" />
     <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
         <div hx-trigger="intersect" hx-get="{% url 'panel_de_control' %}"></div>
     </div>

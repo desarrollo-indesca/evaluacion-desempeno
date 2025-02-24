@@ -222,19 +222,22 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
         return redirect('dashboard')
 
     def get_queryset(self, evaluacion):
-        return evaluacion.formaciones.all()
+        return evaluacion.formaciones.all()    
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+        qs = self.get_queryset(evaluacion)
 
         context['formset'] = modelformset_factory(
             Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo'),
-        ) if not evaluacion.formaciones.exists() else modelformset_factory(
+        )(queryset=qs) if not qs.exists() else modelformset_factory(
             Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo'),
             extra = 0
-        )(queryset = self.get_queryset(evaluacion), initial=[{'competencias_tecnicas': [c.pk for c in form.competencias.filter(tipo='T')]} for form in evaluacion.formaciones.all()])
+        )(queryset = qs, initial=[{'competencias_tecnicas': [c.pk for c in form.competencias.filter(tipo='T')]} for form in evaluacion.formaciones.all()])
+
+        print(self.get_queryset(evaluacion))
 
         context['titulo'] = "Detección de Necesidades de Formación"
         context['evaluacion'] = evaluacion
@@ -282,7 +285,7 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     def get_formsets(self, add_prefixes = False, qs_actual = None, qs_proximo = None):
         formset_actual = modelformset_factory(
             LogrosYMetas, form=FormularioMetas, exclude = ('anadido_por', 'activo', 'periodo', 'evaluacion'),
-            min_num=0, extra = 0 if qs_actual else 1
+            min_num=0, extra = 0 if qs_actual else 1,
         )
 
         formset_proximo = modelformset_factory(
@@ -290,12 +293,9 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
             min_num=0, extra = 0 if qs_proximo else 1
         )
 
-        if(add_prefixes and qs_actual and qs_proximo):
+        if(add_prefixes):
             formset_actual = formset_actual(queryset=qs_actual, prefix="form-actual")
             formset_proximo = formset_proximo(queryset=qs_proximo, prefix="form-proximo")
-        elif(add_prefixes):
-            formset_actual = formset_actual(prefix="form-actual")
-            formset_proximo = formset_proximo(prefix="form-proximo")
 
         return formset_actual, formset_proximo
 

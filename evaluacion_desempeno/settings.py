@@ -26,7 +26,7 @@ with open(BASE_DIR / 'secret-key.txt') as f:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['172.20.30.38']
 
 LOGIN_URL = 'login/'
 
