@@ -115,7 +115,7 @@
                                                 {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' %}
                                                 {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id="evaluacion" tipo="S" %}
                                                 {% elif evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
-                                                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id="evaluacion" tipo="G" %}
+                                                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id="evaluacion" tipo="H" %}
                                                 {% endif %}
                                             </td>
                                         </tr>
