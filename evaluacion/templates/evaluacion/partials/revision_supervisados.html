@@ -21,15 +21,17 @@
 </div>
 <hr>
 
-<form hx-get="{% url 'consultar_supervisados' %}" hx-select="#supervisados" hx-target="#supervisados" hx-swap="outerHTML" hx- hx-trigger="change, keyup delay:1s" id="filter-form" class="flex justify-evenly w-full">
+<form hx-get="{{request.path}}"  hx-select="#supervisados" hx-target="#supervisados" hx-swap="outerHTML" hx- hx-trigger="change, keyup delay:1s" id="filter-form" class="flex justify-evenly w-full">
     <div>
         {{filter.form.ficha.label_tag}} <br>
         {% render_field filter.form.ficha class="input input-bordered w-full" %}
     </div>
+    {% if periodo %}
     <div>
         {{filter.form.evaluacion_estado.label_tag}} <br>
         {% render_field filter.form.evaluacion_estado class="select select-bordered w-full" %}
     </div>
+    {% endif %}
     <div>
         {{filter.form.user__first_name.label_tag}} <br>
         {% render_field filter.form.user__first_name class="input input-bordered w-full" %}
@@ -85,13 +87,13 @@
         </tr>
         {% empty %}
         <tr>
-            <th colspan="4">Usted no tiene supervisados.</th>
+            <th colspan="4">Usted no tiene supervisados que cumplan con los filtros.</th>
         </tr>
         {% endfor %}
         {% if page_obj.has_next %}
         <tr>
             <td colspan="4"
-                hx-get="{% url 'consultar_supervisados' %}" 
+                hx-get="{{request.path}}" 
                 hx-trigger="revealed once"
                 hx-select="#supervisados > tr"
                 hx-swap="outerHTML"
@@ -100,7 +102,9 @@
                     page: {{page_obj.next_page_number}},
                     ficha: document.querySelector('[name=ficha]').value || '',
                     user__first_name: document.querySelector('[name=user__first_name]').value || '',
+                    {% if periodo %}
                     evaluacion_estado: document.querySelector('[name=evaluacion_estado]').value || '',
+                    {% endif %}
                 }">
                 Cargando...
             </td>

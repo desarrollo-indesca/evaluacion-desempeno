@@ -750,6 +750,7 @@ class RevisionGerencia(PeriodoContextMixin, ListView):
     model = DatosPersonal
     template_name = "evaluacion/partials/revision_supervisados.html"
     filter_class = DatosPersonalFilter
+    paginate_by = 5
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_staff:
@@ -758,7 +759,7 @@ class RevisionGerencia(PeriodoContextMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
+        context['filter'] = self.filter_class()
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
         context['url_regreso'] = f'evaluacion/gerencia/'
         context['puede_enviarse_gghh'] = self.request.user.is_staff and (Evaluacion.objects.filter(periodo=self.get_periodo(), estado='G', evaluado__gerencia=self.request.user.datos_personal.get(activo=True).gerencia).count() == self.get_queryset().count())
@@ -766,7 +767,9 @@ class RevisionGerencia(PeriodoContextMixin, ListView):
         return context
 
     def get_queryset(self):
-        return super().get_queryset().filter(gerencia=self.request.user.datos_personal.get(activo=True).gerencia, activo=True)
+        qs = super().get_queryset().filter(gerencia=self.request.user.datos_personal.get(activo=True).gerencia, activo=True)
+        self.filter = self.filter_class(self.request.GET, queryset=qs)
+        return self.filter.qs
 
 class EnviarEvaluacionesGestionHumana(View):
     def post(self, request):
