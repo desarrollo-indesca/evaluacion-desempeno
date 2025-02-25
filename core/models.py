@@ -46,6 +46,12 @@ class DatosPersonal(models.Model):
     def evaluacion_actual(self):
         return self.evaluaciones.filter(periodo__activo=True).last()
     
+    class Meta:
+        ordering = (
+            '-evaluaciones__periodo', '-evaluaciones__estado',
+            'user__first_name'
+        )
+    
 class PeriodoGerencial(models.Model):
     gerente = models.ForeignKey(DatosPersonal, on_delete=models.CASCADE, related_name="personal_gerente")
     activo = models.BooleanField(default=True)

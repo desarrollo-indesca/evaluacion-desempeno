@@ -463,6 +463,7 @@ class ConsultaEvaluaciones(ListView):
         context = super().get_context_data(**kwargs)
         context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
+        context['url_previo'] = self.request.session.get('url_previo')
         return context
 
     def get_queryset(self):
@@ -475,15 +476,23 @@ class RevisionSupervisados(PeriodoContextMixin, ListView):
     model = DatosPersonal
     template_name = "evaluacion/partials/revision_supervisados.html"
     filter_class = DatosPersonalFilter
+    paginate_by = 5
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
+        context['filter'] = self.filter_class()
+        self.request.session['url_previo'] = self.request.get_full_path()
+
         return context
 
     def get_queryset(self):
-        return super().get_queryset().filter(supervisor=self.request.user.datos_personal.get(activo=True), activo=True)
+        queryset = super().get_queryset().filter(
+            supervisor=self.request.user.datos_personal.get(activo=True), 
+            activo=True
+        )
+        queryset = self.filter_class(self.request.GET, queryset=queryset)
+        return queryset.qs
 
 class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
     template_name = "evaluacion/partials/lista_evaluaciones.html"
@@ -496,7 +505,7 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
         context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
         context['datos_personal'] = DatosPersonal.objects.get(pk=self.kwargs['pk'])
         context['supervisado'] = True
-        context['previous_url'] = self.request.GET.get('previous_url')
+        context['previous_url'] = self.request.session.get('previous_url')
         return context
     
     def get(self, request, *args, **kwargs):

@@ -21,10 +21,14 @@
 </div>
 <hr>
 
-<form hx-get="{% url 'consultar_supervisados' %}" hx-select="#supervisados" hx-target="#supervisados" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
+<form hx-get="{% url 'consultar_supervisados' %}" hx-select="#supervisados" hx-target="#supervisados" hx-swap="outerHTML" hx- hx-trigger="change, keyup delay:1s" id="filter-form" class="flex justify-evenly w-full">
     <div>
         {{filter.form.ficha.label_tag}} <br>
         {% render_field filter.form.ficha class="input input-bordered w-full" %}
+    </div>
+    <div>
+        {{filter.form.evaluacion_estado.label_tag}} <br>
+        {% render_field filter.form.evaluacion_estado class="select select-bordered w-full" %}
     </div>
     <div>
         {{filter.form.user__first_name.label_tag}} <br>
@@ -43,14 +47,24 @@
     </thead>
 
     <tbody id="supervisados">
-        {% for supervisado in filter.qs %}
+        {% for supervisado in object_list %}
         <tr>
             <td>{{supervisado.ficha}}</td>
             <td>{{supervisado.user.get_full_name.upper}}</td>
             {% with evaluacion=supervisado.evaluacion_actual %}
             <td>
                 {% if evaluacion %}
+                {% if evaluacion.estado == 'A' %}
+                <span class="badge badge-success">{{evaluacion.estado_largo}}</span>
+                {% elif evaluacion.estado == 'S' %}
+                <span class="badge badge-yellow">{{evaluacion.estado_largo}}</span>
+                {% elif evaluacion.estado == 'G' %}
+                <span class="badge badge-cyan">{{evaluacion.estado_largo}}</span>
+                {% elif evaluacion.estado == 'P' %}
+                <span class="badge badge-error">{{evaluacion.estado_largo}}</span>
+                {% else %}
                 {{evaluacion.estado_largo}}
+                {% endif %}
                 {% else %}
                 <span class="badge badge-error">Sin Evaluación Activa</span>
                 {% endif %}
@@ -74,5 +88,24 @@
             <th colspan="4">Usted no tiene supervisados.</th>
         </tr>
         {% endfor %}
+        {% if page_obj.has_next %}
+        <tr>
+            <td colspan="4"
+                hx-get="{% url 'consultar_supervisados' %}" 
+                hx-trigger="revealed once"
+                hx-select="#supervisados > tr"
+                hx-swap="outerHTML"
+                hx-target="closest tr"
+                hx-vals="js:{
+                    page: {{page_obj.next_page_number}},
+                    ficha: document.querySelector('[name=ficha]').value || '',
+                    user__first_name: document.querySelector('[name=user__first_name]').value || '',
+                    evaluacion_estado: document.querySelector('[name=evaluacion_estado]').value || '',
+                }">
+                Cargando...
+            </td>
+        </tr>
+        {% endif %}
+        
     </tbody>
 </table>
