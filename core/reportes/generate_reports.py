@@ -204,10 +204,10 @@ def fill_resultado_operativo(evaluacion):
     worksheet.cell(row=9, column=2, value=evaluacion.evaluado.cargo.nombre)
     
     resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Evaluación del Desempeño')
-    worksheet.cell(row=13, column=2, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').resultado_final)
-    worksheet.cell(row=13, column=3, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').resultado_final)
-    worksheet.cell(row=13, column=4, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').resultado_final)
-    worksheet.cell(row=13, column=5, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').resultado_final)
+    worksheet.cell(row=13, column=2, value=(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').resultado_final / resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').seccion.peso) * (resultado_instrumento.instrumento.peso * resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').seccion.peso / 100))
+    worksheet.cell(row=13, column=3, value=(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').resultado_final / resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').seccion.peso) * (resultado_instrumento.instrumento.peso * resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').seccion.peso / 100))
+    worksheet.cell(row=13, column=4, value=(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').resultado_final / resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').seccion.peso) * (resultado_instrumento.instrumento.peso * resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').seccion.peso / 100))
+    worksheet.cell(row=13, column=5, value=(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').resultado_final / resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').seccion.peso) * (resultado_instrumento.instrumento.peso * resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').seccion.peso / 100))
     worksheet.cell(row=13, column=6, value=resultado_instrumento.resultado_final)    
     
     resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Competencias Técnicas')
@@ -334,11 +334,11 @@ def fill_resultado_apoyo(evaluacion):
     worksheet.cell(row=14, column=11, value=evaluacion.escalafones.get(asignado_por="H").escalafon.nivel.upper())
     
     resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Evaluación del Desempeño')
-    worksheet.cell(row=13, column=2, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').resultado_final)
-    worksheet.cell(row=13, column=3, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').resultado_final)
-    worksheet.cell(row=13, column=4, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').resultado_final)
-    worksheet.cell(row=13, column=5, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').resultado_final)
-    worksheet.cell(row=13, column=6, value=resultado_instrumento.resultado_final)    
+    worksheet.cell(row=13, column=2, value=float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').resultado_final) / float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').seccion.peso) * (float(resultado_instrumento.instrumento.peso) * float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').seccion.peso) / 100))
+    worksheet.cell(row=13, column=3, value=float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').resultado_final) / float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').seccion.peso) * (float(resultado_instrumento.instrumento.peso) * float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').seccion.peso) / 100))
+    worksheet.cell(row=13, column=4, value=float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').resultado_final) / float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').seccion.peso) * (float(resultado_instrumento.instrumento.peso) * float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').seccion.peso) / 100))
+    worksheet.cell(row=13, column=5, value=float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').resultado_final) / float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').seccion.peso) * (float(resultado_instrumento.instrumento.peso) * float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').seccion.peso) / 100))
+    worksheet.cell(row=13, column=6, value=float(resultado_instrumento.resultado_final))      
     
     resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Competencias Técnicas')
     worksheet.cell(row=13, column=7, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Capacidades Operativas').resultado_final)

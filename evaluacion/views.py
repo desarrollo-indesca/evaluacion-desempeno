@@ -765,7 +765,7 @@ class EnviarEvaluacionesGestionHumana(View):
         evaluaciones = Evaluacion.objects.filter(periodo=periodo_actual, estado='G', evaluado__gerencia=request.user.datos_personal.get(activo=True).gerencia)
 
         if evaluaciones.count() == DatosPersonal.objects.filter(gerencia=request.user.datos_personal.get(activo=True).gerencia, activo=True).count():
-            evaluaciones.update(estado='H', fecha_revision=datetime.datetime.now())
+            evaluaciones.update(estado='H', fecha_entrega=datetime.datetime.now())
             messages.success(request, f"Ha sido enviada la evaluación de todos los empleados de la gerencia para el período {periodo_actual.fecha_inicio} - {periodo_actual.fecha_fin} a la Gerencia de Gestión Humana.")
             return redirect('consultar_gerencia')
         
@@ -776,6 +776,7 @@ class DevolverEvaluacionSupervisor(View):
         if(request.user.is_staff):
             evaluacion = Evaluacion.objects.get(pk=pk, estado='G')
             evaluacion.estado = 'S'
+            evaluacion.fecha_revision = None
             evaluacion.save()
             messages.success(request, "La evaluación ha sido devuelta al estado 'Revisión por Supervisor'. Por favor comunique al supervisor las rrazones para la devolución.")
             return redirect('consultar_gerencia')
