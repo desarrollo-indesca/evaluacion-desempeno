@@ -37,6 +37,8 @@
         {% render_field filter.form.user__first_name class="input input-bordered w-full" %}
     </div>
 </form>
+<br>
+<p class="text-center" id="total-empleados-evals">Se encontraron {{total}} empleados.</p>
 
 <table class="table table-zebra my-4 text-center">
     <thead class="bg-gray-900 text-white">
@@ -48,7 +50,7 @@
         </tr>
     </thead>
 
-    <tbody id="supervisados">
+    <tbody class="resultados" id="supervisados">
         {% for supervisado in object_list %}
         <tr>
             <td>{{supervisado.ficha}}</td>
@@ -113,3 +115,5 @@
         
     </tbody>
 </table>
+
+<p class="text-center resultados" id="total-empleados-evals" hx-swap-oob="true">Se encontraron {{total}} empleados.</p>

@@ -482,7 +482,8 @@ class RevisionSupervisados(PeriodoContextMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
         context['filter'] = self.filter_class()
-        self.request.session['url_previo'] = self.request.get_full_path()
+        context['total'] = self.get_queryset().count()
+        self.request.session['url_previo'] = 'evaluacion/supervisados/'
 
         return context
 
@@ -505,7 +506,7 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
         context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
         context['datos_personal'] = DatosPersonal.objects.get(pk=self.kwargs['pk'])
         context['supervisado'] = True
-        context['previous_url'] = self.request.session.get('previous_url')
+        context['url_previo'] = self.request.session.get('url_previo')
         return context
     
     def get(self, request, *args, **kwargs):
@@ -761,9 +762,10 @@ class RevisionGerencia(PeriodoContextMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['filter'] = self.filter_class()
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
-        context['url_regreso'] = f'evaluacion/gerencia/'
+        self.request.session['url_previo'] = f'evaluacion/gerencia/'
         context['puede_enviarse_gghh'] = self.request.user.is_staff and (Evaluacion.objects.filter(periodo=self.get_periodo(), estado='G', evaluado__gerencia=self.request.user.datos_personal.get(activo=True).gerencia).count() == self.get_queryset().count())
         context['gerencia'] = self.request.user.datos_personal.get(activo=True).gerencia
+        context['total'] = self.get_queryset().count()
         return context
 
     def get_queryset(self):
@@ -800,6 +802,7 @@ class ConsultaGeneralEvaluaciones(RevisionGerencia):
     model = DatosPersonal
     template_name = "evaluacion/partials/revision_supervisados.html"
     filter_class = DatosPersonalFilter
+    paginate_by = 5
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -807,12 +810,13 @@ class ConsultaGeneralEvaluaciones(RevisionGerencia):
         return context
 
     def get_queryset(self):
-        return DatosPersonal.objects.filter(activo=True)
+        return self.filter_class(self.request.GET, queryset=DatosPersonal.objects.filter(activo=True)).qs
 
 class RevisionTodoPersonal(PeriodoContextMixin, ListView):
     model = DatosPersonal
     template_name = "evaluacion/partials/revision_gghh.html"
     filter_class = DatosPersonalFilter
+    paginate_by = 5
 
     def get(self, request, *args, **kwargs):
         if(request.user.is_superuser): # Gerente de Gestión Humana
@@ -820,12 +824,14 @@ class RevisionTodoPersonal(PeriodoContextMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
+        context['filter'] = self.filter_class()
+        context['total'] = self.get_queryset().count()
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
+        self.request.session['url_previo'] = f'evaluacion/revision-general/'
         return context
 
     def get_queryset(self):
-        return super().get_queryset().filter(activo=True)
+        return self.filter_class(self.request.GET, self.model.objects.filter(activo=True)).qs
 
 class RevisionEvaluacionFinal(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     estado = "H"

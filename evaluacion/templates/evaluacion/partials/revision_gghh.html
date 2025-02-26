@@ -1,13 +1,10 @@
 {%  load widget_tweaks %}
 <div class="flex justify-center items-center my-3">
-    <div class="w-1/3"></div>
+    <div class="w-1/3">
+        <a hx-get="{% url 'panel_de_control' %}" hx-target="closest .tab-content" class="btn btn-teal-500">Regresar</a>
+    </div>
     <div class="w-1/3 text-center">
-        {% if gerencia %}
-        <h3 class="text-2xl">Consulta de Personal de la Gerencia</h3>
-        <h4 class="text-md">{{gerencia}}</h4>
-        {% else %}
-        <h3 class="text-2xl">Consulta de Supervisados (Periodo Actual)</h3>
-        {% endif %}
+        <h3 class="text-2xl">Consulta del Personal de la Organización</h3>
     </div>
     <div class="w-1/3">
     </div>
@@ -18,17 +15,24 @@
     {% include 'messages.html' %}
 {% endif %}
 
-<form hx-get="{% url 'consultar_supervisados' %}" hx-select="#supervisados" hx-target="#supervisados" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
+<form hx-get="{% url 'revision_general' %}" hx-select=".resultados" hx-target="#supervisados" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
     <div>
         {{filter.form.ficha.label_tag}} <br>
         {% render_field filter.form.ficha class="input input-bordered w-full" %}
     </div>
+    {% if periodo %}
+    <div>
+        {{filter.form.evaluacion_estado.label_tag}} <br>
+        {% render_field filter.form.evaluacion_estado class="select select-bordered w-full" %}
+    </div>
+    {% endif %}
     <div>
         {{filter.form.user__first_name.label_tag}} <br>
         {% render_field filter.form.user__first_name class="input input-bordered w-full" %}
     </div>
 </form>
-
+<br>
+<p class="text-center" id="total-empleados-evals">Se encontraron {{total}} empleados.</p>
 <table class="table table-zebra my-4 text-center">
     <thead class="bg-gray-900 text-white">
         <tr>
@@ -39,18 +43,22 @@
         </tr>
     </thead>
 
-    <tbody id="supervisados">
-        {% for supervisado in filter.qs %}
+    <tbody id="supervisados" class="resultados">
+        {% for supervisado in object_list %}
         <tr>
             <td>{{supervisado.ficha}}</td>
             <td>{{supervisado.user.get_full_name.upper}}</td>
             {% with evaluacion=supervisado.evaluacion_actual %}
             <td>
                 {% if evaluacion %}
-                {% if evaluacion.estado == 'H' %}
-                <span class="badge badge-warning">
-                    {{evaluacion.estado_largo}}
-                </span>
+                {% if evaluacion.estado == 'A' %}
+                <span class="badge badge-success">{{evaluacion.estado_largo}}</span>
+                {% elif evaluacion.estado == 'S' %}
+                <span class="badge badge-yellow">{{evaluacion.estado_largo}}</span>
+                {% elif evaluacion.estado == 'G' %}
+                <span class="badge badge-cyan">{{evaluacion.estado_largo}}</span>
+                {% elif evaluacion.estado == 'P' %}
+                <span class="badge badge-error">{{evaluacion.estado_largo}}</span>
                 {% else %}
                 {{evaluacion.estado_largo}}
                 {% endif %}
@@ -59,21 +67,7 @@
                 {% endif %}
             </td>
             <td>
-                {% if evaluacion %}
-                {% if evaluacion.estado == 'H' %}
-                <a class="btn btn-error" hx-confirm="¿Desea Revisar la Evaluación Actual? Una vez finalizada la evaluación, no se podrá modificar." hx-target="closest .tab-content" href="#" hx-get="{% url 'revisar_evaluacion_final' pk=evaluacion.pk %}" hx-target="closest .tab-content">Revisar Evaluación Actual</a>
-                {% else %}
-                {% if  evaluacion.estado == 'P' or evaluacion.estado == 'E' or evaluacion.estado == 'S' %}
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="E" %}
-                {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' %}
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="S" %}
-                {% elif evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="H" %}
-                {% endif %}
-                {% endif %}
-                {% endif %}
-                
-                <a class="btn btn-gray" hx-target="closest .tab-content" hx-get="{% url 'consultar_historico_supervisados' pk=supervisado.pk %}" hx-vals="js:{previous_url: '{{url_regreso}}'}">Ver Histórico de Evaluaciones</a>
+                <a class="btn btn-gray" hx-target="closest .tab-content" hx-get="{% url 'consultar_historico_supervisados' pk=supervisado.pk %}">Ver Histórico de Evaluaciones</a>
             </td>
             {% endwith %}
         </tr>
@@ -82,5 +76,27 @@
             <th colspan="4">No se ha encontrado personal que cumpla con la consulta.</th>
         </tr>
         {% endfor %}
+        {% if page_obj.has_next %}
+        <tr>
+            <td colspan="4"
+                hx-get="{{request.path}}" 
+                hx-trigger="revealed once"
+                hx-select="#supervisados > tr"
+                hx-swap="outerHTML"
+                hx-target="closest tr"
+                hx-vals="js:{
+                    page: {{page_obj.next_page_number}},
+                    ficha: document.querySelector('[name=ficha]').value || '',
+                    user__first_name: document.querySelector('[name=user__first_name]').value || '',
+                    {% if periodo %}
+                    evaluacion_estado: document.querySelector('[name=evaluacion_estado]').value || '',
+                    {% endif %}
+                }">
+                Cargando...
+            </td>
+        </tr>
+        {% endif %}
     </tbody>
 </table>
+
+<p class="text-center resultados" id="total-empleados-evals" hx-swap-oob="true">Se encontraron {{total}} empleados.</p>
