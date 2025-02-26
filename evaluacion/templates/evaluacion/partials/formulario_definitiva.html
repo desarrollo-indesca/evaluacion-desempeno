@@ -53,6 +53,7 @@
                             </td>
                             <td class="text-center w-1/8">
                                 <input type="text" value="{% for opcion in pregunta.pregunta.opciones.all %}{% if opcion.valor == pregunta.form.instance.respuesta_empleado %}{{opcion.opcion}}{% endif %}{% endfor %}" class="input input-bordered mt-1 w-full max-w-lg bg-gray-200 text-black" placeholder="Sin Respuesta" readonly>
+                                {{pregunta.form.instance.respuesta_empleado}} {{pregunta.form.instance.respuesta_supervisor}}
                                 <br>
                                 <input type="text" value="{{pregunta.form.instance.comentario_empleado|default_if_none:''}}" class="input input-bordered mt-1 w-full max-w-lg bg-gray-200 text-black" placeholder="Sin Comentarios" name="{{pregunta.form.prefix}}-comentario_supervisor" readonly>
                             </td>

@@ -3,7 +3,8 @@ from django.views.generic import ListView
 from django.http import HttpResponseForbidden, HttpResponse
 from django.forms import modelformset_factory
 from django.shortcuts import render, redirect
-from django.db import transaction, models 
+from django.db import transaction, models
+from django.db.models import OuterRef, Subquery
 from django.contrib import messages
 import datetime
 from .models import *
@@ -81,6 +82,7 @@ class FinalizarEvaluacion(View):
             evaluacion.fecha_envio = datetime.datetime.now()
             evaluacion.comentario_evaluado = request.POST.get('comentarios')
             evaluacion.save()
+            messages.success(request, 'Su auto evaluación fue enviada a su supervisor.')
             return redirect('dashboard')
         
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
@@ -488,10 +490,17 @@ class RevisionSupervisados(PeriodoContextMixin, ListView):
         return context
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(
-            supervisor=self.request.user.datos_personal.get(activo=True), 
+        queryset = self.model.objects.filter(
+            supervisor=self.request.user.datos_personal.get(activo=True),
             activo=True
+        ).order_by('ficha').annotate(
+            dp=Subquery(self.model.objects.filter(
+                ficha=OuterRef('ficha'),
+                supervisor=self.request.user.datos_personal.get(activo=True),
+                activo=True
+            ).values('pk')[:1])
         )
+
         queryset = self.filter_class(self.request.GET, queryset=queryset)
         return queryset.qs
 
@@ -831,7 +840,16 @@ class RevisionTodoPersonal(PeriodoContextMixin, ListView):
         return context
 
     def get_queryset(self):
-        return self.filter_class(self.request.GET, self.model.objects.filter(activo=True)).qs
+        qs = self.model.objects.filter(
+            activo=True
+        ).order_by('ficha', 'pk').annotate(
+            dp=Subquery(self.model.objects.filter(
+                ficha=OuterRef('ficha'),
+                supervisor=self.request.user.datos_personal.get(activo=True),
+                activo=True
+            ).values('pk')[:1])
+        )
+        return self.filter_class(self.request.GET, qs).qs
 
 class RevisionEvaluacionFinal(PeriodoContextMixin, EvaluacionEstadoMixin, View):
     estado = "H"
@@ -1012,7 +1030,7 @@ class CerrarEvaluacion(View):
             evaluacion.fecha_fin = datetime.datetime.now()
             evaluacion.save()
 
-            if(evaluacion.estado == 'R' and evaluacion.comentario_gghh):
+            if(evaluacion.estado == 'R'):
                 evaluacion_previa = evaluacion
                 resultados_instrumentos = evaluacion_previa.resultados.all()
 
@@ -1020,6 +1038,7 @@ class CerrarEvaluacion(View):
                 evaluacion.estado = 'S'
                 evaluacion.fecha_fin = None
                 evaluacion.fecha_revision = None
+                evaluacion.fecha_inicio = datetime.datetime.now()
                 evaluacion.save()
                 for resultado_previo in resultados_instrumentos:
                     nuevo_resultado_instrumento = resultado_previo

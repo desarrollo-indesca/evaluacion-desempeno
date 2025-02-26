@@ -50,7 +50,7 @@
                                 </small>
                             </td>
                             <td class="text-center w-2/5">
-                                <select name="{{pregunta.form.prefix}}-respuesta_empleado" id="id_{{pregunta.form.prefix}}-respuesta_empleado" class="select select-bordered w-full max-w-xs" required>
+                                <select name="{{pregunta.form.prefix}}-respuesta_empleado" id="id_{{pregunta.form.prefix}}-respuesta_empleado" class="select select-bordered w-full max-w-xs" required="true">
                                     <option disabled selected>Seleccionar</option>
                                     {% for opcion in pregunta.pregunta.opciones.all %}
                                         <option value="{{opcion.valor}}" {% if opcion.valor == pregunta.form.instance.respuesta_empleado %}selected{% endif %}>{{opcion.opcion}}</option>

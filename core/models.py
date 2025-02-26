@@ -44,12 +44,11 @@ class DatosPersonal(models.Model):
         return f"{self.user.first_name} {self.user.last_name}"
     
     def evaluacion_actual(self):
-        return self.evaluaciones.filter(periodo__activo=True).last()
+        return self.evaluaciones.filter(periodo__activo=True).first()
     
     class Meta:
         ordering = (
-            '-evaluaciones__periodo', '-evaluaciones__estado',
-            'user__first_name'
+            'evaluaciones__estado', 'user__first_name'
         )
     
 class PeriodoGerencial(models.Model):

@@ -5,17 +5,17 @@
             <h3 class="text-lg font-bold">Evaluación &nbsp;</h3>
             <select name="version" id="version" hx-select=".modal-box" hx-target="closest .modal-box" hx-trigger="change" hx-get="{% url 'generar_modal' pk=evaluacion.pk %}" hx-swap="outerHTML">
                 {% if not include_others and tipo == 'H' %}
-                <option value="H" {% if tipo == 'H' %}selected{% endif %}>Gestión Humana</option>
+                <option value="H" {% if tipo == 'H' %}selected{% endif %}>Definitiva</option>
                 {% elif not include_others and tipo == 'S' %}
-                <option value="S" {% if tipo == 'S' %}selected{% endif %}>Supervisor</option>
+                <option value="S" {% if tipo == 'S' %}selected{% endif %}>Revisada por Supervisor</option>
                 {% else %}
-                <option value="E" {% if tipo == 'E' %}selected{% endif %}>Empleado</option>
+                <option value="E" {% if tipo == 'E' %}selected{% endif %}>Autoevaluación</option>
                 {% if include_others %}
                 {% if tipo == "S" or evaluacion.estado == "G" or evaluacion.estado == "H" or evaluacion.estado == "A" or evaluacion.estado == "R" %}
-                <option value="S" {% if tipo == 'S' or not tipo %}selected{% endif %}>Supervisor</option>
+                <option value="S" {% if tipo == 'S' or not tipo %}selected{% endif %}>Revisada por Supervisor</option>
                 {% endif %}
                 {% if evaluacion.estado == "A" or evaluacion.estado == "R" %}
-                <option value="H" {% if tipo == 'H' or not tipo %}selected{% endif %}>Gestión Humana</option>
+                <option value="H" {% if tipo == 'H' or not tipo %}selected{% endif %}>Definitiva</option>
                 {% endif %}
                 {% endif %}
                 {% endif %}
@@ -154,7 +154,7 @@
                 {% elif tipo == "S" %}
                 hx-confirm="¿Está seguro que desea enviar la evaluación al gerente? No podrá modificarla directamente de nuevo, a menos que sea rechazada." 
                 hx-post="{% url 'enviar_gerente' pk=evaluacion.pk %}" 
-                hx-target="body"
+                hx-target="closest .tab-content"
                 {% elif tipo == "H" %}
                 hx-confirm="Una vez enviada la evaluación esta será archivada, y no podrá ser modificada a menos que informática intervenga. ¿Está de acuerdo con la decisión tomada de acuerdo a los resultados de esta evaluación?" 
                 hx-post="{% url 'cerrar_evaluacion_final' pk=evaluacion.pk %}" 
@@ -186,6 +186,16 @@
                     {% elif tipo == 'H' %}
                     <button id="enviar-evaluacion" name="tipo_evaluacion" value="A" type="submit" class="btn btn-success">Aprobada</button>&nbsp;
                     <button id="enviar-evaluacion" hx-confirm="¿Está seguro que desea rechazar la evaluación? En este caso deberá indicar en un comentario las razones de la misma." name="tipo_evaluacion" value="R" type="submit" class="btn btn-error">Rechazada</button>
+                    
+                    <script>
+                        document.addEventListener("htmx:beforeRequest", event => {
+                            if (event.detail.verb === "post" && document.querySelector('input[name="tipo_evaluacion"][value="R"]') && !document.querySelector('textarea[name="comentario"]').value.trim()) {
+                                event.preventDefault();
+                                alert("Debe escribir un comentario explicando las razones del rechazo de la evaluación.")
+                            }
+                        });
+                    </script>
+                    
                     {% endif %}
                 </div>
             </form>

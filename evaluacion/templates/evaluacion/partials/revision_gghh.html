@@ -67,6 +67,9 @@
                 {% endif %}
             </td>
             <td>
+                {% if evaluacion.estado == 'H' %}
+                <a class="btn btn-error" hx-target="closest .tab-content" hx-get="{% url 'revisar_evaluacion_final' pk=evaluacion.pk %}">Revisar Evaluación</a>
+                {% endif %}
                 <a class="btn btn-gray" hx-target="closest .tab-content" hx-get="{% url 'consultar_historico_supervisados' pk=supervisado.pk %}">Ver Histórico de Evaluaciones</a>
             </td>
             {% endwith %}
