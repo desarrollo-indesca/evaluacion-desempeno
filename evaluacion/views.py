@@ -493,12 +493,6 @@ class RevisionSupervisados(PeriodoContextMixin, ListView):
         queryset = self.model.objects.filter(
             supervisor=self.request.user.datos_personal.get(activo=True),
             activo=True
-        ).order_by('ficha').annotate(
-            dp=Subquery(self.model.objects.filter(
-                ficha=OuterRef('ficha'),
-                supervisor=self.request.user.datos_personal.get(activo=True),
-                activo=True
-            ).values('pk')[:1])
         )
 
         queryset = self.filter_class(self.request.GET, queryset=queryset)
@@ -842,12 +836,6 @@ class RevisionTodoPersonal(PeriodoContextMixin, ListView):
     def get_queryset(self):
         qs = self.model.objects.filter(
             activo=True
-        ).order_by('ficha', 'pk').annotate(
-            dp=Subquery(self.model.objects.filter(
-                ficha=OuterRef('ficha'),
-                supervisor=self.request.user.datos_personal.get(activo=True),
-                activo=True
-            ).values('pk')[:1])
         )
         return self.filter_class(self.request.GET, qs).qs
 

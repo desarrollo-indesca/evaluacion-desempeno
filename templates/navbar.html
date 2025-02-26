@@ -1,42 +1,44 @@
 {% load static %}
 <nav class="bg-neutral border-b border-gray-900 shadow-xl w-full">
-    <div class="max-w-screen-2xl flex flex-wrap items-center justify-evenly mx-auto p-4">
+  <div class="max-w-screen-2xl flex flex-wrap items-center justify-evenly mx-auto p-4">
       <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
           <img src="{% static '/img/logo.svg' %}" class="h-8" alt="Indesca Logo" />
           <span class="self-center font-semibold whitespace-nowrap text-base-100 md:text-lg sm:text-sm xs:text-xs">Evaluación de Desempeño</span>
       </a>
-      <button data-collapse-toggle="navbar-default" type="button" class="inline-flex items-center w-10 justify-center text-base-100 rounded-lg md:hidden hover:bg-neutral focus:outline-none focus:ring-2 focus:ring-gray-200" aria-controls="navbar-default" aria-expanded="false">
-          <span class="sr-only">Abrir Menú Principal</span>
-          <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
-          </svg>
-      </button>
       <div class="hidden w-full md:block md:w-auto" id="navbar-default">
-        <ul class="font-medium text-base-100 flex flex-col items-center p-4 md:p-0 mt-4 border border-gray-300 rounded-lg bg-neutral md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-neutral">
-          <li>
-            <b class="underline">Período:</b>
-            {% if periodo %}
-            {{periodo.fecha_inicio}}-{{periodo.fecha_fin}}
-            {% else %}
-            N/A
-            {% endif %}
-          </li>
-          {% if request.user.is_authenticated %}
-          <li>
-            <div class="dropdown">
-              <button class="btn text-gray-900">{{request.user.get_full_name}}</button>
-              <ul class="menu dropdown-content text-base-100 bg-gray-500 rounded-box z-[1] w-52 p-2 shadow-xl">
-                <li class="hover:bg-gray-400">
-                  <form method="post" action="{% url 'logout' %}" style="background-color: inherit;">
-                    {% csrf_token %}
-                    <button class="text-base-100 w-100 h-100 hover:bg-gray-400" type="submit">Cerrar Sesión</button>
-                  </form>
-                </li>
-              </ul>
-            </div>
-          </li>
-          {% endif %}
-        </ul>
+          <ul class="font-medium text-base-100 flex flex-col items-center p-4 md:p-0 mt-4 border border-gray-300 rounded-lg bg-neutral md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-neutral">
+              <li>
+                  <b class="underline">Período:</b>
+                  {% if periodo %}
+                  {{periodo.fecha_inicio}}-{{periodo.fecha_fin}}
+                  {% else %}
+                  N/A
+                  {% endif %}
+              </li>
+          </ul>
       </div>
-    </div> 
+      {% if request.user.is_authenticated %}
+      <div class="dropdown" id="user-dropdown">
+          <button class="btn text-gray-900" id="user-button">{{request.user.get_full_name}}</button>
+          <form method="post" action="{% url 'logout' %}" style="background-color: inherit;">
+              <ul class="menu dropdown-content text-base-100 bg-gray-500 rounded-box z-[1] w-52 p-2 shadow-xl hidden" id="user-dropdown-menu">
+                  <li class="hover:bg-gray-400">
+                      {% csrf_token %}
+                      <button class="text-base-100 w-100 h-100 hover:bg-gray-400" type="submit">Cerrar Sesión</button>
+                  </li>
+              </ul>
+          </form>
+      </div>
+      {% endif %}
+  </div>
 </nav>
+<script>
+  const userButton = document.getElementById('user-button');
+  const userDropdownMenu = document.getElementById('user-dropdown-menu');
+
+  function toggleDropdown() {
+      userDropdownMenu.classList.toggle('hidden');
+  }
+
+  userButton.addEventListener('click', toggleDropdown);
+</script>

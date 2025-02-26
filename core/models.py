@@ -48,7 +48,7 @@ class DatosPersonal(models.Model):
     
     class Meta:
         ordering = (
-            'evaluaciones__estado', 'user__first_name'
+            'ficha',
         )
     
 class PeriodoGerencial(models.Model):

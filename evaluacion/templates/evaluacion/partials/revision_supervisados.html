@@ -75,7 +75,7 @@
             </td>
             <td>
                 {% if evaluacion %}
-                {% if evaluacion.estado == 'S' %}
+                {% if evaluacion.estado == 'S' and not gerencia %}
                 <a for="modal-{{evaluacion.pk}}" class="btn btn-error" hx-confirm="¿Desea Revisar la Evaluación Actual? Recuerde que esto debe hacerse en reunión con su supervisado, a menos que este no haya respondido a su evaluación en el plazo acordado." hx-target="closest .tab-content" href="#" hx-get="{% url 'revisar_evaluacion' pk=evaluacion.pk %}" hx-target="closest .tab-content">Revisar Evaluación Actual</a>
                 {% else %}
                 <label for="modal-{{evaluacion.pk}}" class="btn btn-error">Revisar Evaluación Actual</label>

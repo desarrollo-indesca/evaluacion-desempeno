@@ -3,7 +3,7 @@
     <div class="modal-box w-11/12 max-w-5xl">
         <div class="flex justify-center items-center">
             <h3 class="text-lg font-bold">Evaluación &nbsp;</h3>
-            <select name="version" id="version" hx-select=".modal-box" hx-target="closest .modal-box" hx-trigger="change" hx-get="{% url 'generar_modal' pk=evaluacion.pk %}" hx-swap="outerHTML">
+            <select name="version" id="version-{{evaluacion.pk}}-{{id}}" hx-select=".modal-box" hx-target="closest .modal-box" hx-trigger="change" hx-get="{% url 'generar_modal' pk=evaluacion.pk %}" hx-swap="outerHTML">
                 {% if not include_others and tipo == 'H' %}
                 <option value="H" {% if tipo == 'H' %}selected{% endif %}>Definitiva</option>
                 {% elif not include_others and tipo == 'S' %}
@@ -65,13 +65,13 @@
 
         <div class="my-5">
             {% for resultado in evaluacion.resultados.all %}
-            <div class="collapse collapse-arrow bg-base-200 mb-2">
+            <div class="collapse collapse-arrow bg-base-200 mb-2 overflow-x-auto">
                 <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
                 <div class="collapse-title text-xl font-medium">
                     {{resultado.instrumento}} ({% if tipo == "E" %}{{resultado.resultado_empleado|default:'-'}}{% elif tipo == "S" %}{{resultado.resultado_supervisor|default:'-'}} {% else %}{{resultado.resultado_final|default:'-'}} {% endif %} / {{resultado.instrumento.peso}})
                 </div>
                 <div class="collapse-content">
-                    <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>
+                    <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version-{{evaluacion.pk}}-{{id}}').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>
                 </div>
             </div>
             {% empty %}
@@ -83,7 +83,7 @@
                 <input type="checkbox" name="my-accordion-dnf" />
                 <div class="collapse-title text-xl font-medium">Detección de Necesidades de Formación</div>
                 <div class="collapse-content">
-                    <div hx-trigger="revealed once" hx-get="{% url 'consulta_formacion' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML"></div>
+                    <div hx-trigger="revealed once" hx-get="{% url 'consulta_formacion' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version-{{evaluacion.pk}}-{{id}}').value}" hx-swap="outerHTML"></div>
                 </div>
             </div>
             {% else %}
@@ -95,7 +95,7 @@
                 <input type="checkbox" name="my-accordion-metas" />
                 <div class="collapse-title text-xl font-medium">Logros y Metas</div>
                 <div class="collapse-content">
-                    <div hx-trigger="revealed" hx-get="{% url 'consulta_metas' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML"></div>
+                    <div hx-trigger="revealed" hx-get="{% url 'consulta_metas' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version-{{evaluacion.pk}}-{{id}}').value}" hx-swap="outerHTML"></div>
                 </div>
             </div>
             {% else %}
