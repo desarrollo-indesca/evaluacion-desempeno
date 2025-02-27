@@ -626,7 +626,7 @@ class FormularioInstrumentoSupervisor(PeriodoContextMixin, EscalafonMixin, Evalu
                                 total += form.instance.respuesta_supervisor
                                 max_seccion += 1
                             elif(seccion.calculo == 'M'):
-                                total = min(total, form.instance.respuesta_supervisor)
+                                total = min(total, form.instance.respuesta_supervisor) if form.instance.respuesta_supervisor != 0 else total 
                         else:
                             context = {} 
                             context['instrumento'] = [{
@@ -1031,15 +1031,17 @@ class CerrarEvaluacion(View):
             if(evaluacion.estado == 'R'):
                 evaluacion_previa = evaluacion
                 resultados_instrumentos = evaluacion_previa.resultados.all()
+                resultados_escalafon = evaluacion_previa.escalafones.get(asignado_por='E')
 
                 evaluacion.pk = None
                 evaluacion.estado = 'S'
                 evaluacion.fecha_fin = None
                 evaluacion.fecha_revision = None
+                evaluacion.fecha_entrega = None
                 evaluacion.fecha_inicio = datetime.datetime.now()
+                evaluacion.fecha_envio = datetime.datetime.now()
                 evaluacion.save()
                 
-                resultados_escalafon = evaluacion_previa.escalafones.get(anadido_por='E')
                 resultados_escalafon.evaluacion = evaluacion
                 resultados_escalafon.pk = None
                 resultados_escalafon.save()
