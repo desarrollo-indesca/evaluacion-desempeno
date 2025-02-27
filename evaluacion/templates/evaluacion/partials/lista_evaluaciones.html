@@ -57,13 +57,13 @@
                 {% endif %}
             </td>
             <td>
-                <label for="modal-{{evaluacion.pk}}" class="btn btn-error">Revisar Evaluación</label>
+                <label for="modal-{{evaluacion.pk}}-{{forloop.counter0}}" class="btn btn-error">Revisar Evaluación</label>
                 {% if  evaluacion.estado == 'P' or evaluacion.estado == 'E' or evaluacion.estado == 'S' %}
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="E" %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk extra_suffix=forloop.counter0 tipo="E" %}
                 {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' %}
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="S" %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk extra_suffix=forloop.counter0 tipo="S" %}
                 {% elif evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="H" %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk extra_suffix=forloop.counter0 tipo="H" %}
                 {% endif %}
             </td>
         </tr>

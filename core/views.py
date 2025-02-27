@@ -131,10 +131,8 @@ class PanelDeControl(LoginRequiredMixin, View, PeriodoContextMixin):
             }
             context['evaluaciones'] = evaluaciones
 
-            context['personal_evaluado'] = DatosPersonal.objects.filter(activo=True, evaluaciones__periodo=context['periodo']).exclude(evaluaciones__estado='A').count()
-            context['personal_finalizado'] = DatosPersonal.objects.filter(activo=True, evaluaciones__periodo=context['periodo'], evaluaciones__estado='A').count()
-            context['porcentaje_finalizado'] = (context['personal_finalizado'] / context['personal_evaluado']) * 100
-        
+            context['personal_evaluado'] = evaluaciones_periodo.exclude(estado__in=['A', 'R']).count()
+            context['personal_finalizado'] = evaluaciones_periodo.filter(estado='A').count()        
         return context
 
     def get(self, request):

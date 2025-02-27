@@ -21,7 +21,7 @@
 </div>
 <hr>
 
-<form hx-get="{{request.path}}"  hx-select="#supervisados" hx-target="#supervisados" hx-swap="outerHTML" hx- hx-trigger="change, keyup delay:1s" id="filter-form" class="flex justify-evenly w-full">
+<form hx-get="{{request.path}}"  hx-select="#supervisados{% if gerencia %}-gerencia{% endif %}" hx-target="#supervisados{% if gerencia %}-gerencia{% endif %}" hx-swap="outerHTML" hx- hx-trigger="change, keyup delay:1s" id="filter-form" class="flex justify-evenly w-full">
     <div>
         {{filter.form.ficha.label_tag}} <br>
         {% render_field filter.form.ficha class="input input-bordered w-full" %}
@@ -38,7 +38,7 @@
     </div>
 </form>
 <br>
-<p class="text-center" id="total-empleados-evals">Se encontraron {{total}} empleados.</p>
+<p class="text-center" id="total-empleados-evals{% if gerencia %}-gerencia{% endif %}">Se encontraron {{total}} empleados.</p>
 
 <table class="table table-zebra my-4 text-center">
     <thead class="bg-gray-900 text-white">
@@ -50,7 +50,7 @@
         </tr>
     </thead>
 
-    <tbody class="resultados" id="supervisados">
+    <tbody class="resultados" id="supervisados{% if gerencia %}-gerencia{% endif %}">
         {% for supervisado in object_list %}
         <tr>
             <td>{{supervisado.ficha}}</td>
@@ -78,7 +78,7 @@
                 {% if evaluacion.estado == 'S' and not gerencia %}
                 <a for="modal-{{evaluacion.pk}}" class="btn btn-error" hx-confirm="¿Desea Revisar la Evaluación Actual? Recuerde que esto debe hacerse en reunión con su supervisado, a menos que este no haya respondido a su evaluación en el plazo acordado." hx-target="closest .tab-content" href="#" hx-get="{% url 'revisar_evaluacion' pk=evaluacion.pk %}" hx-target="closest .tab-content">Revisar Evaluación Actual</a>
                 {% else %}
-                <label for="modal-{{evaluacion.pk}}" class="btn btn-error">Revisar Evaluación Actual</label>
+                <label for="modal-{{evaluacion.pk}}{% if gerencia %}-gerencia{% endif %}" class="btn btn-error">Revisar Evaluación Actual</label>
                 {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with evaluacion=evaluacion include_others=True finish=False id=evaluacion.pk tipo="E" %}
                 {% endif %}
                 {% endif %}
@@ -97,7 +97,7 @@
             <td colspan="4"
                 hx-get="{{request.path}}" 
                 hx-trigger="revealed once"
-                hx-select="#supervisados > tr"
+                hx-select="#supervisados{% if gerencia %}-gerencia{% endif %} > tr"
                 hx-swap="outerHTML"
                 hx-target="closest tr"
                 hx-vals="js:{
@@ -116,4 +116,4 @@
     </tbody>
 </table>
 
-<p class="text-center resultados" id="total-empleados-evals" hx-swap-oob="true">Se encontraron {{total}} empleados.</p>
+<p class="text-center resultados" id="total-empleados-evals{% if gerencia %}-gerencia{% endif %}" hx-swap-oob="true">Se encontraron {{total}} empleados.</p>

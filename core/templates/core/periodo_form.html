@@ -1,7 +1,7 @@
 {% load widget_tweaks %}
 <h1 class="text-3xl font-bold text-center">Crear Periodo</h1>
 
-<form method="post" hx-post="{% url 'periodo_crear' %}" hx-target="closest .tab-content" hx-swap="innerHTML">
+<form method="post" hx-confirm="¿Desea crear el periodo y habilitar las evaluaciones para el personal activo con más de 6 meses a la fecha de inicio del periodo? Revise que los datos sean correctos antes de proceder." hx-post="{% url 'periodo_crear' %}" hx-target="closest .tab-content" hx-swap="innerHTML">
     {% csrf_token %}
     <div class="flex">
         <div class="w-1/2 p-3">

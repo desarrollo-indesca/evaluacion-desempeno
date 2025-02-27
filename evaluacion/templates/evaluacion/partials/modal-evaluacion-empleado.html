@@ -1,4 +1,4 @@
-<input type="checkbox" id="modal-{{id}}" class="modal-toggle" />
+<input type="checkbox" id="modal-{{id}}{% if gerencia %}-gerencia{% endif %}{% if extra_suffix != None %}-{{extra_suffix}}{% endif %}" class="modal-toggle" />
 <div class="modal" role="dialog">
     <div class="modal-box w-11/12 max-w-5xl">
         <div class="flex justify-center items-center">
@@ -218,5 +218,5 @@
         </div>
         {% endif %}
     </div>
-    <label class="modal-backdrop" for="modal-{{id}}">Close</label>
+    <label class="modal-backdrop" for="modal-{{id}}{% if gerencia %}-gerencia{% endif %}{% if extra_suffix != None %}-{{extra_suffix}}{% endif %}">Close</label>
 </div>
