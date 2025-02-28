@@ -1,0 +1,108 @@
+<h1 class="text-3xl font-bold  text-center">Panel de Control</h1>
+<p class="text-sm text-center">Del Gerente de Gestión Humana</p>
+
+{% if periodo %}
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="w-full p-4">
+        <table class="table table-xs w-full">
+            <thead class="text-center">
+                <tr>
+                    <th class="border" colspan="2">Resumen de Evaluaciones</th>
+                </tr>
+                <tr>
+                    <th class="border">Estado</th>
+                    <th class="border">Número de Evaluaciones</th>
+                </tr>
+            </thead>
+            <tbody class="text-center">
+                <tr>
+                    <td class="border">Pendientes</td>
+                    <td class="border">{{evaluaciones.evaluaciones_pendientes.count}} ({{evaluaciones.evaluaciones_pendientes.porcentaje|floatformat:2}} %)</td>
+                </tr>
+                <tr>
+                    <td class="border">Iniciadas por el Empleado</td>
+                    <td class="border">{{evaluaciones.evaluaciones_iniciadas.count}} ({{evaluaciones.evaluaciones_iniciadas.porcentaje|floatformat:2}} %)</td>
+                </tr>
+                <tr>
+                    <td class="border">Enviadas al Supervisor</td>
+                    <td class="border">{{evaluaciones.evaluaciones_enviadas_supervisor.count}} ({{evaluaciones.evaluaciones_enviadas_supervisor.porcentaje|floatformat:2}} %)</td>
+                </tr>
+                <tr>
+                    <td class="border">Revisadas por el Supervisor</td>
+                    <td class="border">{{evaluaciones.evaluaciones_revisadas.count}} ({{evaluaciones.evaluaciones_revisadas.porcentaje|floatformat:2}} %)</td>
+                </tr>
+                <tr>
+                    <td class="border">Enviadas a Gestión Humana</td>
+                    <td class="border">{{evaluaciones.evaluaciones_enviadas_gghh.count}} ({{evaluaciones.evaluaciones_enviadas_gghh.porcentaje|floatformat:2}} %)</td>
+                </tr>
+                <tr>
+                    <td class="border">Aprobadas</td>
+                    <td class="border">{{evaluaciones.evaluaciones_aprobadas.count}} ({{evaluaciones.evaluaciones_aprobadas.porcentaje|floatformat:2}} %)</td>
+                </tr>
+                <tr>
+                    <td class="border">Rechazadas</td>
+                    <td class="border">{{evaluaciones.evaluaciones_rechazadas.count}} ({{evaluaciones.evaluaciones_rechazadas.porcentaje|floatformat:2}} %)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="w-full p-4">
+        <table class="table table-xs w-full">
+            <thead>
+                <tr class="text-center">
+                    <th class="border" colspan="2">Resumen del Personal</th>
+                </tr>
+            </thead>
+            <tbody class="text-center">
+                <tr>
+                    <td class="border">Personal Pendiente por Finalizar</td>
+                    <td class="border">{{personal_evaluado}}</td>
+                </tr>
+                <tr>
+                    <td class="border">Personal Finalizado</td>
+                    <td class="border">{{personal_finalizado}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<hr>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-10">
+    <div class="p-4">
+        <div class="card bg-base-100 shadow-xl border">
+            <div class="card-body">
+                <h2 class="card-title">Evaluaciones del Personal</h2>
+                <p>Accede a las evaluaciones realizadas por el personal de la organización.</p>
+                <div class="card-actions justify-end">
+                    <a href="#" hx-target="closest .tab-content" hx-swap="innerHTML" hx-get="{% url 'revision_general' %}" class="btn btn-error">Ir</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="p-4">
+        <div class="card bg-base-100 shadow-xl border">
+            <div class="card-body">
+                <h2 class="card-title">Administrar periodos</h2>
+                <p>Gestiona los periodos de evaluación en el sistema.</p>
+                <div class="card-actions justify-end">
+                    <a hx-target="closest .tab-content" hx-swap="innerHTML" hx-get="{% url 'periodo_lista' %}" class="btn btn-error">Ir</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="p-4">
+        <div class="card bg-base-100 shadow-xl border">
+            <div class="card-body">
+                <h2 class="card-title">Generación de Reportes</h2>
+                <p>Extrae los reportes correspondientes a los periodos cerrados.</p>
+                <div class="card-actions justify-end">
+                    <a hx-get="{% url 'generar_reportes' %}" hx-target="closest .tab-content" hx-swap="innerHTML" href="#" class="btn btn-error">Ir</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

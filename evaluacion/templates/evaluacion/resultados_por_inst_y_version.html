@@ -1,0 +1,109 @@
+<table class="table table-xs">
+    <tbody>
+        {% for seccion in secciones %}
+        <tr>
+            <th class="text-center bg-gray-900 text-white" colspan="3">{{seccion.seccion}} (
+                {{seccion.resultado}}
+                / {{seccion.seccion.peso}})</th>
+        </tr>
+        <tr>
+            <th class="bg-gray-900 text-white text-center">Pregunta</th>
+            <th class="bg-gray-900 text-white text-center">Respuesta</th>
+            <th class="bg-gray-900 text-white text-center">Peso</th>
+        </tr>
+
+        {% for pregunta in seccion.preguntas %}
+        <tr class="text-center">
+            <td>{{pregunta.pregunta}}</td>
+            <td >
+                {{pregunta.respuesta}} {% if pregunta.respuesta.valor != -1 %}<b>(
+                        {% if pregunta.calculo == "S" %}
+                        {{pregunta.respuesta_ponderada|floatformat:2}}
+                        {% else %}
+                        {{pregunta.respuesta.valor}}
+                        {% endif %}              
+                )</b>{% endif %}
+
+                {% if pregunta.comentario.empleado %}
+                <span class="badge badge-info tooltip" data-tip="Comentario del Evaluado: {{pregunta.comentario.empleado}}">!</span>
+                {% endif %}
+
+                {% if pregunta.comentario.supervisor %}
+                <span class="badge badge-secondary tooltip" data-tip="Comentario del Supervisor: {{pregunta.comentario.supervisor}}">!</span>
+                {% endif %}
+
+                {% if pregunta.comentario.gghh %}
+                <span class="badge badge-success tooltip" data-tip="Comentario de Gestión Humana: {{pregunta.comentario.gghh}}">!</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if pregunta.respuesta.valor >= 0 and seccion.calculo == "S" %}{{pregunta.peso}}{% else %}—{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+
+        <tr class="text-center border-dark">
+            <td class="font-bold">
+                {% if seccion.calculo == 'S' %}
+                Sumatoria ({{seccion.seccion.peso}}%)
+                {% elif seccion.calculo == 'M' %}
+                Mínimo
+                {% elif seccion.calculo == 'P' %}
+                Promedio
+                {% endif %}                
+            </td>
+            <td class="font-bold" colspan="2">
+                {% if seccion.calculo == 'S' %}
+                ({{seccion.valor_relativo}} / {{seccion.max_relativo}} * {{seccion.peso}}) → {{seccion.resultado}} → {{seccion.valor_ponderado|floatformat:2}}
+                {% else %}
+                {{seccion.resultado}}
+                {% endif %}
+            </td>
+            <td class="font-bold"></td>
+        </tr>
+        {% endfor %}
+
+        <tr class="bg-gray-900 text-white text-center">
+            <th colspan="3">Resumen por Sección</th>
+        </tr>
+        {% for seccion in secciones %}
+        <tr class="text-center">
+            <td>{{seccion.seccion}}</td>
+            <td>{{seccion.resultado}} {% if instrumento.instrumento.calculo == "S" %}→ {{seccion.valor_ponderado|floatformat:2}}{% endif %}</td>
+            <td>{{seccion.peso}}</td>
+        </tr>
+        {% endfor %}
+
+        <tr class="text-center font-bold">
+            <td>
+                {% if instrumento.instrumento.calculo == 'S' %}Sumatoria Ponderada{% elif instrumento.instrumento.calculo == 'M' %}Mínimo{% elif instrumento.instrumento.calculo == 'P' %}Promedio{% endif %}
+            </td>
+            <td>
+                {% if version == "E" %}
+                {{instrumento.resultado_empleado}}
+                {% elif version == "S" %}
+                {{instrumento.resultado_supervisor}}
+                {% else %}
+                {{instrumento.resultado_final}}
+                {% endif %}
+            </td>
+            <td>
+                {{instrumento.instrumento.peso}}
+            </td>
+        </tr>
+        {% if instrumento.instrumento.escalafon %}
+        <tr>
+            <tr class="text-center">
+                <td colspan="2">
+                    <b>Nivel de Escalafón</b>
+                </td>
+                <td>
+                    <b>
+                        {{escalafon_obtenido}}
+                    </b>
+                </td>
+            </tr>
+        </tr>
+        {% endif %}
+    </tbody>
+</table>

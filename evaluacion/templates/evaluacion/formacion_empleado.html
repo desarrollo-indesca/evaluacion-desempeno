@@ -6,7 +6,14 @@
 
 <div class="flex justify-evenly items-center p-3">
     <div class="w-25">
-        <a href="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
+        {% if supervisado %}
+        {% else %}
+        {% if url_previo != '' %}
+        <a hx-get="{{url_previo}}"  hx-target="closest .tab-content" class="btn btn-teal-500">Regresar</a>
+        {% else %}
+        <a href="{% url 'dashboard' %}" class="btn btn-teal-500" hx-boost="true">Regresar</a>
+        {% endif %}
+        {% endif %}
     </div>
     <div class="w-50">
         <h1 class="text-center text-2xl">{{titulo}}</h1>
@@ -14,8 +21,13 @@
     <div class="w-25"></div>
 </div>
 <hr>
-
-<form method="post">
+{% if anadido_por == 'S' %}
+<form method="post" hx-post="{% url 'formacion_supervisado' pk=evaluacion.pk %}" hx-target="closest .tab-content">
+{% elif anadido_por == 'H' %}
+<form method="post" hx-post="{% url 'formacion_definitiva' pk=evaluacion.pk %}" hx-target="closest .tab-content">
+{% else %}
+<form method="post" hx-post="{% url 'formacion' pk=evaluacion.pk %}" hx-select="main" hx-target="main">
+{% endif %}
     {% csrf_token %}
     <div class="my-4">       
             <div class="my-2 max-w-screen">
@@ -60,21 +72,37 @@
                     <tbody id="form">
                         {{formset.management_form}}
                         {% for form in formset %}
-                        <tr class="form hover:bg-gray-100">
+                        <tr class="form border-b hover:bg-gray-100">
                             <td class="text-center w-2/8">
-                                {% render_field form.necesidad_formacion class="input input-bordered w-full" %}
+                                {% render_field form.necesidad_formacion class="input input-bordered w-full" required="true" %}
+                                <small class="text-error">
+                                    {% for error in form.necesidad_formacion.errors %}{{error}}<br>{% endfor %}
+                                </small>
                             </td>
                             <td class="text-center w-1/8">
-                                {% render_field form.prioridad class="select select-bordered w-full" %}
+                                {% render_field form.prioridad class="select select-bordered w-full" required="true" %}
+                                <small class="text-error">
+                                    {% for error in form.prioridad.errors %}{{error}}<br>{% endfor %}
+                                </small>
                             </td>
                             <td class="text-center w-1/8">
-                                {% render_field form.clasificacion class="select select-bordered w-full" %}                                
+                                {% render_field form.clasificacion class="select select-bordered w-full" required="true" %}                                
+                                <small class="text-error">
+                                    {% for error in form.clasificacion.errors %}{{error}}<br>{% endfor %}
+                                </small>
                             </td>
                             <td class="text-xs">
                                 {% render_field form.competencias_genericas %}
+                                <small class="text-error">
+                                    {% for error in form.competencias_genericas.errors %}{{error}}<br>{% endfor %}
+                                </small>
                             </td>
                             <td class="text-xs">
                                 {% render_field form.competencias_tecnicas %}
+                                <small class="text-error">
+                                    {% for error in form.competencias_tecnicas.errors %}{{error}}<br>{% endfor %}
+                                </small>
+                            </td>
                             </td>
                             <td>
                                 {% if forloop.first %}
@@ -100,7 +128,7 @@
             <input type="submit" value="Guardar" class="btn btn-error">
         </div>
     </div>
-</form>
 
-<script src="{% static 'js/dynamic-form.js' %}"></script>
+    <script src="{% static 'js/dynamic-forms.js' %}"></script>        
+</form>
 {% endblock %}

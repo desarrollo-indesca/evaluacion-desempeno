@@ -1,0 +1,119 @@
+{%  load widget_tweaks %}
+<div class="flex justify-center items-center my-3">
+    <div class="w-1/3"></div>
+    <div class="w-1/3 text-center">
+        {% if gerencia %}
+        <h3 class="text-2xl">Consulta de Personal de la Gerencia</h3>
+        <h4 class="text-md">{{gerencia}}</h4>
+        {% else %}
+        <h3 class="text-2xl">Consulta de Supervisados (Periodo Actual)</h3>
+        {% endif %}
+
+        {% if messages %}
+            {% include 'messages.html' %}
+        {% endif %}
+    </div>
+    <div class="w-1/3">
+        {% if puede_enviarse_gghh %}
+        <a href="#" class="btn btn-teal-500" hx-trigger="click" hx-target="closest .tab-content" hx-confirm="Al enviar las evaluaciones a la gerencia de Gestión Humana, no se podrán modificar a menos que sea rechazada. ¿Desea continuar?" hx-post="{% url 'enviar_gghh' %}">Enviar a Gestión Humana</a>
+        {% endif %}
+    </div>
+</div>
+<hr>
+
+<form hx-get="{{request.path}}"  hx-select="#supervisados{% if gerencia %}-gerencia{% endif %}" hx-target="#supervisados{% if gerencia %}-gerencia{% endif %}" hx-swap="outerHTML" hx- hx-trigger="change, keyup delay:1s" id="filter-form" class="flex justify-evenly w-full">
+    <div>
+        {{filter.form.ficha.label_tag}} <br>
+        {% render_field filter.form.ficha class="input input-bordered w-full" %}
+    </div>
+    {% if periodo %}
+    <div>
+        {{filter.form.evaluacion_estado.label_tag}} <br>
+        {% render_field filter.form.evaluacion_estado class="select select-bordered w-full" %}
+    </div>
+    {% endif %}
+    <div>
+        {{filter.form.user__first_name.label_tag}} <br>
+        {% render_field filter.form.user__first_name class="input input-bordered w-full" %}
+    </div>
+</form>
+<br>
+<p class="text-center" id="total-empleados-evals{% if gerencia %}-gerencia{% endif %}">Se encontraron {{total}} empleados.</p>
+
+<table class="table table-zebra my-4 text-center">
+    <thead class="bg-gray-900 text-white">
+        <tr>
+            <th>Ficha</th>
+            <th>Nombre</th>
+            <th>Evaluación Actual</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+
+    <tbody class="resultados" id="supervisados{% if gerencia %}-gerencia{% endif %}">
+        {% for supervisado in object_list %}
+        <tr>
+            <td>{{supervisado.ficha}}</td>
+            <td>{{supervisado.user.get_full_name.upper}}</td>
+            {% with evaluacion=supervisado.evaluacion_actual %}
+            <td>
+                {% if evaluacion %}
+                {% if evaluacion.estado == 'A' %}
+                <span class="badge badge-success">{{evaluacion.estado_largo}}</span>
+                {% elif evaluacion.estado == 'S' %}
+                <span class="badge badge-yellow">{{evaluacion.estado_largo}}</span>
+                {% elif evaluacion.estado == 'G' %}
+                <span class="badge badge-cyan">{{evaluacion.estado_largo}}</span>
+                {% elif evaluacion.estado == 'P' %}
+                <span class="badge badge-error">{{evaluacion.estado_largo}}</span>
+                {% else %}
+                {{evaluacion.estado_largo}}
+                {% endif %}
+                {% else %}
+                <span class="badge badge-error">Sin Evaluación Activa</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if evaluacion %}
+                {% if evaluacion.estado == 'S' and not gerencia %}
+                <a for="modal-{{evaluacion.pk}}" class="btn btn-error" hx-confirm="¿Desea Revisar la Evaluación Actual? Recuerde que esto debe hacerse en reunión con su supervisado, a menos que este no haya respondido a su evaluación en el plazo acordado." hx-target="closest .tab-content" href="#" hx-get="{% url 'revisar_evaluacion' pk=evaluacion.pk %}" hx-target="closest .tab-content">Revisar Evaluación Actual</a>
+                {% else %}
+                <label for="modal-{{evaluacion.pk}}{% if gerencia %}-gerencia{% endif %}" class="btn btn-error">Revisar Evaluación Actual</label>
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with evaluacion=evaluacion include_others=True finish=False id=evaluacion.pk tipo="E" %}
+                {% endif %}
+                {% endif %}
+                
+                <a class="btn btn-gray" hx-target="closest .tab-content" hx-get="{% url 'consultar_historico_supervisados' pk=supervisado.pk %}" hx-vals="js:{previous_url: '{{url_regreso}}'}">Ver Histórico de Evaluaciones</a>
+            </td>
+            {% endwith %}
+        </tr>
+        {% empty %}
+        <tr>
+            <th colspan="4">Usted no tiene supervisados que cumplan con los filtros.</th>
+        </tr>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <tr>
+            <td colspan="4"
+                hx-get="{{request.path}}" 
+                hx-trigger="revealed once"
+                hx-select="#supervisados{% if gerencia %}-gerencia{% endif %} > tr"
+                hx-swap="outerHTML"
+                hx-target="closest tr"
+                hx-vals="js:{
+                    page: {{page_obj.next_page_number}},
+                    ficha: document.querySelector('[name=ficha]').value || '',
+                    user__first_name: document.querySelector('[name=user__first_name]').value || '',
+                    {% if periodo %}
+                    evaluacion_estado: document.querySelector('[name=evaluacion_estado]').value || '',
+                    {% endif %}
+                }">
+                Cargando...
+            </td>
+        </tr>
+        {% endif %}
+        
+    </tbody>
+</table>
+
+<p class="text-center resultados" id="total-empleados-evals{% if gerencia %}-gerencia{% endif %}" hx-swap-oob="true">Se encontraron {{total}} empleados.</p>

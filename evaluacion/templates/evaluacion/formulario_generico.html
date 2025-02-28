@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load static %}
 
 {% block content %}
 
@@ -13,6 +14,12 @@
     <div class="w-25"></div>
 </div>
 <hr>
+{% if errores %}
+<div class="alert alert-warning">
+    <p class="text-red-600">Hay errores en el formulario. Por favor, corríjalos antes de continuar.</p>
+</div>
+{% endif %}
+
 
 <form method="post">
     {% csrf_token %}
@@ -23,7 +30,11 @@
                     <thead class="bg-gray-900">
                         <tr>
                             <th colspan="3" class="text-center text-lg text-white">
+                                {% if seccion.seccion.descripcion %}
                                 <h3 class="tooltip tooltip-left" data-tip="{{seccion.seccion.descripcion}}">{{seccion.seccion.titulo}}</h3>
+                                {% else %}
+                                <h3>{{seccion.seccion.titulo}}</h3>
+                                {% endif %}
                             </th>
                         </tr>
                     </thead>
@@ -32,7 +43,11 @@
                         <tr class="hover:bg-gray-100">
                             <td class="text-center w-1/5">{{forloop.counter}}</td>
                             <td class="text-center w-2/5">
+                                {% if pregunta.pregunta.tip %}
                                 <h3 class="text-md font-semibold text-center tooltip" data-tip="{{pregunta.pregunta.tip}}">
+                                {% else %}
+                                <h3 class="text-md font-semibold text-center">
+                                {% endif %}
                                     {{pregunta.pregunta.pregunta}}
                                 </h3>
                                 {% render_field pregunta.form.pregunta class="hidden" type="hidden" %}
@@ -41,7 +56,7 @@
                                 </small>
                             </td>
                             <td class="text-center w-2/5">
-                                <select name="{{pregunta.form.prefix}}-respuesta_empleado" id="id_{{pregunta.form.prefix}}-respuesta_empleado" class="select select-bordered w-full max-w-xs" required>
+                                <select name="{{pregunta.form.prefix}}-respuesta_empleado" id="id_{{pregunta.form.prefix}}-respuesta_empleado" class="select select-bordered w-full max-w-xs" required="true">
                                     <option disabled selected>Seleccionar</option>
                                     {% for opcion in pregunta.pregunta.opciones.all %}
                                         <option value="{{opcion.valor}}" {% if opcion.valor == pregunta.form.instance.respuesta_empleado %}selected{% endif %}>{{opcion.opcion}}</option>
@@ -72,25 +87,5 @@
     </div>
 </form>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const selects = document.querySelectorAll('select');
-        selects.forEach(function(select) {
-            select.addEventListener('change', function() {
-                if (this.value == -1) {
-                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').setAttribute('required', true);
-                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').classList.add('input-error');
-                } else {
-                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').removeAttribute('required');
-                    this.parentElement.parentElement.querySelector('input[name*="comentario_empleado"]').classList.remove('input-error');
-                }
-            });
-        });
-        
-        selects.forEach(function(select) {
-            select.dispatchEvent(new Event('change'));
-        });
-    });
-</script>
-
+<script src="{% static 'js/carga-formulario.js' %}"></script>
 {% endblock %}

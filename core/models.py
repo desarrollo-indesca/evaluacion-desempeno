@@ -13,13 +13,18 @@ class Periodo(models.Model):
 
     def __str__(self):
         return f"PERIODO {self.fecha_inicio} - {self.fecha_fin}"
+    
+    def todas_evaluaciones_terminadas(self):
+        return self.evaluaciones.filter(estado__in=("A", "R")).count() == self.evaluaciones.count()
+    
+    class Meta:
+        ordering = ("-activo", "-fecha_inicio",)
 
 class TipoPersonal(NombreMixin, models.Model):
     nombre = models.CharField(max_length=50)
 
 class Cargo(NombreMixin, models.Model):
     nombre = models.CharField(max_length=50)
-    nivel = models.SmallIntegerField()
 
 class Gerencia(NombreMixin, models.Model):
     nombre = models.CharField(max_length=50)
@@ -33,9 +38,18 @@ class DatosPersonal(models.Model):
     supervisor = models.ForeignKey("self", on_delete=models.CASCADE, related_name="supervisados", null=True, blank=True)
     gerencia = models.ForeignKey("Gerencia", on_delete=models.CASCADE, related_name="personal_gerencia")
     fecha_ingreso = models.DateField()
+    escalafon = models.ForeignKey("evaluacion.NivelEscalafon", on_delete=models.CASCADE, default=1)
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}"
+    
+    def evaluacion_actual(self):
+        return self.evaluaciones.filter(periodo__activo=True).first()
+    
+    class Meta:
+        ordering = (
+            'ficha',
+        )
     
 class PeriodoGerencial(models.Model):
     gerente = models.ForeignKey(DatosPersonal, on_delete=models.CASCADE, related_name="personal_gerente")

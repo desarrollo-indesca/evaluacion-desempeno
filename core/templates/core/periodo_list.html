@@ -1,0 +1,60 @@
+<div class="flex justify-between items-center p-3">
+    <div class="w-1/5">
+        <a hx-get="{% url 'panel_de_control' %}" hx-target="closest .tab-content" hx-swap="innerHTML" href="#" class="btn btn-teal-500">Regresar</a>
+    </div>
+    <div class="w-2/5 text-center">
+        <h1 class="text-2xl">Periodos de Evaluación</h1>
+    </div>
+    <div class="w-1/5 text-right">
+        {% if not periodo %}
+        <a hx-get="{% url 'periodo_crear' %}" hx-target="closest .tab-content" class="btn btn-error">Habilitar Nuevo Periodo</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if messages %}
+    {% include 'messages.html' %}
+{% endif %}
+
+<table class="table w-full text-center">
+    <thead>
+        <tr>
+            <th class="bg-gray-900 text-white">Periodo</th>
+            <th class="bg-gray-900 text-white">Inicio</th>
+            <th class="bg-gray-900 text-white">Fin</th>
+            <th class="bg-gray-900 text-white">Estado</th>
+            <th class="bg-gray-900 text-white">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for periodo in object_list %}
+        <tr class="border-b-2 {% if forloop.first %}bg-gray-200{% endif %}">
+            <td>{{periodo}}</td>
+            <td>{{periodo.fecha_inicio}}</td>
+            <td>{{periodo.fecha_fin}}</td>
+            <td>
+                {% if periodo.activo %}
+                <span class="badge badge-success">Activo</span>
+                {% else %}
+                <span class="badge badge-error">Cerrado</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if periodo.activo and periodo.todas_evaluaciones_terminadas %}
+                <form hx-target="closest .tab-content" hx-swap="innerHTML" hx-confirm="¿Está seguro que desea cerrar el periodo?" hx-post="{% url 'periodo_cerrar' pk=periodo.pk %}" hx-target="closest tr" hx-swap="outerHTML" class="inline-block">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">Cerrar Periodo</button>
+                </form>
+                {% else %}
+                -
+                {% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="5">No han sido creados periodos de evaluación.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+

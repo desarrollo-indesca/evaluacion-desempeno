@@ -6,7 +6,11 @@
 
 <div class="flex justify-evenly items-center p-3">
     <div class="w-25">
-        <a href="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
+        {% if url_previo != '' %}
+        <a hx-get="{{url_previo}}"  hx-target="closest .tab-content" class="btn btn-teal-500">Regresar</a>
+        {% else %}
+        <a href="{% url 'dashboard' %}" class="btn btn-teal-500" hx-boost="true">Regresar</a>
+        {% endif %}
     </div>
     <div class="w-50">
         <h1 class="text-center text-2xl">{{titulo}}</h1>
@@ -14,8 +18,13 @@
     <div class="w-25"></div>
 </div>
 <hr>
-
-<form method="post">
+{% if anadido_por == 'E' %}
+<form method="post" hx-select="main" hx-target="main" hx-post="{% url 'metas' pk=evaluacion.pk %}">
+{% elif anadido_por == 'H' %}
+<form method="post" hx-target="closest .tab-content" hx-post="{% url 'metas_definitivas' pk=evaluacion.pk %}">
+{% else %}
+<form method="post" hx-target="closest .tab-content" hx-post="{% url 'metas_supervisado' pk=evaluacion.pk %}">
+{% endif %}
     {% csrf_token %}
     <div class="my-4">       
             <div class="my-2 max-w-screen">
@@ -43,10 +52,10 @@
                                 {% for hidden_field in form.hidden_fields %}
                                 {{hidden_field}}
                                 {% endfor %}
-                                {% render_field form.descripcion class="input input-bordered w-full" placeholder="Meta o Logro en este Período" %}
+                                {% render_field form.descripcion class="input input-bordered w-full" placeholder="Meta o Logro en este Período" required="true" %}
                             </td>
                             <td class="text-center w-1/8">
-                                {% render_field form.porc_cumplimiento class="input input-bordered w-full" placeholder="% Cumplido" %}
+                                {% render_field form.porc_cumplimiento class="input input-bordered w-full" placeholder="% Cumplido" required="true" %}
                             </td>
                             <td class="flex justify-center">
                                 {% if forloop.first %}
@@ -90,10 +99,10 @@
                                 {% for hidden_field in form.hidden_fields %}
                                 {{hidden_field}}
                                 {% endfor %}
-                                {% render_field form.descripcion class="input input-bordered w-full" placeholder="Meta para el siguiente Período" %}
+                                {% render_field form.descripcion class="input input-bordered w-full" placeholder="Meta para el siguiente Período" required="true" %}
                             </td>
                             <td class="text-center w-1/8">
-                                {% render_field form.nivel_prioridad class="select select-bordered w-full" %}
+                                {% render_field form.nivel_prioridad class="select select-bordered w-full" required="true" %}
                             </td>
                             <td class="flex justify-center">
                                 {% if forloop.first %}
@@ -120,5 +129,5 @@
     </div>
 </form>
 
-<script src="{% static 'js/dynamic-form.js' %}"></script>
+<script src="{% static 'js/dynamic-forms.js' %}"></script>
 {% endblock %}
