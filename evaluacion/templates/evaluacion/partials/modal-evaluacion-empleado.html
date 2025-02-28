@@ -1,0 +1,232 @@
+<input type="checkbox" id="modal-{{id}}{% if gerencia %}-gerencia{% endif %}{% if extra_suffix != None %}-{{extra_suffix}}{% endif %}" class="modal-toggle" />
+<div class="modal" role="dialog">
+    <div class="modal-box w-11/12 max-w-5xl">
+        <div class="flex justify-center items-center">
+            <h3 class="text-lg font-bold">Evaluación &nbsp;</h3>
+            <select name="version" id="version-{{evaluacion.pk}}-{{id}}" hx-select=".modal-box" hx-target="closest .modal-box" hx-trigger="change" hx-get="{% url 'generar_modal' pk=evaluacion.pk %}" hx-swap="outerHTML">
+                {% if not include_others and tipo == 'H' %}
+                <option value="H" {% if tipo == 'H' %}selected{% endif %}>Definitiva</option>
+                {% elif not include_others and tipo == 'S' %}
+                {% if evaluacion.fecha_revision %}
+                <option value="S" {% if tipo == 'S' %}selected{% endif %}>Revisada por Supervisor</option>
+                {% endif %}
+                {% else %}
+                <option value="E" {% if tipo == 'E' %}selected{% endif %}>Autoevaluación</option>
+                {% if include_others %}
+                {% if tipo == "S" or evaluacion.estado == "G" or evaluacion.estado == "H" or evaluacion.estado == "A" or evaluacion.estado == "R" %}
+                {% if evaluacion.fecha_revision %}
+                <option value="S" {% if tipo == 'S' or not tipo %}selected{% endif %}>Revisada por Supervisor</option>
+                {% endif %}
+                {% endif %}
+                {% if evaluacion.estado == "A" or evaluacion.estado == "R" %}
+                <option value="H" {% if tipo == 'H' or not tipo %}selected{% endif %}>Definitiva</option>
+                {% endif %}
+                {% endif %}
+                {% endif %}
+            </select>
+        </div>
+
+        <table class="table-xs table-zebra w-full p-5 my-5">
+            <tbody>
+                <tr>
+                    <th>Evaluado</th>
+                    <td class="text-center">{{evaluacion.evaluado.user.get_full_name}}</td>
+                </tr>
+                <tr>
+                    <th>Cargo</th>
+                    <td class="text-center">{{evaluacion.evaluado.cargo}}</td>
+                </tr>
+                <tr>
+                    <th>Supervisor</th>
+                    <td class="text-center">{{evaluacion.evaluado.supervisor.user.get_full_name}}</td>
+                </tr>
+                <tr>
+                    <th>Periodo</th>
+                    <td class="text-center">{{evaluacion.periodo.fecha_inicio}} - {{evaluacion.periodo.fecha_fin}}</td>
+                </tr>
+                <tr>
+                    <th>Fecha de Inicio</th>
+                    <td class="text-center">{{evaluacion.fecha_inicio|default:'-'}}</td>
+                </tr>
+                <tr>
+                    <th>Fecha Envío a Supervisor</th>
+                    <td class="text-center">{{evaluacion.fecha_envio|default:'-'}}</td>
+                </tr>
+                <tr>
+                    <th>Fecha Revisión por Supervisor</th>
+                    <td class="text-center">{{evaluacion.fecha_revision|default:'-'}}</td>
+                </tr>
+                <tr>
+                    <th>Fecha Entrega a Gestión Humana</th>
+                    <td class="text-center">{{evaluacion.fecha_entrega|default:'-'}}</td>
+                </tr>
+                <tr>
+                    <th>{% if evaluacion.estado != 'R' %}Fecha Aprobación{% else %}Fecha Rechazo{% endif %}</th>
+                    <td class="text-center">{{evaluacion.fecha_fin|default:'-'}}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="my-5">
+            {% for resultado in evaluacion.resultados.all %}
+            <div class="collapse collapse-arrow bg-base-200 mb-2 overflow-x-auto">
+                <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
+                <div class="collapse-title text-xl font-medium">
+                    {{resultado.instrumento}} ({% if tipo == "E" %}{{resultado.resultado_empleado|default:'-'}}{% elif tipo == "S" %}
+                    {% if not evaluacion.fecha_revision %}
+                    {{resultado.resultado_empleado|default:'-'}}
+                    {% else %}
+                    {{resultado.resultado_supervisor|default:'-'}}
+                    {% endif %}
+                    {% else %}{{resultado.resultado_final|default:'-'}} {% endif %} / {{resultado.instrumento.peso}})
+                </div>
+                <div class="collapse-content">
+                    <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version-{{evaluacion.pk}}-{{id}}').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>
+                </div>
+            </div>
+            {% empty %}
+            <h3 class="text-center">No se han cargado respuestas de los instrumentos.</h3>
+            {% endfor %}
+
+            {% if evaluacion.formaciones.count %}
+            <div class="collapse collapse-arrow bg-base-200 mb-2">
+                <input type="checkbox" name="my-accordion-dnf" />
+                <div class="collapse-title text-xl font-medium">Detección de Necesidades de Formación</div>
+                <div class="collapse-content">
+                    <div hx-trigger="revealed once" hx-get="{% url 'consulta_formacion' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version-{{evaluacion.pk}}-{{id}}').value}" hx-swap="outerHTML"></div>
+                </div>
+            </div>
+            {% else %}
+            <h3 class="text-center">No se han cargado las respuestas de la detección de necesidades de formación.</h3>
+            {% endif %}
+
+            {% if evaluacion.logros_y_metas.count %}
+            <div class="collapse collapse-arrow bg-base-200 mb-2">
+                <input type="checkbox" name="my-accordion-metas" />
+                <div class="collapse-title text-xl font-medium">Logros y Metas</div>
+                <div class="collapse-content">
+                    <div hx-trigger="revealed" hx-get="{% url 'consulta_metas' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version-{{evaluacion.pk}}-{{id}}').value}" hx-swap="outerHTML"></div>
+                </div>
+            </div>
+            {% else %}
+            <h3 class="text-center">No se han cargado las respuestas de logros y metas.</h3>
+            {% endif %}
+        </div>
+
+        {% if evaluacion.total %}
+        {% if evaluacion.estado != 'P' and evaluacion.estado != 'R' %}
+        <div class="stats shadow">
+            <div class="stat bg-gray-900 text-white">
+              <div class="stat-title text-white">Resultado de la Evaluación</div>
+              <div class="stat-value">
+                {% if tipo == "E" %}
+                {{evaluacion.total|floatformat:2}}
+                {% elif tipo == "S" %}
+                {{evaluacion.total_supervisor|floatformat:2}}
+                {% else %}
+                {{evaluacion.total_definitivo|floatformat:2}}
+                {% endif %}
+              </div>
+              <div class="stat-desc text-white">de {{evaluacion.peso|floatformat:2}} puntos.</div>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {% if evaluacion.comentario_evaluado %}
+        <div class="mt-3">
+            <h3 class="text-lg font-bold">Comentarios del Empleado:</h3>
+            <p class="whitespace-pre-wrap">{{evaluacion.comentario_evaluado}}</p>
+        </div>
+        {% endif %}
+        
+        {% if evaluacion.comentario_supervisor %}
+        <div class="mt-3">
+            <h3 class="text-lg font-bold">Comentarios del Supervisor:</h3>
+            <p class="whitespace-pre-wrap">{{evaluacion.comentario_supervisor}}</p>
+        </div>
+        {% endif %}
+        
+        {% if evaluacion.comentario_gghh %}
+        <div class="mt-3">
+            <h3 class="text-lg font-bold">Comentarios del Gerente de Gestión Humana:</h3>
+            <p class="whitespace-pre-wrap">{{evaluacion.comentario_gghh}}</p>
+        </div>
+        {% endif %}
+
+        {% if finish %}
+        <div class="my-5 text-left">
+            <form class="flex justify-center items-center flex-col"
+                {% if tipo == "E" %}
+                hx-confirm="¿Está seguro que desea enviar la evaluación? No podrá modificarla directamente de nuevo." 
+                hx-post="{% url 'finalizar_evaluacion' pk=evaluacion.pk %}" 
+                hx-target="body"
+                {% elif tipo == "S" %}
+                hx-confirm="¿Está seguro que desea enviar la evaluación al gerente? No podrá modificarla directamente de nuevo, a menos que sea rechazada." 
+                hx-post="{% url 'enviar_gerente' pk=evaluacion.pk %}" 
+                hx-target="closest .tab-content"
+                {% elif tipo == "H" %}
+                hx-confirm="Una vez enviada la evaluación esta será archivada, y no podrá ser modificada a menos que informática intervenga. ¿Está de acuerdo con la decisión tomada de acuerdo a los resultados de esta evaluación?" 
+                hx-post="{% url 'cerrar_evaluacion_final' pk=evaluacion.pk %}" 
+                hx-target="closest .tab-content"
+                {% endif %}
+            >
+                <div class="w-full">
+                    <input type="text" class="w-full input input-bordered" placeholder="Ingrese sus comentarios sobre los resultados" name="comentarios">
+                </div>
+
+                <div class="my-3">
+                    <input type="checkbox" name="aceptar" id="aceptar" class="checkbox" required>
+                    <label for="aceptar">
+                        {% if tipo == 'S' %}
+                        &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en la autoevaluación por mi supervisado: {{evaluacion.evaluado.user.get_full_name.upper}}, con quien me he reunido para modificar elementos de su autoevaluación, y apruebo que estas sean enviadas al gerente de {{evaluacion.evaluado.gerencia.nombre.upper}}. 
+                        {% elif tipo == 'H' %}
+                        &nbsp;Yo, {{request.user.get_full_name.upper}}, he revisado la autoevaluación y revisión de su respectivo supervisor de la evaluación de desempeño de {{evaluacion.evaluado.user.get_full_name.upper}}, y en mi caracter de GERENTE DE GESTIÓN HUMANA, decido que esta sea:
+                        {% else %}
+                        &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y estoy de acuerdo en que sea enviada a mi supervisor. 
+                        {% endif %}
+                    </label>
+                </div>
+                
+                <div class="flex justify-center my-3">
+                    {% if tipo == 'S' %}
+                    <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la Evaluación al Gerente</button>
+                    {% elif tipo == 'E' %}
+                    <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la evaluación a mi supervisor</button>
+                    {% elif tipo == 'H' %}
+                    <button id="enviar-evaluacion" name="tipo_evaluacion" value="A" type="submit" class="btn btn-success">Aprobada</button>&nbsp;
+                    <button id="enviar-evaluacion" hx-confirm="¿Está seguro que desea rechazar la evaluación? En este caso deberá indicar en un comentario las razones de la misma." name="tipo_evaluacion" value="R" type="submit" class="btn btn-error">Rechazada</button>
+                    
+                    <script>
+                        document.addEventListener("htmx:beforeRequest", event => {
+                            if (event.detail.verb === "post" && document.querySelector('input[name="tipo_evaluacion"][value="R"]') && !document.querySelector('textarea[name="comentario"]').value.trim()) {
+                                event.preventDefault();
+                                alert("Debe escribir un comentario explicando las razones del rechazo de la evaluación.")
+                            }
+                        });
+                    </script>
+                    
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if evaluacion.estado == 'G' and evaluacion.evaluado.gerencia == datos_personal.gerencia and self.request.user.is_staff %}
+        <div class="d-flex justify-center mt-3">
+            <button class="btn btn-error" hx-confirm="¿Desea devolver la evaluación al supervisor? Asegúrese de indicarle las observaciones para realizarle las modificaciones correspondiente." hx-swap="innerHTML" hx-target="closest .tab-content" hx-post="{% url 'devolver_evaluacion_supervisor' pk=evaluacion.pk %}" hx-vals="js:{version: document.getElementById('version').value}" hx-swap="outerHTML">
+                Devolver al supervisor
+            </button>
+        </div>
+        {% endif %}
+
+        {% if evaluacion.estado == 'A' and tipo == "H" %}
+        <div class="d-flex justify-center mt-3">
+            <a class="btn btn-danger" href="{% url 'reporte_final_evaluacion' pk=evaluacion.pk %}">
+                Descargar Reporte XLSX
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    <label class="modal-backdrop" for="modal-{{id}}{% if gerencia %}-gerencia{% endif %}{% if extra_suffix != None %}-{{extra_suffix}}{% endif %}">Close</label>
+</div>

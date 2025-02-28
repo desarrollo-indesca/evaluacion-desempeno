@@ -1,1 +1,5 @@
 /env
+*/__pycache__
+secret-key.txt
+ldap-config.txt
+python_ldap-3.4.4-cp38-cp38-win_amd64.whl

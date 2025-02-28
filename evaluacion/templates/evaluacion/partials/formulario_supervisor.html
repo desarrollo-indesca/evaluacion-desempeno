@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block content %}
+<div class="flex justify-evenly items-center p-3">
+    <div class="w-25">
+        <a hx-target="closest .tab-content" hx-get="{% url 'revisar_evaluacion' pk=evaluacion.pk %}" class="btn btn-teal-500">Regresar</a>
+    </div>
+    <div class="w-50">
+        <h1 class="text-center text-2xl">Revisión del {{titulo}}  - {{evaluacion.evaluado.user.first_name}}</h1>
+    </div>
+    <div class="w-25"></div>
+</div>
+<hr>
+
+{% if messages %}
+    {% include 'messages.html' %}
+{% endif %}
+
+<form method="post" hx-target="closest .tab-content" hx-post="{% url 'revision_instrumento' pk=pk evaluacion=evaluacion.pk %}">
+    {% csrf_token %}
+    {% for seccion in instrumento %}
+    <div class="my-4">       
+            <div class="my-2 max-w-screen">
+                <table class="table max-w-screen">
+                    <thead class="bg-gray-900">
+                        <tr>
+                            <th colspan="4" class="text-center text-lg text-white">
+                                <h3 class="tooltip tooltip-left" data-tip="{{seccion.seccion.descripcion}}">{{seccion.seccion.titulo}}</h3>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th class="text-center text-white w-1/5">N°</th>
+                            <th class="text-center text-white w-2/5">Pregunta</th>
+                            <th class="text-center text-white w-1/5">Respuesta Empleado</th>
+                            <th class="text-center text-white w-2/5">Respuesta Supervisor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pregunta in seccion.preguntas %}
+                        <tr class="hover:bg-gray-100">
+                            <td class="text-center w-1/5">{{forloop.counter}}</td>
+                            <td class="text-center w-2/5">
+                                <h3 class="text-md font-semibold text-center tooltip" data-tip="{{pregunta.pregunta.tip}}">
+                                    {{pregunta.pregunta.pregunta}}
+                                </h3>
+                                {% render_field pregunta.form.pregunta class="hidden" type="hidden" %}
+                                <small class="text-error">
+                                    {% for error in pregunta.form.pregunta.errors %}{{error}}<br>{% endfor %}
+                                </small>
+                            </td>
+                            <td class="text-center w-1/5">
+                                <input type="text" value="{% for opcion in pregunta.pregunta.opciones.all %}{% if opcion.valor == pregunta.form.instance.respuesta_empleado %}{{opcion.opcion}}{% endif %}{% endfor %}" class="input input-bordered mt-1 w-full max-w-lg bg-gray-200 text-black" placeholder="Sin Respuesta" readonly>
+                                <br>
+                                <input type="text" value="{{pregunta.form.instance.comentario_empleado|default_if_none:''}}" class="input input-bordered mt-1 w-full max-w-lg bg-gray-200 text-black" placeholder="Sin Comentarios" name="{{pregunta.form.prefix}}-comentario_supervisor" readonly>
+                            </td>
+                            <td class="text-center w-2/5">
+                                <select name="{{pregunta.form.prefix}}-respuesta_supervisor" id="id_{{pregunta.form.prefix}}-respuesta_supervisor" class="select select-bordered w-full" required>
+                                    <option disabled selected>Seleccionar</option>
+                                    {% for opcion in pregunta.pregunta.opciones.all %}
+                                        <option value="{{opcion.valor}}" {% if opcion.valor == pregunta.form.instance.respuesta_supervisor or opcion.valor == pregunta.form.respuesta_supervisor.initial %}selected{% endif %}>{{opcion.opcion}}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-error">
+                                    {% for error in pregunta.form.respuesta_supervisor.errors %}{{error}}<br>{% endfor %}
+                                </small>
+
+                                <br>
+                                {% render_field pregunta.form.comentario_supervisor class="input input-bordered mt-1 w-full max-w-lg" placeholder="Comentario del Supervisor" type="text" %}
+                                <small class="text-error">
+                                    {% for error in pregunta.form.comentario_supervisor.errors %}{{error}}<br>{% endfor %}
+                                </small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+    </div>
+    {% endfor %}
+    <div class="flex justify-center items-center w-full">
+        <input type="submit" value="Guardar" class="btn btn-error">
+    </div>
+</form>
+
+<script src="{% static 'js/carga-formulario.js' %}"></script>
+{% endblock %}

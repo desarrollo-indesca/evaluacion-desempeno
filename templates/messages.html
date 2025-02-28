@@ -1,0 +1,19 @@
+{% if messages %}
+<div>
+    <div class="alert alert-warning shadow-lg" id="messages">
+        <div>
+            {% for message in messages %}
+            <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<script>
+    setTimeout(function() {
+        var messages = document.getElementById('messages');
+        if (messages) {
+            messages.remove();
+        }
+    }, 6500);
+</script>
+{% endif %}

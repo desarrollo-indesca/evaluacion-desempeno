@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-2xl m-auto p-5 sm:flex align-items-center content-center" style="min-height: 80vh;">
+	<div class="shadow-2xl p-6 border border-gray-300 rounded-lg max-w-4xl m-auto lg:p-10 dark:bg-gray-900 dark:border-gray-800">
+        <form class="space-y-8" method="post">
+            {% csrf_token %}
+            <h3 class="text-xl font-semibold text-gray-800 dark:text-white text-center">
+                Inicio de Sesión<br>
+                <span class="text-base font-medium text-gray-800 dark:text-white text-center">Sistema de Evaluación de Desempeño</span>
+            </h3>
+            <hr>
+
+            {% if messages %}
+            <div role="alert" class="alert alert-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <span>
+                    {% for message in messages %}
+                    {{message}}
+                    {% endfor %}
+                </span>
+            </div>
+            {% endif %}
+
+            <div>
+                <label class="input input-bordered flex items-center gap-2">
+                    <input type="text" class="grow" placeholder="Usuario" name="username" required />
+                </label>
+            </div>
+
+            <div>
+                <label class="input input-bordered flex items-center gap-2">
+                    <input type="password" placeholder="Contraseña" class="grow" name="password" required />
+                </label>
+            </div>
+            
+            <button type="submit" class="w-full text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">Ingresar al Sistema</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
