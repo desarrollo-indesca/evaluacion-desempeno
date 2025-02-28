@@ -8,7 +8,11 @@
     <div class="w-25">
         {% if supervisado %}
         {% else %}
-        <a href="#"  hx-select="main" hx-target="main" hx-get="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
+        {% if url_previo != '' %}
+        <a hx-get="{{url_previo}}"  hx-target="closest .tab-content" class="btn btn-teal-500">Regresar</a>
+        {% else %}
+        <a href="{% url 'dashboard' %}" class="btn btn-teal-500" hx-boost="true">Regresar</a>
+        {% endif %}
         {% endif %}
     </div>
     <div class="w-50">

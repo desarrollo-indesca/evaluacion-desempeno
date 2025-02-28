@@ -197,18 +197,18 @@ def fill_resultado_operativo(evaluacion):
     worksheet.cell(row=6, column=1, value=f"EVALUACIÓN DE DESEMPEÑO")
     worksheet.cell(row=6, column=1, value=f"PERÍODO DE EVALUACIÓN DEL {evaluacion.periodo.fecha_inicio.strftime('%d/%m/%Y')} AL {evaluacion.periodo.fecha_fin.strftime('%d/%m/%Y')}")
 
-    worksheet.cell(row=14, column=11, value=evaluacion.escalafones.get(asignado_por="H").escalafon.nivel.upper())
+    worksheet.cell(row=14, column=7, value=evaluacion.escalafones.get(asignado_por="H").escalafon.nivel.upper())
 
     worksheet.cell(row=8, column=2, value=evaluacion.evaluado.user.get_full_name())
     worksheet.cell(row=8, column=18, value=evaluacion.evaluado.ficha)
     worksheet.cell(row=9, column=2, value=evaluacion.evaluado.cargo.nombre)
     
     resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Evaluación del Desempeño')
-    worksheet.cell(row=13, column=2, value=(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').resultado_final / resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').seccion.peso) * (resultado_instrumento.instrumento.peso * resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').seccion.peso / 100))
-    worksheet.cell(row=13, column=3, value=(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').resultado_final / resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').seccion.peso) * (resultado_instrumento.instrumento.peso * resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').seccion.peso / 100))
-    worksheet.cell(row=13, column=4, value=(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').resultado_final / resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').seccion.peso) * (resultado_instrumento.instrumento.peso * resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').seccion.peso / 100))
-    worksheet.cell(row=13, column=5, value=(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').resultado_final / resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').seccion.peso) * (resultado_instrumento.instrumento.peso * resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').seccion.peso / 100))
-    worksheet.cell(row=13, column=6, value=resultado_instrumento.resultado_final)    
+    worksheet.cell(row=13, column=2, value=float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').resultado_final) / float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').seccion.peso) * (float(resultado_instrumento.instrumento.peso) * float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Costos').seccion.peso) / 100))
+    worksheet.cell(row=13, column=3, value=float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').resultado_final) / float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').seccion.peso) * (float(resultado_instrumento.instrumento.peso) * float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Cantidad').seccion.peso) / 100))
+    worksheet.cell(row=13, column=4, value=float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').resultado_final) / float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').seccion.peso) * (float(resultado_instrumento.instrumento.peso) * float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Calidad').seccion.peso) / 100))
+    worksheet.cell(row=13, column=5, value=float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').resultado_final) / float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').seccion.peso) * (float(resultado_instrumento.instrumento.peso) * float(resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Seguridad').seccion.peso) / 100))
+    worksheet.cell(row=13, column=6, value=float(resultado_instrumento.resultado_final))
     
     resultado_instrumento = evaluacion.resultados.get(instrumento__nombre__icontains='Competencias Técnicas')
     worksheet.cell(row=13, column=7, value=resultado_instrumento.resultados_secciones.get(seccion__nombre__icontains='Capacidades Operativas').resultado_final)
@@ -305,9 +305,12 @@ def fill_resultado_operativo(evaluacion):
         worksheet.cell(row=i, column=1, value=meta.descripcion)
         worksheet.cell(row=i, column=16, value=meta.prioridad_larga())
 
-    worksheet.cell(row=53, column=1, value=f'Comentarios del evaluado: {evaluacion.comentario_evaluado}')
-    worksheet.cell(row=54, column=1, value=f'Comentarios del supervisor: {evaluacion.comentario_supervisor}')
-    worksheet.cell(row=55, column=1, value=f'Comentarios de la gerencia: {evaluacion.comentario_gghh}')
+    if evaluacion.comentario_evaluado:
+        worksheet.cell(row=53, column=1, value=f'Comentarios del evaluado: {evaluacion.comentario_evaluado}')
+    if evaluacion.comentario_supervisor:
+        worksheet.cell(row=54, column=1, value=f'Comentarios del supervisor: {evaluacion.comentario_supervisor}')
+    if evaluacion.comentario_gghh:
+        worksheet.cell(row=55, column=1, value=f'Comentarios de la gerencia: {evaluacion.comentario_gghh}')
 
     output = BytesIO()
     workbook.save(output)
@@ -433,9 +436,12 @@ def fill_resultado_apoyo(evaluacion):
         worksheet.cell(row=i, column=1, value=meta.descripcion)
         worksheet.cell(row=i, column=16, value=meta.prioridad_larga())
 
-    worksheet.cell(row=53, column=1, value=f'Comentarios del evaluado: {evaluacion.comentario_evaluado}')
-    worksheet.cell(row=54, column=1, value=f'Comentarios del supervisor: {evaluacion.comentario_supervisor}')
-    worksheet.cell(row=55, column=1, value=f'Comentarios de la gerencia: {evaluacion.comentario_gghh}')
+    if evaluacion.comentario_evaluado:
+        worksheet.cell(row=53, column=1, value=f'Comentarios del evaluado: {evaluacion.comentario_evaluado}')
+    if evaluacion.comentario_supervisor:
+        worksheet.cell(row=54, column=1, value=f'Comentarios del supervisor: {evaluacion.comentario_supervisor}')
+    if evaluacion.comentario_gghh:
+        worksheet.cell(row=55, column=1, value=f'Comentarios de la gerencia: {evaluacion.comentario_gghh}')
 
     output = BytesIO()
     workbook.save(output)

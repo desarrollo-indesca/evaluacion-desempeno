@@ -154,6 +154,13 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EscalafonMixin, Evaluac
                                 form.instance.evaluacion = evaluacion
                                 form.save()
 
+                                if(self.estado == 'E'):
+                                    campo = 'resultado_empleado'
+                                elif(self.estado == 'S'):
+                                    campo = 'resultado_supervisor'
+                                elif(self.estado == 'H'):
+                                    campo = 'resultado_definitivo'
+
                                 if(seccion.calculo == 'S' and form.instance.respuesta_empleado >= 0):
                                     max_seccion += form.instance.pregunta.peso
                                     total += form.instance.pregunta.peso * form.instance.respuesta_empleado / 2
@@ -201,7 +208,7 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EscalafonMixin, Evaluac
                             seccion=seccion, 
                             resultado_instrumento=resultado_instrumento, 
                             defaults={
-                                'resultado_empleado': total,
+                                campo: total,
                             }
                         )
 
@@ -210,7 +217,14 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EscalafonMixin, Evaluac
                     elif(instrumento.calculo == 'P'):
                         total_instrumento = total_instrumento / max_instrumento
                 
-                    resultado_instrumento.resultado_empleado = total_instrumento
+                    if(self.estado == 'E'):
+                        campo = 'resultado_empleado'
+                    elif(self.estado == 'S'):
+                        campo = 'resultado_supervisor'
+                    elif(self.estado == 'H'):
+                        campo = 'resultado_definitivo'
+
+                    setattr(resultado_instrumento, campo, total_instrumento)
                     resultado_instrumento.save()
 
                     if(instrumento.escalafon):
@@ -249,11 +263,10 @@ class FormacionEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
             extra = 0
         )(queryset = qs, initial=[{'competencias_tecnicas': [c.pk for c in form.competencias.filter(tipo='T')]} for form in evaluacion.formaciones.all()])
 
-        print(self.get_queryset(evaluacion))
-
         context['titulo'] = "Detección de Necesidades de Formación"
         context['evaluacion'] = evaluacion
         context['anadido_por'] = self.anadido_por
+        context['url_previo'] = ''
 
         return context
     
@@ -318,7 +331,8 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
             return qs
         else:
             if(self.anadido_previo):
-                return evaluacion.logros_y_metas.filter(periodo="A", anadido_por=self.anadido_previo)
+                qs = evaluacion.logros_y_metas.filter(periodo="A", anadido_por=self.anadido_previo)
+                return qs if qs.exists() else evaluacion.logros_y_metas.filter(periodo="A")
             else:
                 return evaluacion.logros_y_metas.filter(periodo="A")
     
@@ -329,7 +343,8 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
             return qs
         else:
             if(self.anadido_previo):
-                return evaluacion.logros_y_metas.filter(periodo="P", anadido_por=self.anadido_previo)
+                qs = evaluacion.logros_y_metas.filter(periodo="P", anadido_por=self.anadido_previo)
+                return qs if qs.exists() else evaluacion.logros_y_metas.filter(periodo="P")
             else:
                 return evaluacion.logros_y_metas.filter(periodo="P")
 
@@ -341,6 +356,7 @@ class MetasEmpleado(PeriodoContextMixin, EvaluacionEstadoMixin, View):
         context['titulo'] = "Formulario de Logros y Metas"
         context['anadido_por'] = self.anadido_por
         context['evaluacion'] = evaluacion
+        context['url_previo'] = ''
 
         return context
 
@@ -723,6 +739,12 @@ class FormacionSupervisor(FormacionEmpleado):
     estado = "S"
     anadido_por = "S"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['url_previo'] = f'/evaluacion/supervisados/revisar/{context["evaluacion"].pk}/'
+
+        return context        
+
     def get_success_url(self):
         return redirect('revisar_evaluacion', pk=self.kwargs['pk'])
 
@@ -737,6 +759,11 @@ class FormacionSupervisor(FormacionEmpleado):
 class LogrosYMetasSupervisor(MetasEmpleado):
     estado = "S"
     anadido_por = "S"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['url_previo'] = f"evaluacion/supervisados/revisar/{context['evaluacion'].pk}/"
+        return context 
 
     def get_success_url(self):
         return redirect('revisar_evaluacion', pk=self.kwargs['pk'])
@@ -859,7 +886,7 @@ class RevisionEvaluacionFinal(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 
         context['evaluacion'] = evaluacion
 
-        context['puede_finalizar'] = evaluacion.resultados.filter(resultado_supervisor__isnull=False).count() == evaluacion.formulario.instrumentos.count() and (
+        context['puede_finalizar'] = evaluacion.resultados.filter(resultado_final__isnull=False).count() == evaluacion.formulario.instrumentos.count() and (
             evaluacion.formaciones.filter(anadido_por="H").exists() 
             and 
             evaluacion.logros_y_metas.filter(anadido_por="H").exists() 
@@ -890,7 +917,7 @@ class FormularioEvaluacionDefinitiva(FormularioInstrumentoSupervisor):
     def define_initial_data(self, pregunta, respuesta):
         return {
             'pregunta': pregunta,
-            'respuesta_definitiva': respuesta.respuesta_supervisor if not respuesta.respuesta_definitiva else respuesta.respuesta_definitiva,
+            'respuesta_definitiva': respuesta.respuesta_empleado if not respuesta.respuesta_supervisor else respuesta.respuesta_supervisor if not respuesta.respuesta_definitiva else respuesta.respuesta_definitiva,
             'comentario_gghh': respuesta.comentario_gghh
         }
 
@@ -929,7 +956,7 @@ class FormularioEvaluacionDefinitiva(FormularioInstrumentoSupervisor):
                                 total += form.instance.respuesta_definitiva
                                 max_seccion += 1
                             elif(seccion.calculo == 'M'):
-                                total = min(total, form.instance.respuesta_definitiva)
+                                total = min(total, form.instance.respuesta_definitiva) if form.instance.respuesta_definitiva != 0 else total
                         else:
                             context = {} 
                             context['instrumento'] = [{
@@ -997,7 +1024,8 @@ class FormularioMetasDefinitivos(MetasEmpleado):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["definitiva"] = True
-        return context
+        context['url_previo'] = f"evaluacion/evaluar-final/revisar/{context['evaluacion'].pk}/"
+        return context 
 
     def get_success_url(self):
         return redirect('revisar_evaluacion_final', pk=self.kwargs['pk'])
@@ -1006,6 +1034,12 @@ class FormacionDefinitiva(FormacionEmpleado):
     template_name = "evaluacion/formacion_empleado.html"
     estado = "H"
     anadido_por = "H"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["definitiva"] = True
+        context['url_previo'] = f"evaluacion/evaluar-final/revisar/{context['evaluacion'].pk}/"
+        return context
 
     def get_success_url(self):
         return redirect('revisar_evaluacion_final', pk=self.kwargs['pk'])
@@ -1016,7 +1050,11 @@ class FormacionDefinitiva(FormacionEmpleado):
         if(qs.exists()):
             return qs
         else:
-            return evaluacion.formaciones.filter(anadido_por = 'S')
+            qs = evaluacion.formaciones.filter(anadido_por = "S")
+            if qs.exists():
+                return qs
+            else:
+                return evaluacion.formaciones.filter(anadido_por = "E")
 
 class CerrarEvaluacion(View):
     def post(self, request, pk, *args, **kwargs):
@@ -1029,9 +1067,9 @@ class CerrarEvaluacion(View):
             evaluacion.save()
 
             if(evaluacion.estado == 'R'):
-                evaluacion_previa = evaluacion
+                evaluacion_previa = Evaluacion.objects.get(pk=pk)
                 resultados_instrumentos = evaluacion_previa.resultados.all()
-                resultados_escalafon = evaluacion_previa.escalafones.get(asignado_por='E')
+                resultados_escalafon = evaluacion.escalafones.get(asignado_por='E')
 
                 evaluacion.pk = None
                 evaluacion.estado = 'S'
@@ -1045,22 +1083,24 @@ class CerrarEvaluacion(View):
                 resultados_escalafon.evaluacion = evaluacion
                 resultados_escalafon.pk = None
                 resultados_escalafon.save()
-                
+
                 for resultado_previo in resultados_instrumentos:
                     nuevo_resultado_instrumento = resultado_previo
+                    resultado_previo = ResultadoInstrumento.objects.get(pk=resultado_previo.pk)
                     nuevo_resultado_instrumento.evaluacion = evaluacion
-                    nuevo_resultado_instrumento.resultado_definitivo = None
+                    nuevo_resultado_instrumento.resultado_final = None
                     nuevo_resultado_instrumento.resultado_supervisor = None
                     nuevo_resultado_instrumento.pk = None
                     nuevo_resultado_instrumento.save()
 
                     for resultado_seccion_previo in resultado_previo.resultados_secciones.all():
                         nuevo_resultado_seccion = resultado_seccion_previo
+                        resultado_seccion_previo = ResultadoSeccion.objects.get(pk=resultado_seccion_previo.pk)
                         nuevo_resultado_seccion.pk = None
                         nuevo_resultado_seccion.resultado_final = None
                         nuevo_resultado_seccion.resultado_instrumento = nuevo_resultado_instrumento
                         nuevo_resultado_seccion.resultado_supervisor = None
-                        nuevo_resultado_seccion.resultado_definitivo = None
+                        nuevo_resultado_seccion.resultado_final = None
                         nuevo_resultado_seccion.save()
                         
                         for respuesta_previo in resultado_seccion_previo.seccion.preguntas.all():
@@ -1075,6 +1115,7 @@ class CerrarEvaluacion(View):
                 formaciones_empleado = evaluacion_previa.formaciones.filter(anadido_por='E')
                 for formacion_empleado in formaciones_empleado:
                     nueva_formacion = formacion_empleado
+                    formacion_empleado = Formacion.objects.get(pk=formacion_empleado.pk)
                     nueva_formacion.evaluacion = evaluacion
                     nueva_formacion.pk = None
                     nueva_formacion.save()
@@ -1082,7 +1123,8 @@ class CerrarEvaluacion(View):
                     for competencia in formacion_empleado.competencias.all():
                         nueva_competencia = competencia
                         nueva_competencia.pk = None
-                        nueva_competencia.save()
+                        nueva_formacion.competencias.add(nueva_competencia)
+                        nueva_competencia.save()                        
 
                 logros_empleado = evaluacion_previa.logros_y_metas.filter(anadido_por='E')
                 for logro_empleado in logros_empleado:

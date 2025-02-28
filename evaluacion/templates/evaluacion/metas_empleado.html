@@ -6,7 +6,11 @@
 
 <div class="flex justify-evenly items-center p-3">
     <div class="w-25">
-        <a href="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
+        {% if url_previo != '' %}
+        <a hx-get="{{url_previo}}"  hx-target="closest .tab-content" class="btn btn-teal-500">Regresar</a>
+        {% else %}
+        <a href="{% url 'dashboard' %}" class="btn btn-teal-500" hx-boost="true">Regresar</a>
+        {% endif %}
     </div>
     <div class="w-50">
         <h1 class="text-center text-2xl">{{titulo}}</h1>

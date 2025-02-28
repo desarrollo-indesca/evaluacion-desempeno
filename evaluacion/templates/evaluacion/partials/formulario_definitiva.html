@@ -8,7 +8,7 @@
         <a hx-target="closest .tab-content" hx-get="{% url 'revisar_evaluacion_final' pk=evaluacion.pk %}" class="btn btn-teal-500">Regresar</a>
     </div>
     <div class="w-50">
-        <h1 class="text-center text-2xl">Revisión del {{titulo}}</h1>
+        <h1 class="text-center text-2xl">Revisión del {{titulo}} - {{evaluacion.evaluado.user.first_name}}</h1>
     </div>
     <div class="w-25"></div>
 </div>
