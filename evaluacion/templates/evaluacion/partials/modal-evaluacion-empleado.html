@@ -7,12 +7,16 @@
                 {% if not include_others and tipo == 'H' %}
                 <option value="H" {% if tipo == 'H' %}selected{% endif %}>Definitiva</option>
                 {% elif not include_others and tipo == 'S' %}
+                {% if evaluacion.fecha_revision %}
                 <option value="S" {% if tipo == 'S' %}selected{% endif %}>Revisada por Supervisor</option>
+                {% endif %}
                 {% else %}
                 <option value="E" {% if tipo == 'E' %}selected{% endif %}>Autoevaluación</option>
                 {% if include_others %}
                 {% if tipo == "S" or evaluacion.estado == "G" or evaluacion.estado == "H" or evaluacion.estado == "A" or evaluacion.estado == "R" %}
+                {% if evaluacion.fecha_revision %}
                 <option value="S" {% if tipo == 'S' or not tipo %}selected{% endif %}>Revisada por Supervisor</option>
+                {% endif %}
                 {% endif %}
                 {% if evaluacion.estado == "A" or evaluacion.estado == "R" %}
                 <option value="H" {% if tipo == 'H' or not tipo %}selected{% endif %}>Definitiva</option>
@@ -68,7 +72,13 @@
             <div class="collapse collapse-arrow bg-base-200 mb-2 overflow-x-auto">
                 <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
                 <div class="collapse-title text-xl font-medium">
-                    {{resultado.instrumento}} ({% if tipo == "E" %}{{resultado.resultado_empleado|default:'-'}}{% elif tipo == "S" %}{{resultado.resultado_supervisor|default:'-'}} {% else %}{{resultado.resultado_final|default:'-'}} {% endif %} / {{resultado.instrumento.peso}})
+                    {{resultado.instrumento}} ({% if tipo == "E" %}{{resultado.resultado_empleado|default:'-'}}{% elif tipo == "S" %}
+                    {% if not evaluacion.fecha_revision %}
+                    {{resultado.resultado_empleado|default:'-'}}
+                    {% else %}
+                    {{resultado.resultado_supervisor|default:'-'}}
+                    {% endif %}
+                    {% else %}{{resultado.resultado_final|default:'-'}} {% endif %} / {{resultado.instrumento.peso}})
                 </div>
                 <div class="collapse-content">
                     <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version-{{evaluacion.pk}}-{{id}}').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>

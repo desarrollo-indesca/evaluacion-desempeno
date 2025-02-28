@@ -248,4 +248,13 @@
     </div>
     {% endif %}
   </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const htmxElements = document.querySelectorAll("[hx-*]");
+        htmxElements.forEach(el => {
+            htmx.process(el);
+        });
+    });    
+</script>
 {% endblock %}

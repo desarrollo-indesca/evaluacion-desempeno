@@ -15,7 +15,7 @@
     {% include 'messages.html' %}
 {% endif %}
 
-<form hx-get="{% url 'revision_general' %}" hx-select=".resultados" hx-target="#supervisados" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
+<form hx-get="{% url 'revision_general' %}" hx-select=".resultados" hx-target="#supervisados-gghh" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
     <div>
         {{filter.form.ficha.label_tag}} <br>
         {% render_field filter.form.ficha class="input input-bordered w-full" %}
@@ -32,7 +32,7 @@
     </div>
 </form>
 <br>
-<p class="text-center" id="total-empleados-evals">Se encontraron {{total}} empleados.</p>
+<p class="text-center" id="total-empleados-evals-gghh">Se encontraron {{total}} empleados.</p>
 <table class="table table-zebra my-4 text-center">
     <thead class="bg-gray-900 text-white">
         <tr>
@@ -43,7 +43,7 @@
         </tr>
     </thead>
 
-    <tbody id="supervisados" class="resultados">
+    <tbody id="supervisados-gghh" class="resultados">
         {% for supervisado in object_list %}
         <tr>
             <td>{{supervisado.ficha}}</td>
@@ -54,9 +54,9 @@
                 {% if evaluacion.estado == 'A' %}
                 <span class="badge badge-success">{{evaluacion.estado_largo}}</span>
                 {% elif evaluacion.estado == 'S' %}
-                <span class="badge badge-yellow">{{evaluacion.estado_largo}}</span>
-                {% elif evaluacion.estado == 'G' %}
-                <span class="badge badge-cyan">{{evaluacion.estado_largo}}</span>
+                <span class="badge badge-warning">{{evaluacion.estado_largo}}</span>
+                {% elif evaluacion.estado == 'H' %}
+                <span class="badge badge-warning">{{evaluacion.estado_largo}}</span>
                 {% elif evaluacion.estado == 'P' %}
                 <span class="badge badge-error">{{evaluacion.estado_largo}}</span>
                 {% else %}
@@ -69,6 +69,9 @@
             <td>
                 {% if evaluacion.estado == 'H' %}
                 <a class="btn btn-error" hx-target="closest .tab-content" hx-get="{% url 'revisar_evaluacion_final' pk=evaluacion.pk %}">Revisar Evaluación</a>
+                {% else %}
+                <label for="modal-{{evaluacion.pk}}-gghh" class="btn btn-error">Revisar Evaluación Actual</label>
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with evaluacion=evaluacion extra_suffix="gghh" include_others=True finish=False id=evaluacion.pk tipo="E" %}
                 {% endif %}
                 <a class="btn btn-gray" hx-target="closest .tab-content" hx-get="{% url 'consultar_historico_supervisados' pk=supervisado.pk %}">Ver Histórico de Evaluaciones</a>
             </td>
@@ -84,7 +87,7 @@
             <td colspan="4"
                 hx-get="{{request.path}}" 
                 hx-trigger="revealed once"
-                hx-select="#supervisados > tr"
+                hx-select="#supervisados-gghh > tr"
                 hx-swap="outerHTML"
                 hx-target="closest tr"
                 hx-vals="js:{
@@ -102,4 +105,4 @@
     </tbody>
 </table>
 
-<p class="text-center resultados" id="total-empleados-evals" hx-swap-oob="true">Se encontraron {{total}} empleados.</p>
+<p class="text-center resultados" id="total-empleados-evals-gghh" hx-swap-oob="true">Se encontraron {{total}} empleados.</p>

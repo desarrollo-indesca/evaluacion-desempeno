@@ -14,14 +14,15 @@ def create_dnf(periodo, file_path='core/reportes/bases/plan-anual-formacion.xlsx
 
     # Write data to the worksheet
     # Fetch data from the database
-    evaluaciones = Evaluacion.objects.filter(periodo=periodo).order_by(
+    evaluaciones = Evaluacion.objects.filter(periodo=periodo, estado="A").order_by(
         'evaluado__user__first_name'
     )
     
     # Write data to the worksheet
     row = 10
+    i = 1
     for evaluacion in evaluaciones:
-        for j,formacion in enumerate(evaluacion.formaciones.filter(anadido_por='H'), start=1):            
+        for formacion in enumerate(evaluacion.formaciones.filter(anadido_por='H'), start=1):            
             formacion_sugerida = formacion.necesidad_formacion.upper()
             formacion_especifica = ''
             ente_didactico = ''
@@ -34,7 +35,7 @@ def create_dnf(periodo, file_path='core/reportes/bases/plan-anual-formacion.xlsx
 
             # Write data to the worksheet
             data = [
-                j,evaluacion.evaluado.ficha, evaluacion.evaluado.user.get_full_name(), 
+                i,evaluacion.evaluado.ficha, evaluacion.evaluado.user.get_full_name(), 
                 evaluacion.evaluado.cargo.nombre.upper(), evaluacion.evaluado.gerencia.nombre.upper(), 
                 evaluacion.evaluado.tipo_personal.nombre.upper(),
                 formacion_sugerida, formacion_especifica, ente_didactico,
@@ -56,7 +57,8 @@ def create_dnf(periodo, file_path='core/reportes/bases/plan-anual-formacion.xlsx
             
             for col_num, cell_data in enumerate(data, start=1):
                 worksheet.cell(row=row, column=col_num, value=cell_data)
-            
+
+            i += 1            
             row += 1
     
     # Save the workbook to a file

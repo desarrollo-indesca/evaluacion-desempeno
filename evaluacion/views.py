@@ -77,11 +77,21 @@ class FinalizarEvaluacion(View):
             evaluacion.resultados.count() == evaluacion.formulario.instrumentos.count() and
             evaluacion.formaciones.count() and evaluacion.logros_y_metas.count()
         )):
-            evaluacion.estado = 'S'
+            if evaluacion.evaluado.supervisor and not evaluacion.evaluado.supervisor.user.is_superuser:
+                evaluacion.estado = 'S'
+            else:
+                evaluacion.fecha_entrega = datetime.datetime.now()
+                evaluacion.estado = 'H'
+
             evaluacion.fecha_envio = datetime.datetime.now()
             evaluacion.comentario_evaluado = request.POST.get('comentarios')
             evaluacion.save()
-            messages.success(request, 'Su auto evaluación fue enviada a su supervisor.')
+            
+            if evaluacion.estado == 'S':
+                messages.success(request, 'La evaluación fue enviada a su supervisor.')
+            elif evaluacion.estado == 'H':
+                messages.success(request, 'La evaluación fue enviada a la Gerencia de Gestión Humana.')
+            
             return redirect('dashboard')
         
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
@@ -691,12 +701,22 @@ class EnviarEvaluacionGerente(View):
             evaluacion.resultados.filter(resultado_supervisor__isnull=False).count() == evaluacion.formulario.instrumentos.count() and
             evaluacion.formaciones.filter(anadido_por = "S").count() and evaluacion.logros_y_metas.filter(anadido_por = "S").count()
         )):
-            evaluacion.estado = 'G'
+            if evaluacion.evaluado.supervisor:
+                evaluacion.estado = 'G'
+            else:
+                evaluacion.estado = 'A'
+                evaluacion.fecha_entrega = datetime.datetime.now()
+                evaluacion.fecha_fin = datetime.datetime.now()
+
             evaluacion.fecha_revision = datetime.datetime.now()
             evaluacion.comentario_supervisor = request.POST.get('comentarios')
             evaluacion.save()
 
-            messages.success(request, f"Ha sido enviada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()}")
+            if evaluacion.estado == 'G':
+                messages.success(request, f"Ha sido enviada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} a la Gerencia de Gestión Humana.")
+            elif evaluacion.estado == 'A':
+                messages.success(request, f"Ha sido aprobada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} por la Gerencia General.")
+            
             return redirect('consultar_supervisados')
         
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
@@ -883,6 +903,10 @@ class CerrarEvaluacion(View):
         with transaction.atomic():        
             evaluacion.estado = request.POST.get('tipo_evaluacion')
             evaluacion.comentario_gghh = request.POST.get('comentarios')
+
+            if not evaluacion.fecha_revision:
+                evaluacion.fecha_revision = datetime.datetime.now()
+
             evaluacion.fecha_fin = datetime.datetime.now()
             evaluacion.save()
 
@@ -941,10 +965,7 @@ class CerrarEvaluacion(View):
                     nueva_formacion.save()
 
                     for competencia in formacion_empleado.competencias.all():
-                        nueva_competencia = competencia
-                        nueva_competencia.pk = None
-                        nueva_formacion.competencias.add(nueva_competencia)
-                        nueva_competencia.save()                        
+                        nueva_formacion.competencias.add(competencia)                     
 
                 logros_empleado = evaluacion_previa.logros_y_metas.filter(anadido_por='E')
                 for logro_empleado in logros_empleado:
