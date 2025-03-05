@@ -749,7 +749,7 @@ class RevisionGerencia(PeriodoContextMixin, ListView):
         context['filter'] = self.filter_class()
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
         self.request.session['url_previo'] = f'evaluacion/gerencia/'
-        context['puede_enviarse_gghh'] = self.request.user.is_staff and (Evaluacion.objects.filter(periodo=self.get_periodo(), estado='G', evaluado__gerencia=self.request.user.datos_personal.get(activo=True).gerencia).count() == self.get_queryset().count())
+        context['puede_enviarse_gghh'] = self.request.user.is_staff and (Evaluacion.objects.filter(periodo=self.get_periodo(), estado='G', evaluado__gerencia=self.request.user.datos_personal.get(activo=True).gerencia).count())
         context['gerencia'] = self.request.user.datos_personal.get(activo=True).gerencia
         context['total'] = self.get_queryset().count()
         return context
@@ -764,13 +764,11 @@ class EnviarEvaluacionesGestionHumana(View):
         periodo_actual = Periodo.objects.get(activo=True)
         evaluaciones = Evaluacion.objects.filter(periodo=periodo_actual, estado='G', evaluado__gerencia=request.user.datos_personal.get(activo=True).gerencia)
 
-        if evaluaciones.count() == DatosPersonal.objects.filter(gerencia=request.user.datos_personal.get(activo=True).gerencia, activo=True).count():
+        if evaluaciones.count():
             evaluaciones.update(estado='H', fecha_entrega=datetime.datetime.now())
-            messages.success(request, f"Ha sido enviada la evaluación de todos los empleados de la gerencia para el período {periodo_actual.fecha_inicio} - {periodo_actual.fecha_fin} a la Gerencia de Gestión Humana.")
+            messages.success(request, f"Ha sido enviada la evaluación de los empleados con el estatus 'Enviado a la Gerencia' a la Gerencia de Gestión Humana.")
             return redirect('consultar_gerencia')
         
-        return HttpResponseForbidden("No todas las evaluaciones están en estado ENVIADO A LA GERENCIA.")
-
 class DevolverEvaluacionSupervisor(View):
     def post(self, request, pk):
         if(request.user.is_staff):
@@ -863,7 +861,7 @@ class FormularioEvaluacionDefinitiva(FormularioInstrumentoSupervisor):
     def define_initial_data(self, pregunta, respuesta):
         return {
             'pregunta': pregunta,
-            'respuesta_definitiva': respuesta.respuesta_empleado if not respuesta.respuesta_supervisor else respuesta.respuesta_supervisor if not respuesta.respuesta_definitiva else respuesta.respuesta_definitiva,
+            'respuesta_definitiva': respuesta.respuesta_empleado if respuesta.respuesta_supervisor == None else respuesta.respuesta_supervisor if respuesta.respuesta_definitiva == None else respuesta.respuesta_definitiva,
             'comentario_gghh': respuesta.comentario_gghh
         }
     
