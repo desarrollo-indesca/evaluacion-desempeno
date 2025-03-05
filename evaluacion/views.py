@@ -118,7 +118,7 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EscalafonMixin, Evaluac
         if(instrumento.resultados.filter(evaluacion = evaluacion).exists()):
             context['instrumento'] = [{
                     'preguntas': [{
-                        'form': FormularioRespuestasEmpleado(instance=pregunta.respuestas.get(evaluacion=evaluacion), prefix=pregunta.pk) if not post else FormularioRespuestasEmpleado(self.request.POST, prefix=pregunta.pk),
+                        'form': self.form_class(instance=pregunta.respuestas.get(evaluacion=evaluacion), prefix=pregunta.pk) if not post else self.form_class(self.request.POST, prefix=pregunta.pk),
                         'pregunta': pregunta,
                     } for pregunta in seccion.preguntas.all()],
                     'seccion': seccion
@@ -127,9 +127,9 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EscalafonMixin, Evaluac
         else:
             context['instrumento'] = [{
                     'preguntas': [{
-                        'form': FormularioRespuestasEmpleado(prefix=pregunta.pk, initial={
+                        'form': self.form_class(prefix=pregunta.pk, initial={
                             'pregunta': pregunta
-                        }) if not post else FormularioRespuestasEmpleado(self.request.POST, prefix=pregunta.pk),
+                        }) if not post else self.form_class(self.request.POST, prefix=pregunta.pk),
                         'pregunta': pregunta,
                     } for pregunta in seccion.preguntas.all()],
                     'seccion': seccion
@@ -177,15 +177,24 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EscalafonMixin, Evaluac
                                 elif(self.estado == 'H'):
                                     campo = 'resultado_final'
 
-                                if(seccion.calculo == 'S' and form.instance.respuesta_empleado >= 0):
-                                    max_seccion += form.instance.pregunta.peso
-                                    total += form.instance.pregunta.peso * form.instance.respuesta_empleado / 2
-                                elif(seccion.calculo == 'P'):
-                                    total += form.instance.respuesta_empleado
-                                    max_seccion += 1
-                                elif(seccion.calculo == 'M'):
-                                    if form.instance.respuesta_empleado != 0:
-                                        total = min(total, form.instance.respuesta_empleado)
+                                respuesta = None
+                                if self.estado == 'E':
+                                    respuesta = form.instance.respuesta_empleado
+                                elif self.estado == 'S':
+                                    respuesta = form.instance.respuesta_supervisor
+                                elif self.estado == 'H':
+                                    respuesta = form.instance.respuesta_definitiva
+
+                                if respuesta is not None:
+                                    if seccion.calculo == 'S' and respuesta >= 0:
+                                        max_seccion += form.instance.pregunta.peso
+                                        total += form.instance.pregunta.peso * respuesta / 2
+                                    elif seccion.calculo == 'P':
+                                        total += respuesta
+                                        max_seccion += 1
+                                    elif seccion.calculo == 'M' and respuesta != 0:
+                                        total = min(total, respuesta)
+
                             else:
                                 context = {} 
                                 context['instrumento'] = [{
@@ -512,6 +521,7 @@ class ConsultaEvaluaciones(ListView):
         context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
         context['url_previo'] = self.request.session.get('url_previo')
+        context['extra_suffix'] = 'propias'
         return context
 
     def get_queryset(self):
@@ -556,6 +566,7 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
         context['datos_personal'] = DatosPersonal.objects.get(pk=self.kwargs['pk'])
         context['supervisado'] = True
         context['url_previo'] = self.request.session.get('url_previo')
+        context['extra_suffix'] = f'{context["datos_personal"].pk}extra'
         return context
     
     def get(self, request, *args, **kwargs):
@@ -583,7 +594,7 @@ class FormularioInstrumentoSupervisor(FormularioInstrumentoEmpleado):
     def define_initial_data(self, pregunta, respuesta):
         return {
             'pregunta': pregunta,
-            'respuesta_supervisor': respuesta.respuesta_empleado if not respuesta.respuesta_supervisor else respuesta.respuesta_supervisor,
+            'respuesta_supervisor': respuesta.respuesta_empleado if respuesta.respuesta_supervisor == None else respuesta.respuesta_supervisor,
             'comentario_supervisor': respuesta.comentario_supervisor
         }
 
@@ -713,7 +724,7 @@ class EnviarEvaluacionGerente(View):
             evaluacion.save()
 
             if evaluacion.estado == 'G':
-                messages.success(request, f"Ha sido enviada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} a la Gerencia de Gestión Humana.")
+                messages.success(request, f"Ha sido enviada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} a la Gerencia correspondiente.")
             elif evaluacion.estado == 'A':
                 messages.success(request, f"Ha sido aprobada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} por la Gerencia General.")
             

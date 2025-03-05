@@ -71,7 +71,7 @@
                 <a class="btn btn-error" hx-target="closest .tab-content" hx-get="{% url 'revisar_evaluacion_final' pk=evaluacion.pk %}">Revisar Evaluación</a>
                 {% elif evaluacion %}
                 <label for="modal-{{evaluacion.pk}}-gghh" class="btn btn-error">Revisar Evaluación Actual</label>
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with evaluacion=evaluacion extra_suffix="gghh" include_others=True finish=False id=evaluacion.pk tipo="E" %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with evaluacion=evaluacion extra_suffix="gghh" include_others=True finish=False id=evaluacion.pk %}
                 {% endif %}
                 <a class="btn btn-gray" hx-target="closest .tab-content" hx-get="{% url 'consultar_historico_supervisados' pk=supervisado.pk %}">Ver Histórico de Evaluaciones</a>
             </td>

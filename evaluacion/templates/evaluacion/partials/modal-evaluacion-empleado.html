@@ -11,6 +11,7 @@
                 <option value="S" {% if tipo == 'S' %}selected{% endif %}>Revisada por Supervisor</option>
                 {% endif %}
                 {% else %}
+
                 <option value="E" {% if tipo == 'E' %}selected{% endif %}>Autoevaluación</option>
                 {% if include_others %}
                 {% if tipo == "S" or evaluacion.estado == "G" or evaluacion.estado == "H" or evaluacion.estado == "A" or evaluacion.estado == "R" %}
@@ -22,6 +23,7 @@
                 <option value="H" {% if tipo == 'H' or not tipo %}selected{% endif %}>Definitiva</option>
                 {% endif %}
                 {% endif %}
+
                 {% endif %}
             </select>
         </div>
@@ -38,7 +40,7 @@
                 </tr>
                 <tr>
                     <th>Supervisor</th>
-                    <td class="text-center">{{evaluacion.evaluado.supervisor.user.get_full_name}}</td>
+                    <td class="text-center">{{evaluacion.evaluado.supervisor.user.get_full_name|default:'No tiene'}}</td>
                 </tr>
                 <tr>
                     <th>Periodo</th>
@@ -119,7 +121,7 @@
             <div class="stat bg-gray-900 text-white">
               <div class="stat-title text-white">Resultado de la Evaluación</div>
               <div class="stat-value">
-                {% if tipo == "E" %}
+                {% if tipo == "E" or tipo == 'S' and not evaluacion.fecha_revision %}
                 {{evaluacion.total|floatformat:2}}
                 {% elif tipo == "S" %}
                 {{evaluacion.total_supervisor|floatformat:2}}
@@ -183,7 +185,11 @@
                         {% elif tipo == 'H' %}
                         &nbsp;Yo, {{request.user.get_full_name.upper}}, he revisado la autoevaluación y revisión de su respectivo supervisor de la evaluación de desempeño de {{evaluacion.evaluado.user.get_full_name.upper}}, y en mi caracter de GERENTE DE GESTIÓN HUMANA, decido que esta sea:
                         {% else %}
+                        {% if evaluacion.supervisor %}
                         &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y estoy de acuerdo en que sea enviada a mi supervisor. 
+                        {% else %}
+                        &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y estoy de acuerdo en que sea enviada a la gerencia de gestión humana. 
+                        {% endif %}
                         {% endif %}
                     </label>
                 </div>
