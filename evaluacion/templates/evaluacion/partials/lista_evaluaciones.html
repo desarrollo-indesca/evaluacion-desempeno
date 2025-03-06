@@ -19,7 +19,7 @@
     {% include 'messages.html' %}
 {% endif %}
 
-<form hx-get="{% url 'consultar_evaluaciones' pk=request.user.pk %}" hx-select="#evaluaciones" hx-target="#evaluaciones" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
+<form hx-get="{{request.path}}" hx-select="#evaluaciones-{{extra_suffix}}" hx-target="#evaluaciones-{{extra_suffix}}" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
     <div>
         {{filter.form.periodo.label_tag}} <br>
         {% render_field filter.form.periodo class="select select-bordered w-full" %}
@@ -40,7 +40,7 @@
         </tr>
     </thead>
 
-    <tbody id="evaluaciones">
+    <tbody id="evaluaciones-{{extra_suffix}}">
         {% for evaluacion in filter.qs %}
         <tr>
             <td>{{evaluacion.id}}</td>

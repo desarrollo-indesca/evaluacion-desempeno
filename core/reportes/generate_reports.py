@@ -22,7 +22,7 @@ def create_dnf(periodo, file_path='core/reportes/bases/plan-anual-formacion.xlsx
     row = 10
     i = 1
     for evaluacion in evaluaciones:
-        for formacion in enumerate(evaluacion.formaciones.filter(anadido_por='H'), start=1):            
+        for formacion in evaluacion.formaciones.filter(anadido_por='H'):            
             formacion_sugerida = formacion.necesidad_formacion.upper()
             formacion_especifica = ''
             ente_didactico = ''

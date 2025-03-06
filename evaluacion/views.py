@@ -714,6 +714,8 @@ class EnviarEvaluacionGerente(View):
         )):
             if evaluacion.evaluado.supervisor:
                 evaluacion.estado = 'G'
+            elif evaluacion.evaluado.supervisor and evaluacion.evaluado.supervisor.user.is_superuser:
+                evaluacion.estado = 'H'
             else:
                 evaluacion.estado = 'A'
                 evaluacion.fecha_entrega = datetime.datetime.now()

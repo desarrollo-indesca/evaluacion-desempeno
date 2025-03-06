@@ -188,7 +188,7 @@
                         {% if evaluacion.supervisor %}
                         &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y estoy de acuerdo en que sea enviada a mi supervisor. 
                         {% else %}
-                        &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y estoy de acuerdo en que sea enviada a la gerencia de gestión humana. 
+                        &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y autorizo que sea directamente enviada a la gerencia de gestión humana para su consideración. 
                         {% endif %}
                         {% endif %}
                     </label>
@@ -198,10 +198,12 @@
                     {% if tipo == 'S' %}
                     <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la Evaluación al Gerente</button>
                     {% elif tipo == 'E' %}
-                    <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la evaluación a mi supervisor</button>
+                    <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la evaluación</button>
                     {% elif tipo == 'H' %}
                     <button id="enviar-evaluacion" name="tipo_evaluacion" value="A" type="submit" class="btn btn-success">Aprobada</button>&nbsp;
+                    {% if evaluacion.evaluado.supervisor and not evaluacion.evaluado.supervisor.user.is_superuser %}
                     <button id="enviar-evaluacion" hx-confirm="¿Está seguro que desea rechazar la evaluación? En este caso deberá indicar en un comentario las razones de la misma." name="tipo_evaluacion" value="R" type="submit" class="btn btn-error">Rechazada</button>
+                    {% endif %}
                     
                     <script>
                         document.addEventListener("htmx:beforeRequest", event => {
