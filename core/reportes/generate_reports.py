@@ -235,16 +235,16 @@ def fill_resultado_operativo(evaluacion):
     logros = evaluacion.logros_y_metas.filter(anadido_por="H", periodo="A")
     formaciones = evaluacion.formaciones.filter(anadido_por="H")
 
-    tecnico_cientificas = formaciones.filter(clasificacion__clasificacion__icontains='Tecno-Cientifica').count()
-    supervisoria_formativa = formaciones.filter(clasificacion__clasificacion__icontains='Supervisoria Formativa').count()
-    tecnica_administrativa = formaciones.filter(clasificacion__clasificacion__icontains='Tecnica Administrativa').count()
-    seguridad_industrial = formaciones.filter(clasificacion__clasificacion__icontains='Seguridad Industrial').count()
+    tecnico_cientificas = formaciones.filter(clasificacion__clasificacion__icontains='Cientifica').count()
+    supervisoria_formativa = formaciones.filter(clasificacion__clasificacion__icontains='Supervisoria').count()
+    tecnica_administrativa = formaciones.filter(clasificacion__clasificacion__icontains='APOYO').count()
+    seguridad_industrial = formaciones.filter(clasificacion__clasificacion__icontains='Seguridad').count()
     total_cursos = formaciones.count()
 
     worksheet.cell(row=40, column=3, value=tecnico_cientificas)
     worksheet.cell(row=41, column=3, value=supervisoria_formativa)
     worksheet.cell(row=40, column=12, value=tecnica_administrativa)
-    worksheet.cell(row=40, column=12, value=seguridad_industrial)
+    worksheet.cell(row=41, column=12, value=seguridad_industrial)
     worksheet.cell(row=40, column=21, value=total_cursos)
     for i, logro in enumerate(logros, start=17):
         worksheet.cell(row=i, column=1, value=logro.descripcion)
@@ -257,9 +257,13 @@ def fill_resultado_operativo(evaluacion):
         col = 13
         if formacion.competencias.filter(nombre__icontains='Capacidades Operativas').exists():
             worksheet.cell(row=i, column=col, value='X')
-        
+
         col += 1
         if formacion.competencias.filter(nombre__icontains='Capacidades de Negociación y Relación').exists():
+            worksheet.cell(row=i, column=col, value='X')
+
+        col += 1
+        if formacion.competencias.filter(nombre__icontains='Capacidades Analíticas y de Síntesis').exists():
             worksheet.cell(row=i, column=col, value='X')
         
         col += 1
@@ -267,7 +271,7 @@ def fill_resultado_operativo(evaluacion):
             worksheet.cell(row=i, column=col, value='X')
         
         col += 1
-        if formacion.competencias.filter(nombre__icontains='Desarrollo').exists():
+        if formacion.competencias.filter(nombre__iexact='Desarrollo').exists():
             worksheet.cell(row=i, column=col, value='X')
         
         col += 1
@@ -366,16 +370,16 @@ def fill_resultado_apoyo(evaluacion):
     logros = evaluacion.logros_y_metas.filter(anadido_por="H", periodo="A")
     formaciones = evaluacion.formaciones.filter(anadido_por="H")
 
-    tecnico_cientificas = formaciones.filter(clasificacion__clasificacion__icontains='Tecno-Cientifica').count()
-    supervisoria_formativa = formaciones.filter(clasificacion__clasificacion__icontains='Supervisoria Formativa').count()
-    tecnica_administrativa = formaciones.filter(clasificacion__clasificacion__icontains='Tecnica Administrativa').count()
-    seguridad_industrial = formaciones.filter(clasificacion__clasificacion__icontains='Seguridad Industrial').count()
+    tecnico_cientificas = formaciones.filter(clasificacion__clasificacion__icontains='Cientifica').count()
+    supervisoria_formativa = formaciones.filter(clasificacion__clasificacion__icontains='Supervisoria').count()
+    tecnica_administrativa = formaciones.filter(clasificacion__clasificacion__icontains='APOYO').count()
+    seguridad_industrial = formaciones.filter(clasificacion__clasificacion__icontains='Seguridad').count()
     total_cursos = formaciones.count()
 
     worksheet.cell(row=40, column=3, value=tecnico_cientificas)
     worksheet.cell(row=41, column=3, value=supervisoria_formativa)
     worksheet.cell(row=40, column=12, value=tecnica_administrativa)
-    worksheet.cell(row=40, column=12, value=seguridad_industrial)
+    worksheet.cell(row=41, column=12, value=seguridad_industrial)
     worksheet.cell(row=40, column=21, value=total_cursos)
     for i, logro in enumerate(logros, start=17):
         worksheet.cell(row=i, column=1, value=logro.descripcion)
@@ -398,7 +402,7 @@ def fill_resultado_apoyo(evaluacion):
             worksheet.cell(row=i, column=col, value='X')
         
         col += 1
-        if formacion.competencias.filter(nombre__icontains='Desarrollo').exists():
+        if formacion.competencias.filter(nombre__iexact='Desarrollo').exists():
             worksheet.cell(row=i, column=col, value='X')
         
         col += 1
