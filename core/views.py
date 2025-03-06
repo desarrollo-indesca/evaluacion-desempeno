@@ -148,8 +148,7 @@ class PeriodoListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['periodo'] = Periodo.objects.filter(activo=True).exists()
-
+        context['periodo'] = Periodo.objects.filter(activo=True).first() if Periodo.objects.filter(activo=True).exists() else None
         return context
 
 class PeriodoCreateView(FormView):

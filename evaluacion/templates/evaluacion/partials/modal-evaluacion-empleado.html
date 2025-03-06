@@ -74,7 +74,7 @@
             <div class="collapse collapse-arrow bg-base-200 mb-2 overflow-x-auto">
                 <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
                 <div class="collapse-title text-xl font-medium">
-                    {{resultado.instrumento}} ({% if tipo == "E" %}{{resultado.resultado_empleado|default:'-'}}{% elif tipo == "S" %}
+                    {{resultado.instrumento}} ({% if tipo == "E" %} {{resultado.resultado_empleado|default:'-'}}{% elif tipo == "S" %}
                     {% if not evaluacion.fecha_revision %}
                     {{resultado.resultado_empleado|default:'-'}}
                     {% else %}
@@ -92,7 +92,7 @@
                     {% else %}
                     {{resultado.resultado_final|default:'-'}} 
                     {% endif %}
-                    {% endif %} / {{resultado.instrumento.peso}})
+                    {% endif %} / {{resultado.instrumento.peso|floatformat:2}} )
                 </div>
                 <div class="collapse-content">
                     <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version-{{evaluacion.pk}}-{{id}}').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>
