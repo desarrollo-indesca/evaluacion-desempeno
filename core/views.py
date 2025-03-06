@@ -17,6 +17,32 @@ from core.reportes.generate_reports import create_dnf, fill_resumen_periodo, fil
 
 # Create your views here.
 
+class SuperuserMixin():
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+class EvaluadoMatchMixin():
+    def dispatch(self, request, *args, **kwargs):
+        evaluacion = Evaluacion.objects.filter(pk=self.kwargs['pk']).first()
+        if not evaluacion or evaluacion.evaluado.user != request.user:
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+class GerenteMixin():
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+class SupervisorMixin():
+    def dispatch(self, request, *args, **kwargs):
+        evaluacion = Evaluacion.objects.filter(pk=self.kwargs['pk']).first()
+        if evaluacion and evaluacion.evaluado.supervisor.user.pk != request.user.pk:
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
+
 class PeriodoContextMixin():
     def get_periodo(self):
         return Periodo.objects.get(activo=True) if Periodo.objects.filter(activo=True).exists() else None
@@ -112,7 +138,7 @@ class Dashboard(LoginRequiredMixin, View, PeriodoContextMixin):
     def get(self, request):
         return render(request, 'core/dashboard.html', context=self.get_context_data())
 
-class PanelDeControl(LoginRequiredMixin, View, PeriodoContextMixin):
+class PanelDeControl(SuperuserMixin, View, PeriodoContextMixin):
     template_name = 'core/panel_control.html'
 
     def get_context_data(self, **kwargs):
@@ -141,7 +167,7 @@ class PanelDeControl(LoginRequiredMixin, View, PeriodoContextMixin):
         
         return render(request, self.template_name, self.get_context_data())
     
-class PeriodoListView(ListView):
+class PeriodoListView(SuperuserMixin, ListView):
     model = Periodo
     template_name = 'core/periodo_list.html'
     context_object_name = 'periodos'
@@ -151,7 +177,7 @@ class PeriodoListView(ListView):
         context['periodo'] = Periodo.objects.filter(activo=True).first() if Periodo.objects.filter(activo=True).exists() else None
         return context
 
-class PeriodoCreateView(FormView):
+class PeriodoCreateView(SuperuserMixin, FormView):
     template_name = 'core/periodo_form.html'
     form_class = PeriodoForm
     success_url = reverse_lazy('periodo_lista')
@@ -180,7 +206,7 @@ class PeriodoCreateView(FormView):
         print(form.errors)
         return super().form_invalid(form)
 
-class CerrarPeriodoView(View):
+class CerrarPeriodoView(SuperuserMixin, View):
     def post(self, request, pk):
         periodo = Periodo.objects.get(pk=pk)
         if periodo.activo and request.user.is_superuser:
@@ -189,7 +215,7 @@ class CerrarPeriodoView(View):
 
         return redirect('periodo_lista')
 
-class GenerarReportesPeriodo(View):
+class GenerarReportesPeriodo(SuperuserMixin, View):
     def get(self, request):
         periodos = Periodo.objects.filter(activo=False).order_by('-fecha_inicio')
         return render(request, 'core/dnf.html', context={'periodos': periodos})
@@ -203,7 +229,7 @@ class GenerarReportesPeriodo(View):
         elif(tipo == 'resumen'):
             return fill_resumen_periodo(periodo)
     
-class GenerarReporteFinal(View):
+class GenerarReporteFinal(SuperuserMixin, View):
     def get(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
 
