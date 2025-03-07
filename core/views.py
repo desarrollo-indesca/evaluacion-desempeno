@@ -23,6 +23,16 @@ class SuperuserMixin():
             return redirect('dashboard')
         return super().dispatch(request, *args, **kwargs)
     
+class ValidarMixin():
+    def validar(self) -> bool:
+        ...
+
+    def dispatch(self, request, *args, **kwargs):
+        if(self.validar()):
+            return super().dispatch(request, *args, **kwargs)
+        
+        return redirect('dashboard')
+    
 class EvaluadoMatchMixin():
     def dispatch(self, request, *args, **kwargs):
         evaluacion = Evaluacion.objects.filter(pk=self.kwargs['pk']).first()
@@ -33,13 +43,6 @@ class EvaluadoMatchMixin():
 class GerenteMixin():
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_staff:
-            return redirect('dashboard')
-        return super().dispatch(request, *args, **kwargs)
-    
-class SupervisorMixin():
-    def dispatch(self, request, *args, **kwargs):
-        evaluacion = Evaluacion.objects.filter(pk=self.kwargs['pk']).first()
-        if evaluacion and evaluacion.evaluado.supervisor.user.pk != request.user.pk:
             return redirect('dashboard')
         return super().dispatch(request, *args, **kwargs)
 

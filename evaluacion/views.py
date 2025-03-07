@@ -10,9 +10,27 @@ import datetime
 from .models import *
 from .forms import *
 from .filters import *
-from core.views import PeriodoContextMixin, EvaluacionEstadoMixin, SuperuserMixin, SupervisorMixin, GerenteMixin, EvaluadoMatchMixin
+from core.views import PeriodoContextMixin, ValidarMixin, EvaluacionEstadoMixin, SuperuserMixin, GerenteMixin, EvaluadoMatchMixin
 
 # Create your views here.
+
+class ValidarEvaluadoMixin(ValidarMixin):
+    def validar(self):
+        evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+        return evaluacion.evaluado.user.pk == self.request.user.pk
+    
+class ValidarSupervisorMixin(ValidarMixin):
+    def validar(self):
+        try:
+            evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+        except:
+            evaluacion = Evaluacion.objects.get(pk=self.kwargs['evaluacion'])
+            
+        return evaluacion.evaluado.pk in self.request.user.datos_personal.get(activo=True).supervisados.values_list('pk', flat=True)
+
+class ValidarSuperusuario(ValidarMixin):
+    def validar(self):
+        return self.request.user.is_superuser
 
 class EscalafonMixin():
     def calcular_escalafon(self, resultado_instrumento: ResultadoInstrumento):
@@ -97,11 +115,17 @@ class FinalizarEvaluacion(EvaluadoMatchMixin, View):
         
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
 
-class FormularioInstrumentoEmpleado(PeriodoContextMixin, EscalafonMixin, EvaluacionEstadoMixin, View):
+class FormularioInstrumentoEmpleado(ValidarMixin, PeriodoContextMixin, EscalafonMixin, EvaluacionEstadoMixin, View):
     template_name = 'evaluacion/formulario_generico.html'
     estado = "E"
     success_message = 'Respuestas del Instrumento almacenadas correctamente.'
     form_class = FormularioRespuestasEmpleado
+
+    def validar(self):
+        instrumento = Instrumento.objects.filter(id=self.kwargs['pk']).first()
+        if not instrumento or instrumento.formulario.tipo_personal != self.request.user.datos_personal.get(activo=True).tipo_personal:
+            return False
+        return True
 
     def get_context_data(self, post=False, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -269,11 +293,11 @@ class FormularioInstrumentoEmpleado(PeriodoContextMixin, EscalafonMixin, Evaluac
         elif(self.estado == "H"):
             return redirect('revisar_evaluacion_final', pk=evaluacion.pk)
 
-class FormacionEmpleado(EvaluadoMatchMixin, PeriodoContextMixin, EvaluacionEstadoMixin, View):
+class FormacionEmpleado(ValidarEvaluadoMixin, PeriodoContextMixin, EvaluacionEstadoMixin, View):
     template_name = "evaluacion/formacion_empleado.html"
     estado = "E"
     anadido_por = 'E'
-
+    
     def get_success_url(self):
         return redirect('dashboard')
 
@@ -331,7 +355,7 @@ class FormacionEmpleado(EvaluadoMatchMixin, PeriodoContextMixin, EvaluacionEstad
         messages.success(request, 'Respuestas de Formación almacenadas correctamente.')
         return self.get_success_url()
     
-class MetasEmpleado(EvaluadoMatchMixin, PeriodoContextMixin, EvaluacionEstadoMixin, View):
+class MetasEmpleado(ValidarEvaluadoMixin, PeriodoContextMixin, EvaluacionEstadoMixin, View):
     template_name = "evaluacion/metas_empleado.html"
     estado = "E"
     anadido_por = "E"
@@ -561,6 +585,15 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
     filter_class = EvaluacionFilter
     paginate_by = 10
 
+    def dispatch(self, request, *args, **kwargs):
+        datos_personal = request.user.datos_personal.get(activo=True)
+        evaluado = DatosPersonal.objects.get(pk=self.kwargs['pk'])
+        
+        if datos_personal != evaluado.supervisor and not request.user.is_superuser:
+            return redirect('home')
+        
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
@@ -587,7 +620,7 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
     def get_queryset(self):
         return super().get_queryset().filter(evaluado__pk=self.kwargs['pk'])
 
-class FormularioInstrumentoSupervisor(FormularioInstrumentoEmpleado):
+class FormularioInstrumentoSupervisor(ValidarSupervisorMixin, FormularioInstrumentoEmpleado):
     estado = "S"
     template_name = "evaluacion/partials/formulario_supervisor.html"
     form_class = FormularioRespuestasSupervisor
@@ -639,7 +672,7 @@ class FormularioInstrumentoSupervisor(FormularioInstrumentoEmpleado):
 
         return context
     
-class RevisionEvaluacion(PeriodoContextMixin, EvaluacionEstadoMixin, View):
+class RevisionEvaluacion(ValidarSupervisorMixin, PeriodoContextMixin, EvaluacionEstadoMixin, View):
     estado = "S"
     template_name = 'evaluacion/partials/revision_evaluacion.html'
 
@@ -671,7 +704,7 @@ class RevisionEvaluacion(PeriodoContextMixin, EvaluacionEstadoMixin, View):
 
         return context
     
-class FormacionSupervisor(FormacionEmpleado):
+class FormacionSupervisor(ValidarSupervisorMixin, FormacionEmpleado):
     template_name = "evaluacion/formacion_empleado.html"
     estado = "S"
     anadido_por = "S"
@@ -693,7 +726,7 @@ class FormacionSupervisor(FormacionEmpleado):
         else:
             return evaluacion.formaciones.filter(activo = True)
 
-class LogrosYMetasSupervisor(MetasEmpleado):
+class LogrosYMetasSupervisor(ValidarSupervisorMixin, MetasEmpleado):
     estado = "S"
     anadido_por = "S"
 
@@ -705,7 +738,7 @@ class LogrosYMetasSupervisor(MetasEmpleado):
     def get_success_url(self):
         return redirect('revisar_evaluacion', pk=self.kwargs['pk'])
 
-class EnviarEvaluacionGerente(View):
+class EnviarEvaluacionGerente(ValidarSupervisorMixin, View):
     def post(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
 
@@ -736,16 +769,14 @@ class EnviarEvaluacionGerente(View):
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
 
 # VISTAS DE GERENCIA
-class RevisionGerencia(GerenteMixin, PeriodoContextMixin, ListView):
+class RevisionGerencia(ValidarMixin, PeriodoContextMixin, ListView):
     model = DatosPersonal
     template_name = "evaluacion/partials/revision_supervisados.html"
     filter_class = DatosPersonalFilter
     paginate_by = 5
 
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            return HttpResponseForbidden("Acceso denegado: solo los gerentes pueden acceder a esta vista.")
-        return super().dispatch(request, *args, **kwargs)
+    def validar(self):
+        return self.request.user.datos_personal.filter(activo=True, user__is_staff=True).exists()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -785,7 +816,7 @@ class DevolverEvaluacionSupervisor(GerenteMixin, View):
             return HttpResponseForbidden("No se puede devolver la evaluación al estado 'S'.")
 
 # VISTAS DE GESTIÓN HUMANA / SUPERUSUARIO
-class ConsultaGeneralEvaluaciones(SuperuserMixin, RevisionGerencia):
+class ConsultaGeneralEvaluaciones(ValidarSuperusuario, RevisionGerencia):
     model = DatosPersonal
     template_name = "evaluacion/partials/revision_supervisados.html"
     filter_class = DatosPersonalFilter
@@ -799,7 +830,7 @@ class ConsultaGeneralEvaluaciones(SuperuserMixin, RevisionGerencia):
     def get_queryset(self):
         return self.filter_class(self.request.GET, queryset=DatosPersonal.objects.filter(activo=True)).qs
 
-class RevisionTodoPersonal(SuperuserMixin, PeriodoContextMixin, ListView):
+class RevisionTodoPersonal(ValidarSuperusuario, PeriodoContextMixin, ListView):
     model = DatosPersonal
     template_name = "evaluacion/partials/revision_gghh.html"
     filter_class = DatosPersonalFilter
@@ -823,7 +854,7 @@ class RevisionTodoPersonal(SuperuserMixin, PeriodoContextMixin, ListView):
         )
         return self.filter_class(self.request.GET, qs).qs
 
-class RevisionEvaluacionFinal(SuperuserMixin, PeriodoContextMixin, EvaluacionEstadoMixin, View):
+class RevisionEvaluacionFinal(ValidarSuperusuario, PeriodoContextMixin, EvaluacionEstadoMixin, View):
     estado = "H"
     template_name = 'evaluacion/partials/revision_evaluacion_final.html'
 
@@ -856,7 +887,7 @@ class RevisionEvaluacionFinal(SuperuserMixin, PeriodoContextMixin, EvaluacionEst
 
         return context
 
-class FormularioEvaluacionDefinitiva(SuperuserMixin, FormularioInstrumentoSupervisor):
+class FormularioEvaluacionDefinitiva(ValidarSuperusuario, FormularioInstrumentoSupervisor):
     estado = "H"
     template_name = "evaluacion/partials/formulario_definitiva.html"
     form_class = FormularioRespuestasFinales
@@ -868,7 +899,7 @@ class FormularioEvaluacionDefinitiva(SuperuserMixin, FormularioInstrumentoSuperv
             'comentario_gghh': respuesta.comentario_gghh
         }
     
-class FormularioMetasDefinitivos(SuperuserMixin, MetasEmpleado):
+class FormularioMetasDefinitivos(ValidarSuperusuario, MetasEmpleado):
     anadido_por = "H"
     estado = "H"
     anadido_previo = "S"
@@ -882,7 +913,7 @@ class FormularioMetasDefinitivos(SuperuserMixin, MetasEmpleado):
     def get_success_url(self):
         return redirect('revisar_evaluacion_final', pk=self.kwargs['pk'])
 
-class FormacionDefinitiva(SuperuserMixin, FormacionEmpleado):
+class FormacionDefinitiva(ValidarSuperusuario, FormacionEmpleado):
     template_name = "evaluacion/formacion_empleado.html"
     estado = "H"
     anadido_por = "H"
@@ -908,7 +939,7 @@ class FormacionDefinitiva(SuperuserMixin, FormacionEmpleado):
             else:
                 return evaluacion.formaciones.filter(anadido_por = "E")
 
-class CerrarEvaluacion(SuperuserMixin, View):
+class CerrarEvaluacion(ValidarSuperusuario, View):
     def post(self, request, pk, *args, **kwargs):
         evaluacion = Evaluacion.objects.get(pk=pk)
 

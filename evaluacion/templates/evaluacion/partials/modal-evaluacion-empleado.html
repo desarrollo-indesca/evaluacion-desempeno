@@ -7,9 +7,7 @@
                 {% if not include_others and tipo == 'H' %}
                 <option value="H" {% if tipo == 'H' %}selected{% endif %}>Definitiva</option>
                 {% elif not include_others and tipo == 'S' %}
-                {% if evaluacion.fecha_revision %}
                 <option value="S" {% if tipo == 'S' %}selected{% endif %}>Revisada por Supervisor</option>
-                {% endif %}
                 {% else %}
 
                 <option value="E" {% if tipo == 'E' %}selected{% endif %}>Autoevaluación</option>
