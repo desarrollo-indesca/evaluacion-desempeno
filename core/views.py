@@ -206,6 +206,18 @@ class PeriodoCreateView(SuperuserMixin, FormView):
                 ), 
             )
 
+            if(dp.user.email):
+                correos.append(dp.user.email)
+
+        if(len(correos) > 0):
+            send_mail(
+                'Nuevo periodo de evaluación de Desempeño',
+                f'Como Gerente de Gestión Humana, emito este mensaje para informar que el período de evaluación de desempeño {form.instance.__str__()} ha sido habilitado para que todo el personal realice su evaluación de desempeño. Por favor, ingresen a través del siguiente enlace: {self.request.headers.get("Referer")} para realizar su evaluación, haciendo uso de su número de ficha y clave de máquina.',
+                'kchirino@indesca.com',
+                correos,
+                fail_silently=False,
+            )
+
         return super().form_valid(form)
     
     def form_invalid(self, form):

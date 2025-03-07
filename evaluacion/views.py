@@ -85,6 +85,7 @@ class ComenzarEvaluacion(EvaluadoMatchMixin, View):
             evaluacion.estado = 'E'
             evaluacion.fecha_inicio = datetime.datetime.now()
             evaluacion.save()
+
             return redirect('dashboard')
         
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
@@ -109,8 +110,19 @@ class FinalizarEvaluacion(EvaluadoMatchMixin, View):
             
             if evaluacion.estado == 'S':
                 messages.success(request, 'La evaluación fue enviada a su supervisor.')
+                body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a usted para su revisión en reunión con el empleado; podrá encontrarla en la pestaña "Revisar" del sistema.\n\n'
+                to = [evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor and evaluacion.evaluado.supervisor.user.email else DatosPersonal.object.get(is_superuser=True).email]
             elif evaluacion.estado == 'H':
                 messages.success(request, 'La evaluación fue enviada a la Gerencia de Gestión Humana.')
+                body += 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a la Gerencia de Gestión Humana para su revisión final.\n\n'
+                to = [evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor and evaluacion.evaluado.supervisor.user.email else DatosPersonal.object.get(is_superuser=True).email, DatosPersonal.object.get(is_superuser=True).email]
+
+            send_mail(
+                'Actualización de Estatus - Evaluación de Desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
+                body,
+                'no-replay@indesca.com',
+                to,
+            )
             
             return redirect('dashboard')
         
@@ -762,8 +774,19 @@ class EnviarEvaluacionGerente(ValidarSupervisorMixin, View):
 
             if evaluacion.estado == 'G':
                 messages.success(request, f"Ha sido enviada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} a la Gerencia correspondiente.")
+                body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a usted para su revisión antes de ser enviada a la Gerencia de Gestión Humana; podrá encontrarla en la pestaña "GERENCIA" del sistema, y podrá enviarse mediante el botón "Enviar a Gestión Humana" de la misma pantalla.\n\n'
+                to = [evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
             elif evaluacion.estado == 'A':
                 messages.success(request, f"Ha sido aprobada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} por la Gerencia General.")
+                body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido aprobada por la Gerencia General; siendo cerrada para el periodo activo.\n\n'
+                to = [evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
+
+            send_mail(
+                'Actualización de Estatus - Evaluación de Desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
+                body,
+                'no-replay@indesca.com',
+                to,
+            )
             
             return redirect('consultar_supervisados')
         
@@ -802,6 +825,19 @@ class EnviarEvaluacionesGestionHumana(GerenteMixin, View):
         if evaluaciones.count():
             evaluaciones.update(estado='H', fecha_entrega=datetime.datetime.now())
             messages.success(request, f"Ha sido enviada la evaluación de los empleados con el estatus 'Enviado a la Gerencia' a la Gerencia de Gestión Humana.")
+            body = 'Las evaluaciones de desempeño de los empleados han sido enviadas a la Gerencia de Gestión Humana.\n\n'
+            body += "Los empleados enviados son: \n\n"
+
+            for evaluacion in evaluaciones:
+                body += f"- {evaluacion.evaluado.user.get_full_name().upper()}\n"
+
+            body += "Podrá revisarlas en el Panel de Control del Gerente de Gestión Humana, en la sección de revisión de evaluaciones.\n\n"
+            
+            send_mail(
+                f"Envío de Evaluaciones a la Gerencia de Gestión Humana",
+                body,
+            )
+            
             return redirect('consultar_gerencia')
         
 class DevolverEvaluacionSupervisor(GerenteMixin, View):
