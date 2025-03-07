@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.urls import reverse_lazy
+from django.core.mail import send_mail
 from .forms import PeriodoForm
 from django.views.generic.list import ListView
 from django.db.models import Q
@@ -194,6 +195,8 @@ class PeriodoCreateView(SuperuserMixin, FormView):
             activo=True
         )
 
+        correos = []
+
         for dp in personal:
             Evaluacion.objects.get_or_create(evaluado=dp, 
                 periodo=form.instance, 
@@ -206,7 +209,6 @@ class PeriodoCreateView(SuperuserMixin, FormView):
         return super().form_valid(form)
     
     def form_invalid(self, form):
-        print(form.errors)
         return super().form_invalid(form)
 
 class CerrarPeriodoView(SuperuserMixin, View):

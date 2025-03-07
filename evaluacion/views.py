@@ -6,6 +6,7 @@ from django.forms import modelformset_factory
 from django.shortcuts import render, redirect
 from django.db import transaction, models
 from django.contrib import messages
+from django.core.mail import send_mail
 import datetime
 from .models import *
 from .forms import *
@@ -25,7 +26,7 @@ class ValidarSupervisorMixin(ValidarMixin):
             evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
         except:
             evaluacion = Evaluacion.objects.get(pk=self.kwargs['evaluacion'])
-            
+
         return evaluacion.evaluado.pk in self.request.user.datos_personal.get(activo=True).supervisados.values_list('pk', flat=True)
 
 class ValidarSuperusuario(ValidarMixin):
@@ -838,11 +839,13 @@ class RevisionTodoPersonal(ValidarSuperusuario, PeriodoContextMixin, ListView):
 
     def get(self, request, *args, **kwargs):
         if(request.user.is_superuser): # Gerente de Gestión Humana
+            if request.GET:
+                request.session['previous_req'] = request.GET
             return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['filter'] = self.filter_class()
+        context['filter'] = self.filter_class(self.request.session.get('previous_req'))
         context['total'] = self.get_queryset().count()
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
         self.request.session['url_previo'] = f'evaluacion/revision-general/'
@@ -852,7 +855,7 @@ class RevisionTodoPersonal(ValidarSuperusuario, PeriodoContextMixin, ListView):
         qs = self.model.objects.filter(
             activo=True
         )
-        return self.filter_class(self.request.GET, qs).qs
+        return self.filter_class(self.request.session.get('previous_req'), qs).qs
 
 class RevisionEvaluacionFinal(ValidarSuperusuario, PeriodoContextMixin, EvaluacionEstadoMixin, View):
     estado = "H"

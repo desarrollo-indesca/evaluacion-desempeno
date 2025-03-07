@@ -173,3 +173,13 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static"
 ]
+
+# Email
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'mail.indesca.com'  # Replace with your SMTP server address
+EMAIL_PORT = 465  
+EMAIL_HOST_USER = 'no-replay@indesca.com'  # Replace with your SMTP username
+EMAIL_HOST_PASSWORD = 'indesca2024*'  # Replace with your SMTP password
+EMAIL_USE_SSL = True
+DEFAULT_FROM_EMAIL = 'no-replay@indesca.com'
