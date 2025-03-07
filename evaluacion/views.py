@@ -836,6 +836,8 @@ class EnviarEvaluacionesGestionHumana(GerenteMixin, View):
             send_mail(
                 f"Envío de Evaluaciones a la Gerencia de Gestión Humana",
                 body,
+                'no-replay@indesca.com',
+                [request.user.datos_personal.get(activo=True).gerente.user.email],
             )
             
             return redirect('consultar_gerencia')
@@ -1055,6 +1057,20 @@ class CerrarEvaluacion(ValidarSuperusuario, View):
                     nuevo_logro.evaluacion = evaluacion
                     nuevo_logro.pk = None
                     nuevo_logro.save()
+
+                send_mail(
+                    'Rechazada - Evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
+                    "La gerencia de gestión humana encontró irregularidades en la última evaluación enviada por lo cual se ha rechazado y ha sido remitida al supervisor. Para más detalles, reunirse con la gerencia de gestión humana.\n\n",
+                    'no-replay@indesca.com',
+                    [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email],
+                )
+            else:
+                send_mail(
+                    'Aprobada - Evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
+                    "La gerencia de gestión humana ha revisado su evaluación y ha sido aprobada; cerrando definitivamente el proceso de evaluación para usted en el periodo evaluado.\n\n",
+                    'no-replay@indesca.com',
+                    [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email],
+                )
 
         messages.success(request, 'Evaluación cerrada correctamente.')
         return redirect('revision_general')
