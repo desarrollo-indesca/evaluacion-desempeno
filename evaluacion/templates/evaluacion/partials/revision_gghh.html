@@ -30,6 +30,10 @@
         {{filter.form.user__first_name.label_tag}} <br>
         {% render_field filter.form.user__first_name class="input input-bordered w-full" %}
     </div>
+    <div>
+        {{filter.form.gerencia.label_tag}} <br>
+        {% render_field filter.form.gerencia class="select select-bordered w-full" %}
+    </div>
 </form>
 <br>
 <p class="text-center" id="total-empleados-evals-gghh">Se encontraron {{total}} empleados.</p>
@@ -94,6 +98,7 @@
                     page: {{page_obj.next_page_number}},
                     ficha: document.querySelector('[name=ficha]').value || '',
                     user__first_name: document.querySelector('[name=user__first_name]').value || '',
+                    gerencia: document.querySelector('[name=gerencia]').value || '',
                     {% if periodo %}
                     evaluacion_estado: document.querySelector('[name=evaluacion_estado]').value || '',
                     {% endif %}
