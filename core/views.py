@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.urls import reverse_lazy
-from django.core.mail import send_mail
+from core.email import send_mail_async
 from .forms import PeriodoForm
 from django.views.generic.list import ListView
 from django.db.models import Q
@@ -210,12 +210,11 @@ class PeriodoCreateView(SuperuserMixin, FormView):
                 correos.append(dp.user.email)
 
         if(len(correos) > 0):
-            send_mail(
+            send_mail_async(
                 'Nuevo periodo de evaluación de Desempeño',
                 f'Como Gerente de Gestión Humana, emito este mensaje para informar que el período de evaluación de desempeño {form.instance.__str__()} ha sido habilitado para que todo el personal realice su evaluación de desempeño. Por favor, ingresen a través del siguiente enlace: {self.request.headers.get("Referer")} para realizar su evaluación, haciendo uso de su número de ficha y clave de máquina.',
-                'kchirino@indesca.com',
                 correos,
-                fail_silently=False,
+                sender='kchirino@indesca.com',
             )
 
         return super().form_valid(form)

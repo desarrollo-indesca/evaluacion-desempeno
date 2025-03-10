@@ -6,7 +6,7 @@ from django.forms import modelformset_factory
 from django.shortcuts import render, redirect
 from django.db import transaction, models
 from django.contrib import messages
-from django.core.mail import send_mail
+from core.email import send_mail_async
 import datetime
 from .models import *
 from .forms import *
@@ -117,10 +117,9 @@ class FinalizarEvaluacion(EvaluadoMatchMixin, View):
                 body += 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a la Gerencia de Gestión Humana para su revisión final.\n\n'
                 to = [evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor and evaluacion.evaluado.supervisor.user.email else DatosPersonal.object.get(is_superuser=True).email, DatosPersonal.object.get(is_superuser=True).email]
 
-            send_mail(
+            send_mail_async(
                 'Actualización de Estatus - Evaluación de Desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
                 body,
-                'no-replay@indesca.com',
                 to,
             )
             
@@ -781,10 +780,9 @@ class EnviarEvaluacionGerente(ValidarSupervisorMixin, View):
                 body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido aprobada por la Gerencia General; siendo cerrada para el periodo activo.\n\n'
                 to = [evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
 
-            send_mail(
+            send_mail_async(
                 'Actualización de Estatus - Evaluación de Desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
                 body,
-                'no-replay@indesca.com',
                 to,
             )
             
@@ -833,10 +831,9 @@ class EnviarEvaluacionesGestionHumana(GerenteMixin, View):
 
             body += "Podrá revisarlas en el Panel de Control del Gerente de Gestión Humana, en la sección de revisión de evaluaciones.\n\n"
             
-            send_mail(
+            send_mail_async(
                 f"Envío de Evaluaciones a la Gerencia de Gestión Humana",
                 body,
-                'no-replay@indesca.com',
                 [request.user.datos_personal.get(activo=True).gerente.user.email],
             )
             
@@ -1058,17 +1055,15 @@ class CerrarEvaluacion(ValidarSuperusuario, View):
                     nuevo_logro.pk = None
                     nuevo_logro.save()
 
-                send_mail(
+                send_mail_async(
                     'Rechazada - Evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
-                    "La gerencia de gestión humana encontró irregularidades en la última evaluación enviada por lo cual se ha rechazado y ha sido remitida al supervisor. Para más detalles, reunirse con la gerencia de gestión humana.\n\n",
-                    'no-replay@indesca.com',
+                    "La gerencia de gestión humana encontró irregularidades en la última evaluación enviada por lo cual se ha rechazado y ha sido remitida al supervisor. Para más detalles, reunirse con el gerente de gestión humana.\n\n",
                     [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email],
                 )
             else:
-                send_mail(
+                send_mail_async(
                     'Aprobada - Evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
-                    "La gerencia de gestión humana ha revisado su evaluación y ha sido aprobada; cerrando definitivamente el proceso de evaluación para usted en el periodo evaluado.\n\n",
-                    'no-replay@indesca.com',
+                    "La gerencia de gestión humana ha revisado la evaluación y ha sido aprobada; cerrando definitivamente el proceso de evaluación para usted en el periodo evaluado.\n\n",
                     [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email],
                 )
 
