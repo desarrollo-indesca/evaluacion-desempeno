@@ -182,120 +182,120 @@ class FormularioInstrumentoEmpleado(ValidarMixin, PeriodoContextMixin, Escalafon
     def post(self, request, pk, evaluacion = None):
         instrumento = Instrumento.objects.get(pk=pk)
 
-        with transaction.atomic():
-                    if(not evaluacion):
-                        evaluacion = Evaluacion.objects.get(evaluado=request.user.datos_personal.get(activo=True), periodo=self.get_periodo(), fecha_fin__isnull=True)
-                    else:
-                        evaluacion = Evaluacion.objects.get(
-                            pk=evaluacion
-                        )
-                    
-                    resultado_instrumento = ResultadoInstrumento.objects.get_or_create(
-                        evaluacion=evaluacion, 
-                        instrumento=instrumento
-                    )[0]
+        try:
+            with transaction.atomic():
+                        if(not evaluacion):
+                            evaluacion = Evaluacion.objects.get(evaluado=request.user.datos_personal.get(activo=True), periodo=self.get_periodo(), fecha_fin__isnull=True)
+                        else:
+                            evaluacion = Evaluacion.objects.get(
+                                pk=evaluacion
+                            )
+                        
+                        resultado_instrumento = ResultadoInstrumento.objects.get_or_create(
+                            evaluacion=evaluacion, 
+                            instrumento=instrumento
+                        )[0]
 
-                    total_instrumento = 0 if instrumento.calculo != 'M' else 1e9
-                    max_instrumento = 0 if instrumento.calculo == 'S' else 1e9 if instrumento.calculo == 'M' else instrumento.secciones.count()     
-                    for seccion in instrumento.secciones.all():
-                        max_seccion = 0
-                        total = 0 if seccion.calculo != 'M' else 1e9
-                        for pregunta in seccion.preguntas.all():
-                            form = self.form_class(request.POST, 
-                                                                instance=pregunta.respuestas.get(evaluacion=evaluacion) if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None, 
-                                                                prefix=pregunta.pk)
-                            if form.is_valid():
-                                form.instance.evaluacion = evaluacion
-                                form.save()
+                        total_instrumento = 0 if instrumento.calculo != 'M' else 1e9
+                        max_instrumento = 0 if instrumento.calculo == 'S' else 1e9 if instrumento.calculo == 'M' else instrumento.secciones.count()     
+                        for seccion in instrumento.secciones.all():
+                            max_seccion = 0
+                            total = 0 if seccion.calculo != 'M' else 1e9
+                            for pregunta in seccion.preguntas.all():
+                                form = self.form_class(request.POST, 
+                                                                    instance=pregunta.respuestas.get(evaluacion=evaluacion) if pregunta.respuestas.filter(evaluacion=evaluacion).exists() else None, 
+                                                                    prefix=pregunta.pk)
+                                if form.is_valid():
+                                    form.instance.evaluacion = evaluacion
+                                    form.save()
 
-                                if(self.estado == 'E'):
-                                    campo = 'resultado_empleado'
-                                elif(self.estado == 'S'):
-                                    campo = 'resultado_supervisor'
-                                elif(self.estado == 'H'):
-                                    campo = 'resultado_final'
+                                    if(self.estado == 'E'):
+                                        campo = 'resultado_empleado'
+                                    elif(self.estado == 'S'):
+                                        campo = 'resultado_supervisor'
+                                    elif(self.estado == 'H'):
+                                        campo = 'resultado_final'
 
-                                respuesta = None
-                                if self.estado == 'E':
-                                    respuesta = form.instance.respuesta_empleado
-                                elif self.estado == 'S':
-                                    respuesta = form.instance.respuesta_supervisor
-                                elif self.estado == 'H':
-                                    respuesta = form.instance.respuesta_definitiva
+                                    respuesta = None
+                                    if self.estado == 'E':
+                                        respuesta = form.instance.respuesta_empleado
+                                    elif self.estado == 'S':
+                                        respuesta = form.instance.respuesta_supervisor
+                                    elif self.estado == 'H':
+                                        respuesta = form.instance.respuesta_definitiva
 
-                                if respuesta is not None:
-                                    if seccion.calculo == 'S' and respuesta >= 0:
-                                        max_seccion += form.instance.pregunta.peso
-                                        total += form.instance.pregunta.peso * respuesta / 2
-                                    elif seccion.calculo == 'P':
-                                        total += respuesta
-                                        max_seccion += 1
-                                    elif seccion.calculo == 'M' and respuesta != 0:
-                                        total = min(total, respuesta)
+                                    if respuesta is not None:
+                                        if seccion.calculo == 'S' and respuesta >= 0:
+                                            max_seccion += form.instance.pregunta.peso
+                                            total += form.instance.pregunta.peso * respuesta / 2
+                                        elif seccion.calculo == 'P':
+                                            total += respuesta
+                                            max_seccion += 1
+                                        elif seccion.calculo == 'M' and respuesta != 0:
+                                            total = min(total, respuesta)
+                                else:
+                                    raise Exception("No validó")
+                                
+                            total = round(total, 2)
 
-                            else:
-                                context = {} 
-                                context['instrumento'] = [{
-                                        'preguntas': [{
-                                            'form': self.form_class(request.POST, prefix=pregunta.pk, initial={
-                                                'pregunta': pregunta
-                                            }),
-                                            'pregunta': pregunta,
-                                        } for pregunta in seccion.preguntas.all()],
-                                        'seccion': seccion
-                                    } for seccion in instrumento.secciones.all()
-                                ]
-                                context['error'] = 'Verifique la información ingresada, ya que hay errores en el formulario.'
-                                context['evaluacion'] = evaluacion
-                                context['pk'] = instrumento.pk
-
-                                print(form.errors)
-
-                                return render(
-                                    request, self.template_name,
-                                    context
-                                )
-                            
-                        total = round(total, 2)
-
-                        if(seccion.calculo == 'S'):
-                            if(total > 0):
-                                total = total*seccion.peso/max_seccion
+                            if(seccion.calculo == 'S'):
+                                if(total > 0):
+                                    total = total*seccion.peso/max_seccion
+                                    total_instrumento += total
+                                    max_instrumento += seccion.peso
+                                else:
+                                    total = None
+                            elif(seccion.calculo == 'P'):
+                                total = total / max_seccion
                                 total_instrumento += total
-                                max_instrumento += seccion.peso
-                            else:
-                                total = None
-                        elif(seccion.calculo == 'P'):
-                            total = total / max_seccion
-                            total_instrumento += total
-                        elif(seccion.calculo == 'M'):
-                            total_instrumento += total
+                            elif(seccion.calculo == 'M'):
+                                total_instrumento += total
 
-                        ResultadoSeccion.objects.update_or_create(
-                            seccion=seccion, 
-                            resultado_instrumento=resultado_instrumento, 
-                            defaults={
-                                campo: total,
-                            }
-                        )
+                            ResultadoSeccion.objects.update_or_create(
+                                seccion=seccion, 
+                                resultado_instrumento=resultado_instrumento, 
+                                defaults={
+                                    campo: total,
+                                }
+                            )
 
-                    if(instrumento.calculo == 'S'):
-                        total_instrumento = total_instrumento*instrumento.peso/max_instrumento
-                    elif(instrumento.calculo == 'P'):
-                        total_instrumento = total_instrumento / max_instrumento
-                
-                    if(self.estado == 'E'):
-                        campo = 'resultado_empleado'
-                    elif(self.estado == 'S'):
-                        campo = 'resultado_supervisor'
-                    elif(self.estado == 'H'):
-                        campo = 'resultado_final'
+                        if(instrumento.calculo == 'S'):
+                            total_instrumento = total_instrumento*instrumento.peso/max_instrumento
+                        elif(instrumento.calculo == 'P'):
+                            total_instrumento = total_instrumento / max_instrumento
+                    
+                        if(self.estado == 'E'):
+                            campo = 'resultado_empleado'
+                        elif(self.estado == 'S'):
+                            campo = 'resultado_supervisor'
+                        elif(self.estado == 'H'):
+                            campo = 'resultado_final'
 
-                    setattr(resultado_instrumento, campo, total_instrumento)
-                    resultado_instrumento.save()
+                        setattr(resultado_instrumento, campo, total_instrumento)
+                        resultado_instrumento.save()
 
-                    if(instrumento.escalafon):
-                        self.calcular_escalafon(resultado_instrumento)
+                        if(instrumento.escalafon):
+                            self.calcular_escalafon(resultado_instrumento)
+        except:
+            context = {} 
+            context['instrumento'] = [{
+                    'preguntas': [{
+                        'form': self.form_class(request.POST, prefix=pregunta.pk, initial={
+                            'pregunta': pregunta
+                        }),
+                        'pregunta': pregunta,
+                    } for pregunta in seccion.preguntas.all()],
+                    'seccion': seccion
+                } for seccion in instrumento.secciones.all()
+            ]
+            context['error'] = 'Verifique la información ingresada, ya que hay errores en el formulario.'
+            context['evaluacion'] = evaluacion
+            context['pk'] = instrumento.pk
+
+            return render(
+                request, self.template_name,
+                context
+            )
 
         messages.success(request, self.success_message)
 
@@ -837,7 +837,7 @@ class RevisionGerencia(ValidarMixin, PeriodoContextMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['filter'] = self.filter_class()
+        context['filter'] = self.filter_class(prefix='gerencia')
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
         self.request.session['url_previo'] = f'evaluacion/gerencia/'
         context['puede_enviarse_gghh'] = self.request.user.is_staff and (Evaluacion.objects.filter(periodo=self.get_periodo(), estado='G', evaluado__gerencia=self.request.user.datos_personal.get(activo=True).gerencia).count())
@@ -847,7 +847,7 @@ class RevisionGerencia(ValidarMixin, PeriodoContextMixin, ListView):
 
     def get_queryset(self):
         qs = super().get_queryset().filter(gerencia=self.request.user.datos_personal.get(activo=True).gerencia, activo=True)
-        self.filter = self.filter_class(self.request.GET, queryset=qs)
+        self.filter = self.filter_class(self.request.GET, queryset=qs, prefix='gerencia')
         return self.filter.qs
 
 class EnviarEvaluacionesGestionHumana(GerenteMixin, View):

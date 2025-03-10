@@ -110,10 +110,10 @@
                 hx-target="closest tr"
                 hx-vals="js:{
                     page: {{page_obj.next_page_number}},
-                    ficha: document.querySelector('[name=ficha]').value || '',
-                    user__first_name: document.querySelector('[name=user__first_name]').value || '',
+                    'ficha': document.querySelector('[name={% if gerencia %}gerencia-{% endif %}ficha]').value || '',
+                    'user__first_name': document.querySelector('[name={% if gerencia %}gerencia-{% endif %}user__first_name]').value || '',
                     {% if periodo %}
-                    evaluacion_estado: document.querySelector('[name=evaluacion_estado]').value || '',
+                    evaluacion_estado: document.querySelector('[name={% if gerencia %}gerencia-{% endif %}evaluacion_estado]').value || '',
                     {% endif %}
                 }">
                 Cargando...
