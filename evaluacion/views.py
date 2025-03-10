@@ -111,11 +111,11 @@ class FinalizarEvaluacion(EvaluadoMatchMixin, View):
             if evaluacion.estado == 'S':
                 messages.success(request, 'La evaluación fue enviada a su supervisor.')
                 body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a usted para su revisión en reunión con el empleado; podrá encontrarla en la pestaña "Revisar" del sistema.\n\n'
-                to = [evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor and evaluacion.evaluado.supervisor.user.email else DatosPersonal.object.get(is_superuser=True).email]
+                to = [evaluacion.evaluado.supervisor.user.email]
             elif evaluacion.estado == 'H':
                 messages.success(request, 'La evaluación fue enviada a la Gerencia de Gestión Humana.')
                 body += 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a la Gerencia de Gestión Humana para su revisión final.\n\n'
-                to = [evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor and evaluacion.evaluado.supervisor.user.email else DatosPersonal.object.get(is_superuser=True).email, DatosPersonal.object.get(is_superuser=True).email]
+                to = [evaluacion.evaluado.supervisor.user.email, DatosPersonal.object.get(is_superuser=True).email]
 
             send_mail_async(
                 'Actualización de Estatus - Evaluación de Desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
@@ -774,11 +774,11 @@ class EnviarEvaluacionGerente(ValidarSupervisorMixin, View):
             if evaluacion.estado == 'G':
                 messages.success(request, f"Ha sido enviada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} a la Gerencia correspondiente.")
                 body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a usted para su revisión antes de ser enviada a la Gerencia de Gestión Humana; podrá encontrarla en la pestaña "GERENCIA" del sistema, y podrá enviarse mediante el botón "Enviar a Gestión Humana" de la misma pantalla.\n\n'
-                to = [evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
+                to = [evaluacion.evaluado.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
             elif evaluacion.estado == 'A':
                 messages.success(request, f"Ha sido aprobada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} por la Gerencia General.")
                 body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido aprobada por la Gerencia General; siendo cerrada para el periodo activo.\n\n'
-                to = [evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
+                to = [evaluacion.evaluado.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
 
             send_mail_async(
                 'Actualización de Estatus - Evaluación de Desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
