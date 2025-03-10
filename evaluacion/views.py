@@ -754,31 +754,58 @@ class EnviarEvaluacionGerente(ValidarSupervisorMixin, View):
     def post(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
 
-        if(evaluacion.estado == 'S' and (
-            evaluacion.resultados.filter(resultado_supervisor__isnull=False).count() == evaluacion.formulario.instrumentos.count() and
-            evaluacion.formaciones.filter(anadido_por = "S").count() and evaluacion.logros_y_metas.filter(anadido_por = "S").count()
-        )):
-            if evaluacion.evaluado.supervisor:
-                evaluacion.estado = 'G'
-            elif evaluacion.evaluado.supervisor and evaluacion.evaluado.supervisor.user.is_superuser:
-                evaluacion.estado = 'H'
-            else:
-                evaluacion.estado = 'A'
-                evaluacion.fecha_entrega = datetime.datetime.now()
-                evaluacion.fecha_fin = datetime.datetime.now()
+        with transaction.atomic():
+            if(evaluacion.estado == 'S' and (
+                evaluacion.resultados.filter(resultado_supervisor__isnull=False).count() == evaluacion.formulario.instrumentos.count() and
+                evaluacion.formaciones.filter(anadido_por = "S").count() and evaluacion.logros_y_metas.filter(anadido_por = "S").count()
+            )):
+                if evaluacion.evaluado.supervisor and not evaluacion.evaluado.user.is_superuser:
+                    evaluacion.estado = 'G'
+                elif evaluacion.evaluado.supervisor and evaluacion.evaluado.supervisor.user.is_superuser:
+                    evaluacion.estado = 'H'
+                elif evaluacion.evaluado.user.is_superuser:
+                    evaluacion.estado = 'A'
+                    evaluacion.fecha_entrega = datetime.datetime.now()
+                    evaluacion.fecha_fin = datetime.datetime.now()
 
-            evaluacion.fecha_revision = datetime.datetime.now()
-            evaluacion.comentario_supervisor = request.POST.get('comentarios')
-            evaluacion.save()
+                    #copiamos los resultados del supervisor como definitivos
+                    for resultado in evaluacion.resultados.all():
+                        resultado.resultado_final = resultado.resultado_supervisor
+                        resultado.save()
+                        for seccion in resultado.resultados_secciones.all():
+                            seccion.resultado_final = seccion.resultado_supervisor
+                            seccion.save()
 
-            if evaluacion.estado == 'G':
-                messages.success(request, f"Ha sido enviada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} a la Gerencia correspondiente.")
-                body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a usted para su revisión antes de ser enviada a la Gerencia de Gestión Humana; podrá encontrarla en la pestaña "GERENCIA" del sistema, y podrá enviarse mediante el botón "Enviar a Gestión Humana" de la misma pantalla.\n\n'
-                to = [evaluacion.evaluado.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
-            elif evaluacion.estado == 'A':
-                messages.success(request, f"Ha sido aprobada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} por la Gerencia General.")
-                body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido aprobada por la Gerencia General; siendo cerrada para el periodo activo.\n\n'
-                to = [evaluacion.evaluado.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
+                    for respuesta in evaluacion.respuestas.all():
+                        respuesta.respuesta_definitiva = respuesta.respuesta_supervisor
+                        respuesta.save()
+
+                    for formacion in evaluacion.formaciones.filter(anadido_por = 'S'):
+                        competencias = formacion.competencias.all()
+                        formacion.pk = None
+                        formacion.anadido_por = 'H'
+                        formacion.save()
+
+                        for competencia in competencias:
+                            formacion.competencias.add(competencia)
+
+                    for logro in evaluacion.logros_y_metas.filter(anadido_por = 'S'):
+                        logro.pk = None
+                        logro.anadido_por = 'H'
+                        logro.save()
+
+                evaluacion.fecha_revision = datetime.datetime.now()
+                evaluacion.comentario_supervisor = request.POST.get('comentarios')
+                evaluacion.save()
+
+                if evaluacion.estado == 'G':
+                    messages.success(request, f"Ha sido enviada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} a la Gerencia correspondiente.")
+                    body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a usted para su revisión antes de ser enviada a la Gerencia de Gestión Humana; podrá encontrarla en la pestaña "GERENCIA" del sistema, y podrá enviarse mediante el botón "Enviar a Gestión Humana" de la misma pantalla.\n\n'
+                    to = [evaluacion.evaluado.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
+                elif evaluacion.estado == 'A':
+                    messages.success(request, f"Ha sido aprobada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} por la Gerencia General.")
+                    body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido aprobada por la Gerencia General; siendo cerrada para el periodo activo.\n\n'
+                    to = [evaluacion.evaluado.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
 
             send_mail_async(
                 'Actualización de Estatus - Evaluación de Desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
