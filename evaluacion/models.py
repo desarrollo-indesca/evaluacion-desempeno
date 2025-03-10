@@ -203,6 +203,7 @@ class ResultadoEscalafon(models.Model):
 
     def __str__(self):
         return self.escalafon.nivel
-
-class FormularioPromocion(models.Model):
-    evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="formularios_promocion")
+    
+# Promocion del Personal
+class Aspecto(models.Model):
+    nombre = models.CharField("Nombre del Aspecto a Considerar", max_length=120)
