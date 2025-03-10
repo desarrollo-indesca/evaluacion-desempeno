@@ -138,8 +138,10 @@
                 {% else %}
                 {% if evaluacion.estado == 'A' %}
                 {{evaluacion.total_definitivo|floatformat:2}}
-                {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' %}
+                {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' and evaluacion.fecha_revision %}
                 {{evaluacion.total_supervisor|floatformat:2}}
+                {% elif evaluacion.estado == 'H' %}
+                {{evaluacion.total_definitivo|floatformat:2}}
                 {% else %}
                 {{evaluacion.total|floatformat:2}}
                 {% endif %}
