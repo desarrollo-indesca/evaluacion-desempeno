@@ -245,7 +245,14 @@ class GenerarReportesPeriodo(SuperuserMixin, View):
         elif(tipo == 'resumen'):
             return fill_resumen_periodo(periodo)
     
-class GenerarReporteFinal(SuperuserMixin, View):
+class GenerarReporteFinal(ValidarMixin, View):
+    def validar(self):
+        return (self.request.user.is_superuser 
+            or self.request.user.is_staff 
+            or self.request.user.id == evaluacion.evaluado.supervisor.user.pk 
+            or self.request.user.id == evaluacion.evaluado.user.pk
+        )
+
     def get(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
 

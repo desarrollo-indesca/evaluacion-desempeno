@@ -94,37 +94,38 @@ class FinalizarEvaluacion(EvaluadoMatchMixin, View):
     def post(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
 
-        if(evaluacion.estado == 'E' and (
-            evaluacion.resultados.count() == evaluacion.formulario.instrumentos.count() and
-            evaluacion.formaciones.count() and evaluacion.logros_y_metas.count()
-        )):
-            if evaluacion.evaluado.supervisor and not evaluacion.evaluado.supervisor.user.is_superuser:
-                evaluacion.estado = 'S'
-            else:
-                evaluacion.fecha_entrega = datetime.datetime.now()
-                evaluacion.estado = 'H'
+        with transaction.atomic():
+            if(evaluacion.estado == 'E' and (
+                evaluacion.resultados.count() == evaluacion.formulario.instrumentos.count() and
+                evaluacion.formaciones.count() and evaluacion.logros_y_metas.count()
+            )):
+                if evaluacion.evaluado.supervisor and not evaluacion.evaluado.supervisor.user.is_superuser:
+                    evaluacion.estado = 'S'
+                else:
+                    evaluacion.fecha_entrega = datetime.datetime.now()
+                    evaluacion.estado = 'H'
 
-            evaluacion.fecha_envio = datetime.datetime.now()
-            evaluacion.comentario_evaluado = request.POST.get('comentarios')
-            evaluacion.save()
-            
-            if evaluacion.estado == 'S':
-                messages.success(request, 'La evaluación fue enviada a su supervisor.')
-                body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a usted para su revisión en reunión con el empleado; podrá encontrarla en la pestaña "Revisar" del sistema.\n\n'
-                to = [evaluacion.evaluado.supervisor.user.email]
-            elif evaluacion.estado == 'H':
-                messages.success(request, 'La evaluación fue enviada a la Gerencia de Gestión Humana.')
-                body += 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a la Gerencia de Gestión Humana para su revisión final.\n\n'
-                to = [evaluacion.evaluado.supervisor.user.email, DatosPersonal.object.get(is_superuser=True).email]
+                evaluacion.fecha_envio = datetime.datetime.now()
+                evaluacion.comentario_evaluado = request.POST.get('comentarios')
+                evaluacion.save()
+                
+                if evaluacion.estado == 'S':
+                    messages.success(request, 'La evaluación fue enviada a su supervisor.')
+                    body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a usted para su revisión en reunión con el empleado; podrá encontrarla en la pestaña "Revisar" del sistema.\n\n'
+                    to = [evaluacion.evaluado.supervisor.user.email]
+                elif evaluacion.estado == 'H':
+                    messages.success(request, 'La evaluación fue enviada a la Gerencia de Gestión Humana.')
+                    body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a la Gerencia de Gestión Humana para su revisión final.\n\n'
+                    to = [evaluacion.evaluado.supervisor.user.email, DatosPersonal.object.get(is_superuser=True).email]
 
-            send_mail_async(
-                'Actualización de Estatus - Evaluación de Desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
-                body,
-                to,
-            )
+                send_mail_async(
+                    'Actualización de Estatus - Evaluación de Desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
+                    body,
+                    to,
+                )
+                
+                return redirect('dashboard')
             
-            return redirect('dashboard')
-        
         return HttpResponseForbidden("Una vez empezada la evaluación no puede modificar su estado.")
 
 class FormularioInstrumentoEmpleado(ValidarMixin, PeriodoContextMixin, EscalafonMixin, EvaluacionEstadoMixin, View):
@@ -794,6 +795,13 @@ class EnviarEvaluacionGerente(ValidarSupervisorMixin, View):
                         logro.anadido_por = 'H'
                         logro.save()
 
+                #copiamos el resultado escalafon del supervisor como definitivo
+                resultado_escalafon = evaluacion.escalafones.get(asignado_por='S')
+                nuevo_resultado_escalafon = resultado_escalafon
+                nuevo_resultado_escalafon.pk = None
+                nuevo_resultado_escalafon.asignado_por = 'H'
+                nuevo_resultado_escalafon.save()
+
                 evaluacion.fecha_revision = datetime.datetime.now()
                 evaluacion.comentario_supervisor = request.POST.get('comentarios')
                 evaluacion.save()
@@ -1085,13 +1093,13 @@ class CerrarEvaluacion(ValidarSuperusuario, View):
                 send_mail_async(
                     'Rechazada - Evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
                     "La gerencia de gestión humana encontró irregularidades en la última evaluación enviada por lo cual se ha rechazado y ha sido remitida al supervisor. Para más detalles, reunirse con el gerente de gestión humana.\n\n",
-                    [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email],
+                    [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor else None, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email],
                 )
             else:
                 send_mail_async(
                     'Aprobada - Evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
                     "La gerencia de gestión humana ha revisado la evaluación y ha sido aprobada; cerrando definitivamente el proceso de evaluación para usted en el periodo evaluado.\n\n",
-                    [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email],
+                    [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor else None, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email],
                 )
 
         messages.success(request, 'Evaluación cerrada correctamente.')

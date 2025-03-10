@@ -203,7 +203,7 @@
                         {% elif tipo == 'H' %}
                         &nbsp;Yo, {{request.user.get_full_name.upper}}, he revisado la autoevaluación y revisión de su respectivo supervisor de la evaluación de desempeño de {{evaluacion.evaluado.user.get_full_name.upper}}, y en mi caracter de GERENTE DE GESTIÓN HUMANA, decido que esta sea:
                         {% else %}
-                        {% if evaluacion.supervisor %}
+                        {% if evaluacion.evaluado.supervisor %}
                         &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y estoy de acuerdo en que sea enviada a mi supervisor. 
                         {% else %}
                         &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y autorizo que sea directamente enviada a la gerencia de gestión humana para su consideración. 
@@ -248,7 +248,7 @@
 
         {% if evaluacion.estado == 'A' and tipo == "H" or evaluacion.estado == 'A' and not tipo %}
         <div class="d-flex justify-center mt-3">
-            <a class="btn btn-danger" href="{% url 'reporte_final_evaluacion' pk=evaluacion.pk %}">
+            <a class="btn btn-danger" target="_blank" href="{% url 'reporte_final_evaluacion' pk=evaluacion.pk %}">
                 Descargar Reporte XLSX
             </a>
         </div>
