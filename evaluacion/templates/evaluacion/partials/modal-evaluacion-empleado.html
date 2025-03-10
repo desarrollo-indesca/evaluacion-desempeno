@@ -126,7 +126,7 @@
         </div>
 
         {% if evaluacion.total %}
-        {% if evaluacion.estado != 'P' and evaluacion.estado != 'R' %}
+        {% if evaluacion.estado != 'P' %}
         <div class="stats shadow">
             <div class="stat bg-gray-900 text-white">
               <div class="stat-title text-white">Resultado de la Evaluación</div>
@@ -136,7 +136,7 @@
                 {% elif tipo == "S" %}
                 {{evaluacion.total_supervisor|floatformat:2}}
                 {% else %}
-                {% if evaluacion.estado == 'A' %}
+                {% if evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
                 {{evaluacion.total_definitivo|floatformat:2}}
                 {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' and evaluacion.fecha_revision %}
                 {{evaluacion.total_supervisor|floatformat:2}}
@@ -252,6 +252,8 @@
                 Descargar Reporte XLSX
             </a>
         </div>
+        {% elif evaluacion.estado == 'R' %}
+        <h2 class="text-xl">Esta evaluación fue rechazada por la Gerencia de Gestión Humana.</h2>
         {% endif %}
     </div>
     <label class="modal-backdrop" for="modal-{{id}}{% if gerencia %}-gerencia{% endif %}{% if extra_suffix != None %}-{{extra_suffix}}{% endif %}">Close</label>

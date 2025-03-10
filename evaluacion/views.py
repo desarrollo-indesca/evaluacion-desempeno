@@ -116,7 +116,7 @@ class FinalizarEvaluacion(EvaluadoMatchMixin, View):
                 elif evaluacion.estado == 'H':
                     messages.success(request, 'La evaluación fue enviada a la Gerencia de Gestión Humana.')
                     body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a la Gerencia de Gestión Humana para su revisión final.\n\n'
-                    to = [evaluacion.evaluado.supervisor.user.email, DatosPersonal.object.get(is_superuser=True).email]
+                    to = [evaluacion.evaluado.supervisor.user.email, DatosPersonal.objects.get(user__is_superuser=True).user.email]
 
                 send_mail_async(
                     'Actualización de Estatus - Evaluación de Desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
@@ -869,7 +869,7 @@ class EnviarEvaluacionesGestionHumana(GerenteMixin, View):
             send_mail_async(
                 f"Envío de Evaluaciones a la Gerencia de Gestión Humana",
                 body,
-                [request.user.datos_personal.get(activo=True).gerente.user.email],
+                [DatosPersonal.objects.get(user__is_superuser=True).user.email],
             )
             
             return redirect('consultar_gerencia')

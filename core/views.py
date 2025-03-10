@@ -247,6 +247,8 @@ class GenerarReportesPeriodo(SuperuserMixin, View):
     
 class GenerarReporteFinal(ValidarMixin, View):
     def validar(self):
+        evaluacion = Evaluacion.objects.get(pk=self.kwargs.get('pk'))
+
         return (self.request.user.is_superuser 
             or self.request.user.is_staff 
             or self.request.user.id == evaluacion.evaluado.supervisor.user.pk 
