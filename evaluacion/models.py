@@ -27,9 +27,9 @@ PERIODO_METAS = (
 )
 
 PRIORIDADES = (
-    ("1","1"),
-    ("2","2"),
-    ("3","3"),
+    (1, "1 - Asociado a Competencias Técnicas"),
+    (2, "2 - Asociado a Competencias Genéricas"),
+    (3, "3 - Otras"),
 )
 
 NIVELES_PRIORIDAD = (
@@ -205,5 +205,30 @@ class ResultadoEscalafon(models.Model):
         return self.escalafon.nivel
     
 # Promocion del Personal
-class Aspecto(models.Model):
+class AspectoPromocion(models.Model):
     nombre = models.CharField("Nombre del Aspecto a Considerar", max_length=120)
+
+class FormularioPromocion(models.Model):
+    nivel = models.ForeignKey(NivelEscalafon, on_delete=models.CASCADE, related_name="formularios_promocion")
+    activo = models.BooleanField(default=True)
+
+class DetalleAspectoPromocion(models.Model):
+    aspecto = models.ForeignKey(AspectoPromocion, on_delete=models.CASCADE, related_name="detalle_aspectos")
+    formulario_promocion = models.ForeignKey(FormularioPromocion, on_delete=models.CASCADE, null=True, blank=True, related_name="detalle_aspectos")
+    pregunta_asociada = models.ForeignKey(Pregunta, on_delete=models.CASCADE, null=True, blank=True, related_name="detalle_aspectos")
+    valor_asociado = models.SmallIntegerField()
+    descripcion = models.CharField(max_length=200, null=True, blank=True)
+    opcion_asociada = models.ForeignKey(Opciones, on_delete=models.CASCADE, related_name="detalle_aspectos", null=True, blank=True)
+
+class SolicitudPromocion(models.Model):
+    evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="solicitudes_promocion")
+    aprobado = models.BooleanField(null=True, blank=True)
+    fecha_envio = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    fecha_aprobacion = models.DateTimeField(null=True, blank=True)
+
+class RespuestaSolicitudPromocion(models.Model):
+    solicitud_promocion = models.ForeignKey(SolicitudPromocion, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")
+    respuesta_asociada = models.ForeignKey(Respuesta, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")
+    cumple = models.BooleanField(null=True, blank=True)
+    justificacion = models.TextField(null=True, blank=True)
+    detalle_aspecto = models.ForeignKey(DetalleAspectoPromocion, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")
