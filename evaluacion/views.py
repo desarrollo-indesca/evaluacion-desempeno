@@ -1105,6 +1105,43 @@ class CerrarEvaluacion(ValidarSuperusuario, View):
         messages.success(request, 'Evaluación cerrada correctamente.')
         return redirect('revision_general')
 
+# PROMOCIONES
+class FormularioPromocion(ValidarMixin, View):    
+    def validar(self):
+        evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+        return not evaluacion.promociones.count() and evaluacion.evaluado.supervisor == self.request.user
+
+    def get(self, request, pk, *args, **kwargs):
+        evaluacion = Evaluacion.objects.get(pk=pk)
+        if (datetime.date.today() - evaluacion.fecha_aprobacion).days > 30:
+            messages.error(request, 'No se pueden realizar promociones para evaluaciones aprobadas hace más de 30 días.')
+            return redirect('revision_general')
+        else:
+            return render(request, 'evaluacion/formulario_promocion.html', context=self.get_context_data())
+        
+    def get_context_data(self):
+        evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+        nivel_competencias = evaluacion.escalafones.get(tipo='H').nivel
+        nivel_previo = evaluacion.evaluado.escalafon
+        nivel_deseado = self.request.GET.get('nivel', nivel_competencias)
+
+        formularios = {}
+        detalles = DetalleAspectoPromocion.objects.filter(aspecto__formulariopromocion__nivel=nivel_deseado)
+        for detalle in detalles:
+            formularios[detalle] = RespuestaSolicitudPromocionSupervisorForm(initial={
+                'detalle_aspecto': detalle
+            }, prefix=detalle.pk)
+
+        context = {
+            'evaluacion': evaluacion,
+            'nivel_competencias': nivel_competencias,
+            'nivel_previo': nivel_previo,
+            'nivel_deseado': nivel_deseado,
+            'formularios': formularios
+        }
+
+        return context
+
 # OTROS
 class GenerarModal(LoginRequiredMixin, View):
     def get_context_data(self, **kwargs):

@@ -232,3 +232,4 @@ class RespuestaSolicitudPromocion(models.Model):
     cumple = models.BooleanField(null=True, blank=True)
     justificacion = models.TextField(null=True, blank=True)
     detalle_aspecto = models.ForeignKey(DetalleAspectoPromocion, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")
+    comentario_gghh = models.TextField(null=True, blank=True)
