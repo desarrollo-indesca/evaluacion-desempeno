@@ -5,6 +5,7 @@ from django.http import HttpResponseForbidden, HttpResponse
 from django.forms import modelformset_factory
 from django.shortcuts import render, redirect
 from django.db import transaction, models
+from django.db.models import Q, Exists, OuterRef
 from django.contrib import messages
 from core.email import send_mail_async
 import datetime
@@ -1106,7 +1107,7 @@ class CerrarEvaluacion(ValidarSuperusuario, View):
         return redirect('revision_general')
 
 # PROMOCIONES
-class FormularioPromocion(ValidarMixin, View):    
+class FormularioPostulacionPromocion(ValidarMixin, View):    
     def validar(self):
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
         print(not evaluacion.solicitudes_promocion.count(), evaluacion.evaluado.supervisor.user.pk == self.request.user.pk)
@@ -1122,9 +1123,15 @@ class FormularioPromocion(ValidarMixin, View):
         
     def get_context_data(self):
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+        niveles = NivelEscalafon.objects.filter(
+            pk__gt = evaluacion.evaluado.escalafon.pk, 
+            escalafon__tipo_personal=evaluacion.evaluado.tipo_personal
+        ).exclude(
+            ~Exists(FormularioPromocion.objects.filter(nivel=OuterRef('pk')))
+        )
         nivel_competencias = evaluacion.escalafones.get(asignado_por='H').escalafon
         nivel_previo = evaluacion.evaluado.escalafon
-        nivel_deseado = self.request.GET.get('nivel', nivel_competencias)
+        nivel_deseado = self.request.GET.get('nivel', [nivel_competencias] + list(niveles)[0] if nivel_competencias in niveles else list(niveles)[0])
 
         formularios = {}
         detalles = DetalleAspectoPromocion.objects.filter(
@@ -1132,17 +1139,18 @@ class FormularioPromocion(ValidarMixin, View):
         )
         for detalle in detalles:
             respuesta_eval = Respuesta.objects.get(evaluacion=evaluacion, pregunta=detalle.pregunta_asociada).respuesta_definitiva if Respuesta.objects.filter(evaluacion=evaluacion, pregunta=detalle.pregunta_asociada).exists() else None
+            respuesta_eval = detalle.pregunta_asociada.opciones.get(valor=respuesta_eval) if respuesta_eval else None
             formularios[detalle] = {
                 'formulario': RespuestaSolicitudPromocionSupervisorForm(initial={
                     'detalle_aspecto': detalle,
-                    'cumple': respuesta_eval >= detalle.opcion_asociada.valor if detalle.opcion_asociada else None
+                    'cumple': respuesta_eval.valor >= detalle.opcion_asociada.valor if detalle.opcion_asociada else None
                 }, prefix=detalle.pk),
                 'respuesta_eval': respuesta_eval
             }
 
         context = {
             'evaluacion': evaluacion,
-            'niveles': NivelEscalafon.objects.filter(pk__gt = evaluacion.evaluado.escalafon.pk, escalafon__tipo_personal=evaluacion.evaluado.tipo_personal),
+            'niveles': niveles,
             'nivel_competencias': nivel_competencias,
             'nivel_previo': nivel_previo,
             'nivel_deseado': nivel_deseado,
@@ -1150,6 +1158,28 @@ class FormularioPromocion(ValidarMixin, View):
         }
 
         return context
+
+    def post(self, request, pk, *args, **kwargs):
+        with transaction.atomic():
+            nivel = request.POST.get('nivel')
+            forms_promocion = [RespuestaSolicitudPromocionSupervisorForm(request.POST, prefix=detalle.pk) for detalle in DetalleAspectoPromocion.objects.filter(formulario_promocion__nivel=nivel)]
+            evaluacion = Evaluacion.objects.get(pk=kwargs['pk'])
+            
+            if all(form.is_valid() for form in forms_promocion):
+                for form in forms_promocion:
+                    respuesta = form.save(commit=False)
+                    respuesta.evaluacion = evaluacion
+                    respuesta.save()
+                return redirect('success_url')  # replace with actual success URL
+            else:
+                for form in forms:
+                    if not form.cleaned_data.get('justificacion'):
+                        form.add_error('justificacion', 'La justificación es obligatoria.')
+
+                context = self.get_context_data()
+                context.update({'formularios': {detalle: {'formulario': form} for detalle, form in zip(DetalleAspectoPromocion.objects.filter(formulario_promocion__nivel=nivel), forms)}})
+                return render(request, 'template_name.html', context)  # replace with actual template name
+
 
 # OTROS
 class GenerarModal(LoginRequiredMixin, View):

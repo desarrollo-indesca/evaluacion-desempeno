@@ -1,13 +1,15 @@
+{% load widget_tweaks %}
 <div class="flex justify-between items-center p-3">
     <div class="w-1/4">
         <a href="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
     </div>
     <div class="w-1/2 text-center">
         <h1 class="text-2xl">Postulación de Promoción para {{evaluacion.evaluado.user.first_name}}</h1>
-        <p class="text-center text-sm text-gray-600">Según Competencias Técnicas: {{nivel_competencias}} | Nivel Actual: {{nivel_previo}}</p>
+        <p class="text-center text-sm text-gray-600">Según Competencias Técnicas: <b>{{nivel_competencias}}</b> | Nivel Actual: <b>{{nivel_previo}}</b></p>
     </div>
     <div class="w-1/4">
-        <select name="nivel" class="select select-bordered w-full">
+        <label for="nivel">Promocionar a:</label>
+        <select name="nivel" class="select select-bordered w-full" hx-select="#form" hx-get="{% url 'postular_promocion' pk=evaluacion.pk %}" hx-target="#form" hx-swap="outerHTML">
             {% for nivel in niveles %}
             <option value="{{nivel.id}}" {% if nivel.id == nivel_competencias.id %}selected{% endif %}>{{nivel}}</option>
             {% endfor %}
@@ -15,11 +17,11 @@
     </div>
 </div>
 
-<form method="post">
+<form hx-post="{% url 'postular_promocion' pk=evaluacion.pk %}" hx-target="#form" hx-swap="outerHTML" hx-vals="js:{nivel: document.getElementById('version').value}">
     {% csrf_token %}
-    <table class="table table-zebra w-full">
+    <table class="table table-zebra w-full text-xs text-center">
         <thead>
-            <tr>
+            <tr class="bg-gray-900 text-white sticky top-0">
                 <th>Aspecto a Considerar</th>
                 <th>Valor Requerido</th>
                 <th>Valor Empleado</th>
@@ -28,22 +30,42 @@
                 <th>Observaciones</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="form">
             {% for aspecto, valor in formularios.items %}
-            <tr>
+            <tr class="border-b-2">
                 <td>{{aspecto.aspecto.nombre}}</td>
-                <td>{{aspecto.opcion_asociada|default:aspecto.valor_asociado|default:'Leer Descripción'}}</td>
-                <td>{{valor.respuesta_eval|default:'N/A'}}</td>
+                <td>
+                    {% if aspecto.pregunta_asociada %}
+                        <span class="tooltip tooltip-bottom" data-tip="{{aspecto.opcion_asociada.opcion}}">
+                            <span class="tooltip" data-tip="{{aspecto.pregunta_asociada.pregunta}}">
+                                {{aspecto.opcion_asociada.valor|default:aspecto.valor_asociado|default:'Leer Descripción'}}
+                            </span>
+                        </span>
+                    {% else %}
+                        {{aspecto.opcion_asociada.valor|default:aspecto.valor_asociado|default:'Leer Descripción'}}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if valor.respuesta_eval %}
+                        <span class="tooltip tooltip-bottom" data-tip="{{valor.respuesta_eval.opcion}}">
+                            <span class="tooltip" data-tip="{{aspecto.pregunta_asociada.pregunta}}">
+                                {{valor.respuesta_eval.valor|default:'N/A'}}
+                            </span>
+                        </span>
+                    {% else %}
+                        <span class="tooltip tooltip-bottom" data-tip="No hay pregunta asociada a este aspecto">N/A</span>
+                    {% endif %}
+                </td>
                 <td>{{aspecto.descripcion}}</td>
-                <td>{{valor.formulario.cumple}}</td>
-                <td>{{valor.formulario.justificacion}}</td>
+                <td>{% render_field valor.formulario.cumple class="select select-bordered w-full" %}</td>
+                <td>{% render_field valor.formulario.justificacion class="input input-bordered w-full" required="" %}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     <div class="flex justify-center items-center w-full">
         <div>
-            <input type="submit" value="Guardar" class="btn btn-primary">
+            <input type="submit" value="Guardar" class="btn btn-error">
         </div>
     </div>
 </form>

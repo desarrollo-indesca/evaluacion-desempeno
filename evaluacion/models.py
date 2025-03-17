@@ -230,6 +230,6 @@ class RespuestaSolicitudPromocion(models.Model):
     solicitud_promocion = models.ForeignKey(SolicitudPromocion, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")
     respuesta_asociada = models.ForeignKey(Respuesta, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")
     cumple = models.BooleanField(null=True, blank=True)
-    justificacion = models.TextField(null=True, blank=True)
+    justificacion = models.TextField()
     detalle_aspecto = models.ForeignKey(DetalleAspectoPromocion, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")
     comentario_gghh = models.TextField(null=True, blank=True)
