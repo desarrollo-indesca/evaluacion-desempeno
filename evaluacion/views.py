@@ -1176,6 +1176,20 @@ class FormularioPostulacionPromocion(ValidarMixin, View):
                         respuesta = form.save(commit=False)
                         respuesta.solicitud_promocion = solicitud_promocion
                         respuesta.save()
+
+                    messages.success(request, 'Solicitud de promoción enviada correctamente a Gestión humana.')
+                    
+                    send_mail_async(
+                        f'Solicitud de promoción para {evaluacion.evaluado.user.get_full_name().upper()}',
+                        f"Se solicita considerar la promoción para el empleado {evaluacion.evaluado.user.get_full_name().upper()}; el formulario correspondiente ha sido enviado con sus justificaciones y consideraciones correspondientes.",
+                        [
+                            DatosPersonal.objects.get(user__is_superuser=True).user.email,
+                            evaluacion.evaluado.supervisor.user.email,
+                            DatosPersonal.objects.get(user__is_staff=True, gerencia=evaluacion.evaluado.gerencia).user.email
+                        ],
+                        sender=request.user.email if request.user.email else 'no-replay@indesca.com'
+                    )
+
                     return redirect('consultar_supervisados')
                 else:
                     raise Exception("Error en el formulario")
@@ -1211,3 +1225,19 @@ class GenerarModal(LoginRequiredMixin, View):
             template_name='evaluacion/partials/modal-evaluacion-empleado.html',
             context=self.get_context_data()
         )
+    
+class GenerarModalPromocion(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        return render(
+            request=request, 
+            template_name='evaluacion/partials/modal-promocion.html',
+            context=self.get_context_data()
+        )
+    
+    def get_context_data(self, **kwargs):
+        evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
+        return {
+            'evaluacion': evaluacion,
+            'id': self.kwargs['pk'],
+            'solicitud': SolicitudPromocion.objects.get(evaluacion=evaluacion)
+        }

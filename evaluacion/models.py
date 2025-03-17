@@ -207,6 +207,7 @@ class ResultadoEscalafon(models.Model):
 # Promocion del Personal
 class AspectoPromocion(models.Model):
     nombre = models.CharField("Nombre del Aspecto a Considerar", max_length=120)
+    antiguedad = models.BooleanField(default=False)
 
 class FormularioPromocion(models.Model):
     nivel = models.ForeignKey(NivelEscalafon, on_delete=models.CASCADE, related_name="formularios_promocion")
@@ -225,6 +226,10 @@ class SolicitudPromocion(models.Model):
     aprobado = models.BooleanField(null=True, blank=True)
     fecha_envio = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     fecha_aprobacion = models.DateTimeField(null=True, blank=True)
+    comentario_general_gghh = models.TextField(null=True, blank=True)
+
+    def estado(self):
+        return "PROMOCIÓN CONCEDIDA" if self.aprobado else "PROMOCIÓN PENDIENTE" if self.aprobado is None else "PROMOCIÓN RECHAZADA"
 
 class RespuestaSolicitudPromocion(models.Model):
     solicitud_promocion = models.ForeignKey(SolicitudPromocion, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")
@@ -232,3 +237,8 @@ class RespuestaSolicitudPromocion(models.Model):
     justificacion = models.TextField()
     detalle_aspecto = models.ForeignKey(DetalleAspectoPromocion, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")
     comentario_gghh = models.TextField(null=True, blank=True)
+    enviada_por = models.CharField(max_length=1, choices=ROLES, default="S")
+
+    def valor_evaluado(self):
+        res = Respuesta.objects.get(evaluacion=self.solicitud_promocion.evaluacion, pregunta=self.detalle_aspecto.pregunta_asociada).respuesta_definitiva
+        return res

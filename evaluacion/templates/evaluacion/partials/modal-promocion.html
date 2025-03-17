@@ -1,0 +1,70 @@
+<input type="checkbox" id="modalpromocion-{{id}}{% if gerencia %}-gerencia{% endif %}{% if extra_suffix != None %}-{{extra_suffix}}{% endif %}" class="modal-toggle" />
+<div class="modal" role="dialog">
+    <div class="modal-box w-11/12 max-w-5xl">
+        <div class="flex justify-center items-center">
+            <h3 class="text-lg font-bold">Solicitud de Promoción</h3>
+        </div>
+
+        <table class="table-xs table-zebra w-full p-5 my-5">
+            <tbody>
+                <tr>
+                    <th>Evaluado</th>
+                    <td class="text-center">{{solicitud.evaluacion.evaluado.user.get_full_name}}</td>
+                </tr>
+                <tr>
+                    <th>Supervisor Solicitante</th>
+                    <td class="text-center">{{solicitud.evaluacion.evaluado.supervisor.user.get_full_name|default:'No tiene'}}</td>
+                </tr>
+                <tr>
+                    <th>Periodo</th>
+                    <td class="text-center">{{solicitud.evaluacion.periodo.fecha_inicio}} - {{solicitud.evaluacion.periodo.fecha_fin}}</td>
+                </tr>
+                <tr>
+                    <th>Fecha de Envío</th>
+                    <td class="text-center">{{solicitud.fecha_envio|default:'-'}}</td>
+                </tr>
+                <tr>
+                    <th>Fecha Decisión</th>
+                    <td class="text-center">{{solicitud.fecha_aprobacion|default:'-'}}</td>
+                </tr>
+                <tr>
+                    <th>Resultado</th>
+                    <td class="text-center">
+                        {% if solicitud.estado != "PROMOCIÓN PENDIENTE" %}
+                            {{solicitud.estado}}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="my-5">
+            <h2 class="text-center my-5">Contenido de la Solicitud (Supervisor)</h2>
+            <table class="table-xs table-zebra w-full p-5 my-5">
+                <thead>
+                    <tr class="bg-gray-900 text-white">
+                        <th>Aspecto</th>
+                        <th>Valor requerido</th>
+                        <th>Valor evaluado</th>
+                        <th>Cumple</th>
+                        <th>Observaciones/Justificación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for respuesta in solicitud.respuestas_solicitud_promocion.all %}
+                    <tr>
+                        <td>{{respuesta.detalle_aspecto.aspecto.nombre}}</td>
+                        <td>{{respuesta.detalle_aspecto.opcion_asociada.valor|default:respuesta.detalle_aspecto.valor_asociado|default:'Leer Descripción'}}</td>
+                        <td>{{respuesta.valor_evaluado|default:'N/A'}}</td>
+                        <td>{% if respuesta.cumple %}Si{% else %}No{% endif %}</td>
+                        <td>{{respuesta.observaciones}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <label class="modal-backdrop" for="modalpromocion-{{id}}{% if gerencia %}-gerencia{% endif %}{% if extra_suffix != None %}-{{extra_suffix}}{% endif %}">Close</label>
+</div>
