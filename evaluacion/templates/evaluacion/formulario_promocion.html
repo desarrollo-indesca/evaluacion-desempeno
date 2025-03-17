@@ -9,7 +9,7 @@
     </div>
     <div class="w-1/4">
         <label for="nivel">Promocionar a:</label>
-        <select name="nivel" class="select select-bordered w-full" hx-select="#form" hx-get="{% url 'postular_promocion' pk=evaluacion.pk %}" hx-target="#form" hx-swap="outerHTML">
+        <select id="nivel" name="nivel" class="select select-bordered w-full" hx-select="#form" hx-get="{% url 'postular_promocion' pk=evaluacion.pk %}" hx-target="#form" hx-swap="outerHTML">
             {% for nivel in niveles %}
             <option value="{{nivel.id}}" {% if nivel.id == nivel_competencias.id %}selected{% endif %}>{{nivel}}</option>
             {% endfor %}
@@ -17,7 +17,7 @@
     </div>
 </div>
 
-<form hx-post="{% url 'postular_promocion' pk=evaluacion.pk %}" hx-target="#form" hx-swap="outerHTML" hx-vals="js:{nivel: document.getElementById('version').value}">
+<form hx-post="{% url 'postular_promocion' pk=evaluacion.pk %}" hx-target="#form" hx-swap="outerHTML" hx-vals="js:{nivel: document.getElementById('nivel').value}">
     {% csrf_token %}
     <table class="table table-zebra w-full text-xs text-center">
         <thead>
@@ -27,13 +27,16 @@
                 <th>Valor Empleado</th>
                 <th>Descripción del Requerimiento</th>
                 <th>Cumple</th>
-                <th>Observaciones</th>
+                <th>Observaciones/Justificaciones</th>
             </tr>
         </thead>
         <tbody id="form">
             {% for aspecto, valor in formularios.items %}
             <tr class="border-b-2">
-                <td>{{aspecto.aspecto.nombre}}</td>
+                <td>
+                    {{aspecto.aspecto.nombre}}
+                    {% render_field valor.formulario.detalle_aspecto class="hidden" %}
+                </td>
                 <td>
                     {% if aspecto.pregunta_asociada %}
                         <span class="tooltip tooltip-bottom" data-tip="{{aspecto.opcion_asociada.opcion}}">
@@ -65,7 +68,9 @@
     </table>
     <div class="flex justify-center items-center w-full">
         <div>
-            <input type="submit" value="Guardar" class="btn btn-error">
+            <button type="submit" value="Guardar" class="btn btn-error">
+                Guardar
+            </button>
         </div>
     </div>
 </form>

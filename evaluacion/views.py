@@ -1160,26 +1160,35 @@ class FormularioPostulacionPromocion(ValidarMixin, View):
         return context
 
     def post(self, request, pk, *args, **kwargs):
-        with transaction.atomic():
-            nivel = request.POST.get('nivel')
-            forms_promocion = [RespuestaSolicitudPromocionSupervisorForm(request.POST, prefix=detalle.pk) for detalle in DetalleAspectoPromocion.objects.filter(formulario_promocion__nivel=nivel)]
-            evaluacion = Evaluacion.objects.get(pk=kwargs['pk'])
-            
-            if all(form.is_valid() for form in forms_promocion):
-                for form in forms_promocion:
-                    respuesta = form.save(commit=False)
-                    respuesta.evaluacion = evaluacion
-                    respuesta.save()
-                return redirect('success_url')  # replace with actual success URL
-            else:
-                for form in forms:
-                    if not form.cleaned_data.get('justificacion'):
-                        form.add_error('justificacion', 'La justificación es obligatoria.')
+        try:
+            with transaction.atomic():
+                nivel = request.POST.get('nivel')
+                forms_promocion = [RespuestaSolicitudPromocionSupervisorForm(request.POST, prefix=detalle.pk) for detalle in DetalleAspectoPromocion.objects.filter(formulario_promocion__nivel=nivel)]
+                evaluacion = Evaluacion.objects.get(pk=pk)
 
-                context = self.get_context_data()
-                context.update({'formularios': {detalle: {'formulario': form} for detalle, form in zip(DetalleAspectoPromocion.objects.filter(formulario_promocion__nivel=nivel), forms)}})
-                return render(request, 'template_name.html', context)  # replace with actual template name
+                solicitud_promocion = SolicitudPromocion.objects.create(
+                    evaluacion = evaluacion,
+                    fecha_envio = datetime.datetime.now()
+                )
+                
+                if all(form.is_valid() for form in forms_promocion):
+                    for form in forms_promocion:
+                        respuesta = form.save(commit=False)
+                        respuesta.solicitud_promocion = solicitud_promocion
+                        respuesta.save()
+                    return redirect('consultar_supervisados')
+                else:
+                    raise Exception("Error en el formulario")
+        except Exception as e:
+            print(str(e))
+            print(forms_promocion)
+            for form in forms_promocion:
+                if form.is_valid() and not form.cleaned_data.get('justificacion'):
+                    form.add_error('justificacion', 'La justificación es obligatoria.')
 
+            context = self.get_context_data()
+            context.update({'formularios': {detalle: {'formulario': form} for detalle, form in zip(DetalleAspectoPromocion.objects.filter(formulario_promocion__nivel=nivel), forms_promocion)}})
+            return render(request, 'evaluacion/formulario_promocion.html', context)
 
 # OTROS
 class GenerarModal(LoginRequiredMixin, View):
