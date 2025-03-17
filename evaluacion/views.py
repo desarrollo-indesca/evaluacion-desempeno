@@ -1109,11 +1109,12 @@ class CerrarEvaluacion(ValidarSuperusuario, View):
 class FormularioPromocion(ValidarMixin, View):    
     def validar(self):
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
-        return not evaluacion.promociones.count() and evaluacion.evaluado.supervisor == self.request.user
+        print(not evaluacion.solicitudes_promocion.count(), evaluacion.evaluado.supervisor.user.pk == self.request.user.pk)
+        return not evaluacion.solicitudes_promocion.count() and evaluacion.evaluado.supervisor.user.pk == self.request.user.pk
 
     def get(self, request, pk, *args, **kwargs):
         evaluacion = Evaluacion.objects.get(pk=pk)
-        if (datetime.date.today() - evaluacion.fecha_aprobacion).days > 30:
+        if evaluacion.fecha_fin and (datetime.datetime.now() - evaluacion.fecha_fin).days > 30:
             messages.error(request, 'No se pueden realizar promociones para evaluaciones aprobadas hace más de 30 días.')
             return redirect('revision_general')
         else:
@@ -1121,19 +1122,27 @@ class FormularioPromocion(ValidarMixin, View):
         
     def get_context_data(self):
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
-        nivel_competencias = evaluacion.escalafones.get(tipo='H').nivel
+        nivel_competencias = evaluacion.escalafones.get(asignado_por='H').escalafon
         nivel_previo = evaluacion.evaluado.escalafon
         nivel_deseado = self.request.GET.get('nivel', nivel_competencias)
 
         formularios = {}
-        detalles = DetalleAspectoPromocion.objects.filter(aspecto__formulariopromocion__nivel=nivel_deseado)
+        detalles = DetalleAspectoPromocion.objects.filter(
+            formulario_promocion__nivel=nivel_deseado
+        )
         for detalle in detalles:
-            formularios[detalle] = RespuestaSolicitudPromocionSupervisorForm(initial={
-                'detalle_aspecto': detalle
-            }, prefix=detalle.pk)
+            respuesta_eval = Respuesta.objects.get(evaluacion=evaluacion, pregunta=detalle.pregunta_asociada).respuesta_definitiva if Respuesta.objects.filter(evaluacion=evaluacion, pregunta=detalle.pregunta_asociada).exists() else None
+            formularios[detalle] = {
+                'formulario': RespuestaSolicitudPromocionSupervisorForm(initial={
+                    'detalle_aspecto': detalle,
+                    'cumple': respuesta_eval >= detalle.opcion_asociada.valor if detalle.opcion_asociada else None
+                }, prefix=detalle.pk),
+                'respuesta_eval': respuesta_eval
+            }
 
         context = {
             'evaluacion': evaluacion,
+            'niveles': NivelEscalafon.objects.filter(pk__gt = evaluacion.evaluado.escalafon.pk, escalafon__tipo_personal=evaluacion.evaluado.tipo_personal),
             'nivel_competencias': nivel_competencias,
             'nivel_previo': nivel_previo,
             'nivel_deseado': nivel_deseado,

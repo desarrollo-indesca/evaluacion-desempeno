@@ -1,27 +1,42 @@
+<div class="flex justify-between items-center p-3">
+    <div class="w-1/4">
+        <a href="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
+    </div>
+    <div class="w-1/2 text-center">
+        <h1 class="text-2xl">Postulación de Promoción para {{evaluacion.evaluado.user.first_name}}</h1>
+        <p class="text-center text-sm text-gray-600">Según Competencias Técnicas: {{nivel_competencias}} | Nivel Actual: {{nivel_previo}}</p>
+    </div>
+    <div class="w-1/4">
+        <select name="nivel" class="select select-bordered w-full">
+            {% for nivel in niveles %}
+            <option value="{{nivel.id}}" {% if nivel.id == nivel_competencias.id %}selected{% endif %}>{{nivel}}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
 <form method="post">
     {% csrf_token %}
     <table class="table table-zebra w-full">
         <thead>
             <tr>
                 <th>Aspecto a Considerar</th>
-                <th>Valor Asociado</th>
-                <th>Descripción</th>
+                <th>Valor Requerido</th>
+                <th>Valor Empleado</th>
+                <th>Descripción del Requerimiento</th>
+                <th>Cumple</th>
+                <th>Observaciones</th>
             </tr>
         </thead>
         <tbody>
-            {% for aspecto in form.aspectos %}
+            {% for aspecto, valor in formularios.items %}
             <tr>
                 <td>{{aspecto.aspecto.nombre}}</td>
-                <td>
-                    <select name="{{aspecto.name}}" class="select select-bordered w-full">
-                        {% for opcion in aspecto.aspecto.opciones.all %}
-                        <option value="{{opcion.valor}}" {% if opcion.valor == aspecto.value %}selected{% endif %}>{{opcion.opcion}}</option>
-                        {% endfor %}
-                    </select>
-                </td>
-                <td>
-                    <input type="text" class="input input-bordered w-full" name="{{aspecto.name}}_descripcion" value="{{aspecto.descripcion|default_if_none:''}}">
-                </td>
+                <td>{{aspecto.opcion_asociada|default:aspecto.valor_asociado|default:'Leer Descripción'}}</td>
+                <td>{{valor.respuesta_eval|default:'N/A'}}</td>
+                <td>{{aspecto.descripcion}}</td>
+                <td>{{valor.formulario.cumple}}</td>
+                <td>{{valor.formulario.justificacion}}</td>
             </tr>
             {% endfor %}
         </tbody>
