@@ -48,6 +48,7 @@
                         <th>Aspecto</th>
                         <th>Valor requerido</th>
                         <th>Valor evaluado</th>
+                        <th>Descripción</th>
                         <th>Cumple</th>
                         <th>Observaciones/Justificación</th>
                     </tr>
@@ -56,10 +57,31 @@
                     {% for respuesta in solicitud.respuestas_solicitud_promocion.all %}
                     <tr>
                         <td>{{respuesta.detalle_aspecto.aspecto.nombre}}</td>
-                        <td>{{respuesta.detalle_aspecto.opcion_asociada.valor|default:respuesta.detalle_aspecto.valor_asociado|default:'Leer Descripción'}}</td>
-                        <td>{{respuesta.valor_evaluado|default:'N/A'}}</td>
-                        <td>{% if respuesta.cumple %}Si{% else %}No{% endif %}</td>
-                        <td>{{respuesta.observaciones}}</td>
+                        <td>
+                            {% if respuesta.detalle_aspecto.aspecto.antiguedad %}
+                                {{respuesta.detalle_aspecto.valor_asociado}} meses
+                            {% else %}
+                                {{respuesta.detalle_aspecto.opcion_asociada.valor|default:respuesta.detalle_aspecto.valor_asociado|default:'Leer Descripción'}}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if respuesta.detalle_aspecto.aspecto.antiguedad %}
+                                {{solicitud.evaluacion.evaluado.antiguedad}} meses
+                            {% else %}
+                                {{respuesta.valor_evaluado|default:'N/A'}}
+                            {% endif %}
+                        </td>
+                        <td>{{respuesta.detalle_aspecto.descripcion}}</td>
+                        <td>
+                            {% if respuesta.cumple %}
+                                Si
+                            {% elif respuesta.cumple is None %}
+                                Leer Justificación
+                            {% else %}
+                                No
+                            {% endif %}
+                        </td>
+                        <td>{{respuesta.justificacion}}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

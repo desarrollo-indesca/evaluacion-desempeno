@@ -121,9 +121,7 @@ class Dashboard(LoginRequiredMixin, View, PeriodoContextMixin):
 
         datos_personal = context['datos_personal']
         evaluacion = Evaluacion.objects.filter(evaluado=datos_personal, periodo = context['periodo']).first()
-        today = date.today()
-        time_in_charge_months = (today.year - datos_personal.fecha_ingreso.year) * 12 + today.month - datos_personal.fecha_ingreso.month - ((today.month, today.day) < (datos_personal.fecha_ingreso.month, datos_personal.fecha_ingreso.day))
-        context['antiguedad'] = time_in_charge_months
+        context['antiguedad'] = datos_personal.antiguedad()
         context['evaluacion'] = evaluacion
         context['puede_finalizar'] = evaluacion.resultados.count() == evaluacion.formulario.instrumentos.count() and (
             evaluacion.formaciones.exists() and evaluacion.logros_y_metas.exists()

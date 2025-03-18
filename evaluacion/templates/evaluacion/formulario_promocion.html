@@ -45,7 +45,11 @@
                             </span>
                         </span>
                     {% else %}
-                        {{aspecto.opcion_asociada.valor|default:aspecto.valor_asociado|default:'Leer Descripción'}}
+                        {% if aspecto.aspecto.antiguedad %}
+                            {{aspecto.valor_asociado}} meses
+                        {% else %}
+                            {{aspecto.opcion_asociada.valor|default:aspecto.valor_asociado|default:'Leer Descripción'}}
+                        {% endif %}
                     {% endif %}
                 </td>
                 <td>
@@ -56,7 +60,11 @@
                             </span>
                         </span>
                     {% else %}
-                        <span class="tooltip tooltip-bottom" data-tip="No hay pregunta asociada a este aspecto">N/A</span>
+                        {% if aspecto.aspecto.antiguedad %}
+                            {{evaluacion.evaluado.antiguedad}} meses
+                        {% else %}
+                            <span class="tooltip tooltip-bottom" data-tip="No hay pregunta asociada a este aspecto">N/A</span>
+                        {% endif %}
                     {% endif %}
                 </td>
                 <td>{{aspecto.descripcion}}</td>

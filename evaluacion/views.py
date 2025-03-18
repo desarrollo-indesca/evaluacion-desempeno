@@ -1143,7 +1143,7 @@ class FormularioPostulacionPromocion(ValidarMixin, View):
             formularios[detalle] = {
                 'formulario': RespuestaSolicitudPromocionSupervisorForm(initial={
                     'detalle_aspecto': detalle,
-                    'cumple': respuesta_eval.valor >= detalle.opcion_asociada.valor if detalle.opcion_asociada else None
+                    'cumple': evaluacion.evaluado.antiguedad() >= detalle.valor_asociado if detalle.aspecto.antiguedad else respuesta_eval.valor >= detalle.opcion_asociada.valor if detalle.opcion_asociada else None
                 }, prefix=detalle.pk),
                 'respuesta_eval': respuesta_eval
             }

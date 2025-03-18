@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from django.contrib.auth import get_user_model
 
@@ -45,6 +46,11 @@ class DatosPersonal(models.Model):
     
     def evaluacion_actual(self):
         return self.evaluaciones.filter(periodo__activo=True).first()
+    
+    def antiguedad(self):
+        today = datetime.date.today()
+        time_in_charge_months = (today.year - self.fecha_ingreso.year) * 12 + today.month - self.fecha_ingreso.month - ((today.month, today.day) < (self.fecha_ingreso.month, self.fecha_ingreso.day))
+        return time_in_charge_months
     
     class Meta:
         ordering = (
