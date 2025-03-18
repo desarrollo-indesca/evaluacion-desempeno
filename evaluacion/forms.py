@@ -64,6 +64,7 @@ class FormularioMetas(forms.ModelForm):
         exclude = ('id', 'anadido_por', 'activo', 'periodo', 'evaluacion')
 
 class RespuestaSolicitudPromocionSupervisorForm(forms.ModelForm):
+
     class Meta:
         model = RespuestaSolicitudPromocion
         fields = ('cumple', 'justificacion', 'detalle_aspecto')
