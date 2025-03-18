@@ -106,7 +106,7 @@
                 {% if not evaluacion.solicitudes_promocion.count %}
                 <a class="btn btn-gray bg-gray-900 text-white" hx-confirm="Está a punto de ingresar al formulario de postulación a promoción del empleado. Toda la información que coloque deberá ser real y correcta a efectos de tomar una decisión de promoción. Asimismo, solo se podrá realizar este proceso una vez por evaluación. ¿Desea continuar?" hx-get="{% url 'postular_promocion' pk=evaluacion.pk %}" hx-target="closest .tab-content">Postular a Promoción</a>
                 {% else %}
-                <label for="modalpromocion-{{evaluacion.pk}}" class="btn btn-gray bg-gray-900 text-white">Ver Promoción Solicitada</label>
+                <label for="modalpromocion-{{evaluacion.pk}}{% if gerencia %}-gerencia{% endif %}" class="btn btn-gray bg-gray-900 text-white">Ver Promoción Solicitada</label>
                 {% include 'evaluacion/partials/modal-promocion.html' with evaluacion=evaluacion solicitud=evaluacion.solicitudes_promocion.first id=evaluacion.pk %}
                 {% endif %}
                 {% endif %}
