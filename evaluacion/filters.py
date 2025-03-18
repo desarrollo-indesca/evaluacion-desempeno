@@ -1,6 +1,6 @@
 import django_filters
 from core.models import DatosPersonal
-from evaluacion.models import Evaluacion, Periodo, ESTADOS
+from evaluacion.models import Evaluacion, Periodo, SolicitudPromocion, ESTADOS
 
 class EvaluacionFilter(django_filters.FilterSet):
     
@@ -32,3 +32,13 @@ class DatosPersonalFilter(django_filters.FilterSet):
     class Meta:
         model = DatosPersonal
         fields = ['user__first_name', 'cargo', 'tipo_personal', 'gerencia', 'ficha', 'fecha_ingreso']
+
+class SolicitudPromocionFilter(django_filters.FilterSet):
+    evaluacion__evaluado__user__first_name__icontains = django_filters.CharFilter(label="El nombre del usuario contiene", lookup_expr='icontains', field_name='evaluacion__evaluado__user__first_name')
+    
+    class Meta:
+        model = SolicitudPromocion
+        fields = [
+            'evaluacion__evaluado__user__first_name', 'evaluacion__periodo',
+            'aprobado'
+        ]

@@ -36,6 +36,7 @@ urlpatterns = [
     # Promoción
     path('promocion/<int:pk>/', FormularioPostulacionPromocion.as_view(), name="postular_promocion"),
     path('promocion/ver/<int:pk>/', GenerarModalPromocion.as_view(), name="ver_promocion"),
+    path('promocion/consulta/', ConsultaPromociones.as_view(), name="consulta_promociones"),
 
     path("modal/<int:pk>/", GenerarModal.as_view(), name="generar_modal")
 ]

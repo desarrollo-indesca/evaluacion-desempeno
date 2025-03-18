@@ -227,6 +227,7 @@ class SolicitudPromocion(models.Model):
     fecha_envio = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     fecha_aprobacion = models.DateTimeField(null=True, blank=True)
     comentario_general_gghh = models.TextField(null=True, blank=True)
+    formulario_promocion = models.ForeignKey(FormularioPromocion, on_delete=models.CASCADE)
 
     def estado(self):
         return "PROMOCIÓN CONCEDIDA" if self.aprobado else "PROMOCIÓN PENDIENTE" if self.aprobado is None else "PROMOCIÓN RECHAZADA"

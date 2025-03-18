@@ -5,7 +5,7 @@ from django.http import HttpResponseForbidden, HttpResponse
 from django.forms import modelformset_factory
 from django.shortcuts import render, redirect
 from django.db import transaction, models
-from django.db.models import Q, Exists, OuterRef
+from django.db.models import Q, Exists, OuterRef, Prefetch
 from django.contrib import messages
 from core.email import send_mail_async
 import datetime
@@ -1110,7 +1110,6 @@ class CerrarEvaluacion(ValidarSuperusuario, View):
 class FormularioPostulacionPromocion(ValidarMixin, View):    
     def validar(self):
         evaluacion = Evaluacion.objects.get(pk=self.kwargs['pk'])
-        print(not evaluacion.solicitudes_promocion.count(), evaluacion.evaluado.supervisor.user.pk == self.request.user.pk)
         return not evaluacion.solicitudes_promocion.count() and evaluacion.evaluado.supervisor.user.pk == self.request.user.pk
 
     def get(self, request, pk, *args, **kwargs):
@@ -1168,7 +1167,8 @@ class FormularioPostulacionPromocion(ValidarMixin, View):
 
                 solicitud_promocion = SolicitudPromocion.objects.create(
                     evaluacion = evaluacion,
-                    fecha_envio = datetime.datetime.now()
+                    fecha_envio = datetime.datetime.now(),
+                    formulario_promocion = FormularioPromocion.objects.get(nivel__pk=nivel)
                 )
                 
                 if all(form.is_valid() for form in forms_promocion):
@@ -1203,6 +1203,39 @@ class FormularioPostulacionPromocion(ValidarMixin, View):
             context = self.get_context_data()
             context.update({'formularios': {detalle: {'formulario': form} for detalle, form in zip(DetalleAspectoPromocion.objects.filter(formulario_promocion__nivel=nivel), forms_promocion)}})
             return render(request, 'evaluacion/formulario_promocion.html', context)
+
+class ConsultaPromociones(SuperuserMixin, ListView):
+    model = SolicitudPromocion
+    template_name = "evaluacion/partials/lista_promociones.html"
+    filter_class = SolicitudPromocionFilter
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        if 'promocion' in self.request.GET:
+            context['filter'] = self.filter_class(self.request.GET, queryset=self.get_queryset())
+        else:
+            active_periodo = Periodo.objects.filter(activo=True).first()
+            context['filter'] = self.filter_class(self.request.GET.copy(), queryset=self.get_queryset())
+            if active_periodo:
+                context['filter'].form.fields['evaluacion__periodo'].initial = active_periodo.pk
+
+        context['object_list'] = context['filter'].qs
+
+        return context
+
+    def get_queryset(self):
+        return self.model.objects.all().select_related(
+            'evaluacion', 'evaluacion__evaluado',
+            'evaluacion__evaluado__escalafon',
+        ).prefetch_related(
+            Prefetch(
+                'respuestas_solicitud_promocion',
+                RespuestaSolicitudPromocion.objects.select_related(
+                    'detalle_aspecto', 'detalle_aspecto__pregunta_asociada',
+                    'detalle_aspecto__opcion_asociada'
+                )
+            )
+        )
 
 # OTROS
 class GenerarModal(LoginRequiredMixin, View):

@@ -17,7 +17,7 @@
     </div>
 </div>
 
-<form hx-post="{% url 'postular_promocion' pk=evaluacion.pk %}" hx-target="#form" hx-swap="outerHTML" hx-vals="js:{nivel: document.getElementById('nivel').value}">
+<form hx-post="{% url 'postular_promocion' pk=evaluacion.pk %}" hx-target="closest .tab-content" hx-swap="outerHTML" hx-vals="js:{nivel: document.getElementById('nivel').value}">
     {% csrf_token %}
     <table class="table table-zebra w-full text-xs text-center">
         <thead>
