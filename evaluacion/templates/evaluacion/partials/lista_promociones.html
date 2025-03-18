@@ -24,8 +24,8 @@
 </form>
 
 
-<table class="table table-striped">
-    <thead>
+<table class="table table-striped text-center mt-5">
+    <thead class="text-white bg-gray-900">
         <tr>
             <th>Evaluado</th>
             <th>Nivel Actual</th>
@@ -47,7 +47,7 @@
             <td>{{ solicitud.estado }}</td>
             <td>
             {% if solicitud.aprobado is None %}
-            <a href="#" class="btn btn-default">Revisar Solicitud</a>
+            <a hx-get="{% url 'revisar_promocion' pk=solicitud.pk %}" hx-target="closest .tab-content" class="btn btn-default">Revisar Solicitud</a>
             {% else %}
             <label for="modal-{{ solicitud.pk }}" class="btn btn-primary">Ver Formulario</label>
             {% endif %}

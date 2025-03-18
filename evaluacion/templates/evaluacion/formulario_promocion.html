@@ -1,4 +1,6 @@
 {% load widget_tweaks %}
+{% load static %}
+
 <div class="flex justify-between items-center p-3">
     <div class="w-1/4">
         <a href="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
@@ -17,9 +19,13 @@
     </div>
 </div>
 
-<form hx-post="{% url 'postular_promocion' pk=evaluacion.pk %}" hx-target="closest .tab-content" hx-swap="outerHTML" hx-vals="js:{nivel: document.getElementById('nivel').value}">
+<form hx-post="{% if gerencia %}{% url 'revisar_promocion' pk=evaluacion.pk %}{% else %}{% url 'postular_promocion' pk=evaluacion.pk %}{% endif %}"
+      hx-target="closest .tab-content" 
+      hx-swap="outerHTML" 
+      hx-vals="js:{nivel: document.getElementById('nivel').value}" 
+      hx-confirm="{% if gerencia %}¿Está seguro de promover al empleado al nivel declarado?{% else %}¿Está seguro que desea postular al empleado a este nivel?{% endif %}">
     {% csrf_token %}
-    <table class="table table-zebra w-full text-xs text-center">
+    <table class="table table-zebra w-full text-xs text-center mb-4">
         <thead>
             <tr class="bg-gray-900 text-white sticky top-0">
                 <th>Aspecto a Considerar</th>
@@ -27,7 +33,10 @@
                 <th>Valor Empleado</th>
                 <th>Descripción del Requerimiento</th>
                 <th>Cumple</th>
-                <th>Observaciones/Justificaciones</th>
+                <th>Observaciones/Justificaciones {% if evaluacion.evaluado.gerencia %}Supervisor {% endif %}</th>
+                {% if gerencia %}
+                <th>Observaciones/Justificaciones Finales</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody id="form">
@@ -69,41 +78,62 @@
                 </td>
                 <td>{{aspecto.descripcion}}</td>
                 <td>{% render_field valor.formulario.cumple class="select select-bordered w-full" %}</td>
-                <td>{% render_field valor.formulario.justificacion class="input input-bordered w-full" required="" %}</td>
+                <td>
+                    {% if not gerencia %}
+                    {% render_field valor.formulario.justificacion class="input input-bordered w-full" required="" %}
+                    {% else %}
+                    {{valor.res_previa.justificacion}}
+                    {% endif %}
+                </td>
+                {% if gerencia %}
+                <td>
+                    {% render_field valor.formulario.justificacion class="input input-bordered w-full" required="" %}
+                </td>
+                {% endif %}
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    {% if gerencia %}
+    <div class="flex justify-center items-center w-full mt-4">
+        <div class="w-full">
+            <label for="comentario_general_gghh" class="label">
+                Comentario General GGHH
+            </label>
+            <textarea id="comentario_general_gghh" name="comentario_general_gghh" class="textarea textarea-bordered w-full" placeholder="Comentario general según la decisión tomada."></textarea>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="flex w-full items-center">
+        <input type="checkbox" name="check" id="check" class="checkbox" required />
+        <div>
+            {% if gerencia %}
+            <p>&nbsp;Yo, {{request.user.first_name.upper}}, declaro en calidad de GERENTE DE GESTIÓN HUMANA, que revisé las respuestas previas y ajusté las mismas de acuerdo al escalafón. Luego de la revisión correspondiente he decidido entonces tomar la siguiente acción sobre esta solicitud de promoción:</p>
+            {% else %}
+            <p>&nbsp;Yo, {{request.user.first_name.upper}}, declaro en calidad de supervisor del empleado {{evaluacion.evaluado.user.first_name.upper}}, que esta solicitud sea enviada al GERENTE DE GESTIÓN HUMANA, a efectos de lograr la promoción al nivel solicitado.</p>
+            {% endif %}
+        </div>
+    </div>
+
     <div class="flex justify-center items-center w-full">
         <div>
+            {% if gerencia %}
+            <button type="submit" value="Conceder" class="btn btn-success">
+                Conceder
+            </button>
+            <button type="submit" value="Denegar" class="btn btn-error">
+                Denegar
+            </button>
+            {% else %}
             <button type="submit" value="Guardar" class="btn btn-error">
                 Guardar
             </button>
+            {% endif %}
         </div>
     </div>
 </form>
 
 <input type="hidden" name="nivel" value="{{nivel_competencias.pk}}" id="id_nivel_comp">
-<script>
-    function checkNivel() {
-        var nivel = parseInt(document.querySelector('#id_nivel_comp').value);
-        var selectedOption = document.querySelector('#nivel').selectedOptions[0];
-        var selectedNivel = parseInt(selectedOption.value);
-
-        if (nivel < selectedNivel) {
-            alert('El nivel seleccionado para promoción (' + selectedOption.textContent + ') es menor que el recomendado por competencias técnicas. Tomar en consideración que en este caso se recomienda justificar la promoción para su revisión.');
-        }
-    }
-
-    function cambiarEtiquetas() {
-        document.querySelectorAll('option[value="unknown"]').forEach(opcion => {
-            opcion.textContent = "Justificar";
-        });
-    }
-    
-    cambiarEtiquetas();
-    checkNivel();    
-
-    document.querySelector('#nivel').addEventListener('change', checkNivel);
-    document.addEventListener('htmx:afterSwap', cambiarEtiquetas);
-</script>
+<script src="{% static 'js/formulario-promocion.js' %}"></script>

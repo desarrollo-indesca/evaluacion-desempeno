@@ -1130,7 +1130,9 @@ class FormularioPostulacionPromocion(ValidarMixin, View):
         )
         nivel_competencias = evaluacion.escalafones.get(asignado_por='H').escalafon
         nivel_previo = evaluacion.evaluado.escalafon
-        nivel_deseado = self.request.GET.get('nivel', [nivel_competencias] + list(niveles)[0] if nivel_competencias in niveles else list(niveles)[0])
+        nivel_deseado = NivelEscalafon.objects.get(
+            pk = self.request.GET.get('nivel')
+        ) if self.request.GET.get('nivel') else nivel_competencias
 
         formularios = {}
         detalles = DetalleAspectoPromocion.objects.filter(
@@ -1142,7 +1144,7 @@ class FormularioPostulacionPromocion(ValidarMixin, View):
             formularios[detalle] = {
                 'formulario': RespuestaSolicitudPromocionSupervisorForm(initial={
                     'detalle_aspecto': detalle,
-                    'cumple': evaluacion.evaluado.antiguedad() >= detalle.valor_asociado if detalle.aspecto.antiguedad else respuesta_eval.valor >= detalle.opcion_asociada.valor if detalle.opcion_asociada else None
+                    'cumple': evaluacion.evaluado.antiguedad() >= detalle.valor_asociado if detalle.aspecto.antiguedad else respuesta_eval.valor >= detalle.opcion_asociada.valor if detalle.opcion_asociada and respuesta_eval else None
                 }, prefix=detalle.pk),
                 'respuesta_eval': respuesta_eval
             }
@@ -1236,6 +1238,101 @@ class ConsultaPromociones(SuperuserMixin, ListView):
                 )
             )
         )
+
+class FormularioRevisionPostulacionPromocion(FormularioPostulacionPromocion):    
+    def validar(self):
+        return self.request.user.is_superuser
+
+    def get(self, request, pk, *args, **kwargs):
+        return render(request, 'evaluacion/formulario_promocion.html', context=self.get_context_data())
+        
+    def get_context_data(self):
+        solicitud = SolicitudPromocion.objects.get(pk=self.kwargs['pk'])
+        evaluacion = solicitud.evaluacion
+
+        niveles = [solicitud.formulario_promocion.nivel]
+        nivel_competencias = evaluacion.escalafones.get(asignado_por='H').escalafon
+        nivel_previo = evaluacion.evaluado.escalafon
+        nivel_deseado = solicitud.formulario_promocion.nivel
+        print(nivel_deseado)
+
+        formularios = {}
+        detalles = DetalleAspectoPromocion.objects.filter(
+            formulario_promocion__nivel=nivel_deseado
+        )
+        for detalle in detalles:
+            respuesta_eval = Respuesta.objects.get(evaluacion=evaluacion, pregunta=detalle.pregunta_asociada).respuesta_definitiva if Respuesta.objects.filter(evaluacion=evaluacion, pregunta=detalle.pregunta_asociada).exists() else None
+            respuesta_eval = detalle.pregunta_asociada.opciones.get(valor=respuesta_eval) if respuesta_eval else None
+            res_previa = RespuestaSolicitudPromocion.objects.get(
+                detalle_aspecto = detalle,
+                solicitud_promocion = solicitud
+            )
+            formularios[detalle] = {
+                'formulario': RespuestaSolicitudPromocionSupervisorForm(initial={
+                    'detalle_aspecto': detalle,
+                    'cumple': res_previa.cumple
+                }, prefix=detalle.pk),
+                'respuesta_eval': respuesta_eval,
+                'res_previa': res_previa
+            }
+
+        context = {
+            'evaluacion': evaluacion,
+            'niveles': niveles,
+            'nivel_competencias': nivel_competencias,
+            'nivel_previo': nivel_previo,
+            'nivel_deseado': nivel_deseado,
+            'formularios': formularios,
+            'gerencia': True
+        }
+
+        return context
+
+    def post(self, request, pk, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                nivel = request.POST.get('nivel')
+                forms_promocion = [RespuestaSolicitudPromocionSupervisorForm(request.POST, prefix=detalle.pk) for detalle in DetalleAspectoPromocion.objects.filter(formulario_promocion__nivel=nivel)]
+                evaluacion = Evaluacion.objects.get(pk=pk)
+
+                solicitud_promocion = SolicitudPromocion.objects.create(
+                    evaluacion = evaluacion,
+                    fecha_envio = datetime.datetime.now(),
+                    formulario_promocion = FormularioPromocion.objects.get(nivel__pk=nivel)
+                )
+                
+                if all(form.is_valid() for form in forms_promocion):
+                    for form in forms_promocion:
+                        respuesta = form.save(commit=False)
+                        respuesta.solicitud_promocion = solicitud_promocion
+                        respuesta.save()
+
+                    messages.success(request, 'Solicitud de promoción enviada correctamente a Gestión humana.')
+                    
+                    send_mail_async(
+                        f'Solicitud de promoción para {evaluacion.evaluado.user.get_full_name().upper()}',
+                        f"Se solicita considerar la promoción para el empleado {evaluacion.evaluado.user.get_full_name().upper()}; el formulario correspondiente ha sido enviado con sus justificaciones y consideraciones correspondientes.",
+                        [
+                            DatosPersonal.objects.get(user__is_superuser=True).user.email,
+                            evaluacion.evaluado.supervisor.user.email,
+                            DatosPersonal.objects.get(user__is_staff=True, gerencia=evaluacion.evaluado.gerencia).user.email
+                        ],
+                        sender=request.user.email if request.user.email else 'no-replay@indesca.com'
+                    )
+
+                    return redirect('consultar_supervisados')
+                else:
+                    raise Exception("Error en el formulario")
+        except Exception as e:
+            print(str(e))
+            print(forms_promocion)
+            for form in forms_promocion:
+                if form.is_valid() and not form.cleaned_data.get('justificacion'):
+                    form.add_error('justificacion', 'La justificación es obligatoria.')
+
+            context = self.get_context_data()
+            context.update({'formularios': {detalle: {'formulario': form} for detalle, form in zip(DetalleAspectoPromocion.objects.filter(formulario_promocion__nivel=nivel), forms_promocion)}})
+            return render(request, 'evaluacion/formulario_promocion.html', context)
 
 # OTROS
 class GenerarModal(LoginRequiredMixin, View):
