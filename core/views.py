@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.urls import reverse_lazy
+from django.contrib.sessions.models import Session
 from core.email import send_mail_async
 from .forms import PeriodoForm
 from django.views.generic.list import ListView
@@ -95,10 +96,9 @@ class Login(PeriodoContextMixin, View):
             if not user:
                 try:
                     datos_personal = DatosPersonal.objects.get(ficha=username_or_ficha)
-                    print(f"FICHA: {username_or_ficha} - {datos_personal.user.username}")
                     user = authenticate(request, username=datos_personal.user.username, password=password)
-                    print(user)
-                except DatosPersonal.DoesNotExist:
+                except Exception as e:
+                    print(str(e))
                     user = None
 
             if user is not None:

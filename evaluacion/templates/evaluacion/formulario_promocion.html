@@ -21,7 +21,7 @@
 
 <form hx-post="{% if gerencia %}{% url 'revisar_promocion' pk=evaluacion.pk %}{% else %}{% url 'postular_promocion' pk=evaluacion.pk %}{% endif %}"
       hx-target="closest .tab-content" 
-      hx-swap="outerHTML" 
+      hx-swap="innerHTML" 
       hx-vals="js:{nivel: document.getElementById('nivel').value}" 
       hx-confirm="{% if gerencia %}¿Está seguro de promover al empleado al nivel declarado?{% else %}¿Está seguro que desea postular al empleado a este nivel?{% endif %}">
     {% csrf_token %}
@@ -99,9 +99,9 @@
     <div class="flex justify-center items-center w-full mt-4">
         <div class="w-full">
             <label for="comentario_general_gghh" class="label">
-                Comentario General GGHH
+                Comentario General GGHH (Acotaciones, felicitaciones, observaciones)
             </label>
-            <textarea id="comentario_general_gghh" name="comentario_general_gghh" class="textarea textarea-bordered w-full" placeholder="Comentario general según la decisión tomada."></textarea>
+            <textarea id="comentario_general_gghh" name="comentario_general_gghh" class="textarea textarea-bordered w-full" placeholder="Comentario general según la decisión tomada." required></textarea>
         </div>
     </div>
     {% endif %}
@@ -120,10 +120,10 @@
     <div class="flex justify-center items-center w-full">
         <div>
             {% if gerencia %}
-            <button type="submit" value="Conceder" class="btn btn-success">
+            <button type="submit" value="Conceder" name="submit" class="btn btn-success">
                 Conceder
             </button>
-            <button type="submit" value="Denegar" class="btn btn-error">
+            <button type="submit" value="Denegar" name="submit" class="btn btn-error">
                 Denegar
             </button>
             {% else %}

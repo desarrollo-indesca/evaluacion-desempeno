@@ -1,7 +1,7 @@
 
 import openpyxl
 import datetime
-from evaluacion.models import Evaluacion
+from evaluacion.models import Evaluacion, SolicitudPromocion
 from io import BytesIO
 from django.http import HttpResponse
 
@@ -168,9 +168,13 @@ def fill_resumen_periodo(periodo):
         else:
             worksheet.cell(row=row, column=13, value=obtener_accion_a_tomar_ct_operativos(resultado_ct_tecnicas.resultado_final) if resultado_ct_tecnicas else '')
         
+        print(SolicitudPromocion.objects.filter(evaluacion=evaluacion).values('evaluacion__evaluado__user__first_name', 'aprobado'))
         resultado_ct_genericas = evaluacion.resultados.filter(instrumento__nombre__icontains='Competencias Genérica').first()
         worksheet.cell(row=row, column=14, value=resultado_ct_genericas.resultado_final if resultado_ct_genericas else '')
         worksheet.cell(row=row, column=15, value=obtener_accion_a_tomar_genericas(resultado_ct_genericas.resultado_final) if resultado_ct_genericas else '')
+        worksheet.cell(row=row, column=16, 
+            value=SolicitudPromocion.objects.get(evaluacion=evaluacion, aprobado=True).formulario_promocion.nivel.nivel if SolicitudPromocion.objects.filter(evaluacion=evaluacion, aprobado=True).exists() else '' 
+        )
         
         row += 1
     

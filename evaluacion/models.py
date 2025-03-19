@@ -27,9 +27,9 @@ PERIODO_METAS = (
 )
 
 PRIORIDADES = (
-    (1, "1 - Asociado a Competencias Técnicas"),
-    (2, "2 - Asociado a Competencias Genéricas"),
-    (3, "3 - Otras"),
+    ("1", "1 - Asociado a Competencias Técnicas"),
+    ("2", "2 - Asociado a Competencias Genéricas"),
+    ("3", "3 - Otras"),
 )
 
 NIVELES_PRIORIDAD = (
@@ -78,6 +78,9 @@ class Pregunta(models.Model):
     peso = models.DecimalField(max_digits=5, decimal_places=2)
     tip = models.CharField(max_length=400, null=True, blank=True)
     seccion = models.ForeignKey(Seccion, on_delete=models.CASCADE, related_name="preguntas")
+
+    def __str__(self):
+        return f"{self.pregunta}; Sección: {self.seccion}"
 
 class Opciones(models.Model):
     opcion = models.CharField(max_length=300)
@@ -146,6 +149,9 @@ class Respuesta(models.Model):
     pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE, related_name="respuestas")
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="respuestas")
 
+    def __str__(self):
+        return f"RESPUESTAS A LA PREGUNTA {self.pregunta} DE LA EVALUACION {self.evaluacion} DEL EMPLEADO {self.evaluacion.evaluado}"
+
 class LogrosYMetas(models.Model):
     descripcion = models.CharField(max_length=200)
     porc_cumplimiento = models.SmallIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)], null=True, blank=True)
@@ -209,9 +215,15 @@ class AspectoPromocion(models.Model):
     nombre = models.CharField("Nombre del Aspecto a Considerar", max_length=120)
     antiguedad = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.nombre
+
 class FormularioPromocion(models.Model):
     nivel = models.ForeignKey(NivelEscalafon, on_delete=models.CASCADE, related_name="formularios_promocion")
     activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Formulario (Nivel): {self.nivel.nivel}; Activo: {self.activo}"
 
 class DetalleAspectoPromocion(models.Model):
     aspecto = models.ForeignKey(AspectoPromocion, on_delete=models.CASCADE, related_name="detalle_aspectos")

@@ -141,9 +141,14 @@ class FormularioInstrumentoEmpleado(ValidarMixin, PeriodoContextMixin, Escalafon
             return False
         return True
 
-    def get_context_data(self, post=False, **kwargs):
-        context = super().get_context_data(**kwargs)
-        evaluacion = Evaluacion.objects.get(evaluado=self.request.user.datos_personal.get(activo=True), periodo=self.get_periodo())
+    def get_context_data(self, post=False):
+        context = super().get_context_data(post=post)        
+        evaluacion = Evaluacion.objects.get(
+            evaluado=self.request.user.datos_personal.get(activo=True), 
+            periodo=self.get_periodo()
+        ) if not self.request.GET.get('evaluacion') else Evaluacion.objects.get(
+            pk=self.request.GET.get('evaluacion')
+        )
         instrumento = Instrumento.objects.filter(id=self.kwargs['pk']).prefetch_related(
             models.Prefetch(
                 'secciones',
@@ -155,14 +160,22 @@ class FormularioInstrumentoEmpleado(ValidarMixin, PeriodoContextMixin, Escalafon
         ).first()
         
         if(instrumento.resultados.filter(evaluacion = evaluacion).exists()):
-            context['instrumento'] = [{
-                    'preguntas': [{
+            context['instrumento'] = []
+            for seccion in instrumento.secciones.all():
+                seccion_questions = []
+                for pregunta in seccion.preguntas.all():
+                    respuestas = pregunta.respuestas.filter(evaluacion=evaluacion)
+                    if respuestas.count() > 1:
+                        for respuesta in respuestas[:respuestas.count() - 1]:
+                            respuesta.delete()
+                    seccion_questions.append({
                         'form': self.form_class(instance=pregunta.respuestas.get(evaluacion=evaluacion), prefix=pregunta.pk) if not post else self.form_class(self.request.POST, prefix=pregunta.pk),
                         'pregunta': pregunta,
-                    } for pregunta in seccion.preguntas.all()],
+                    })
+                context['instrumento'].append({
+                    'preguntas': seccion_questions,
                     'seccion': seccion
-                } for seccion in instrumento.secciones.all()
-            ]
+                })
         else:
             context['instrumento'] = [{
                     'preguntas': [{
@@ -647,7 +660,7 @@ class FormularioInstrumentoSupervisor(ValidarSupervisorMixin, FormularioInstrume
         }
 
     def get_context_data(self, post=False, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = {}
         evaluacion = Evaluacion.objects.get(
             pk=self.kwargs['evaluacion']
         )
@@ -1132,7 +1145,7 @@ class FormularioPostulacionPromocion(ValidarMixin, View):
         nivel_previo = evaluacion.evaluado.escalafon
         nivel_deseado = NivelEscalafon.objects.get(
             pk = self.request.GET.get('nivel')
-        ) if self.request.GET.get('nivel') else nivel_competencias
+        ) if self.request.GET.get('nivel') else nivel_competencias if nivel_competencias.pk > nivel_previo.pk else niveles[0]
 
         formularios = {}
         detalles = DetalleAspectoPromocion.objects.filter(
@@ -1247,24 +1260,38 @@ class FormularioRevisionPostulacionPromocion(FormularioPostulacionPromocion):
         return render(request, 'evaluacion/formulario_promocion.html', context=self.get_context_data())
         
     def get_context_data(self):
-        solicitud = SolicitudPromocion.objects.get(pk=self.kwargs['pk'])
+        solicitud = SolicitudPromocion.objects.select_related(
+            'evaluacion', 'evaluacion__evaluado', 'evaluacion__evaluado__user'
+        ).get(pk=self.kwargs['pk'])
         evaluacion = solicitud.evaluacion
 
         niveles = [solicitud.formulario_promocion.nivel]
         nivel_competencias = evaluacion.escalafones.get(asignado_por='H').escalafon
         nivel_previo = evaluacion.evaluado.escalafon
         nivel_deseado = solicitud.formulario_promocion.nivel
-        print(nivel_deseado)
 
         formularios = {}
         detalles = DetalleAspectoPromocion.objects.filter(
             formulario_promocion__nivel=nivel_deseado
+        ).select_related(
+            'aspecto',
+            'pregunta_asociada',
+            'opcion_asociada'
+        ).prefetch_related(
+            Prefetch(
+                'respuestas_solicitud_promocion',
+                RespuestaSolicitudPromocion.objects.select_related(
+                    'detalle_aspecto', 'detalle_aspecto__pregunta_asociada',
+                )
+            ),
+            Prefetch(
+                'pregunta_asociada__respuestas'
+            )
         )
         for detalle in detalles:
-            respuesta_eval = Respuesta.objects.get(evaluacion=evaluacion, pregunta=detalle.pregunta_asociada).respuesta_definitiva if Respuesta.objects.filter(evaluacion=evaluacion, pregunta=detalle.pregunta_asociada).exists() else None
+            respuesta_eval = detalle.pregunta_asociada.respuestas.get(evaluacion=evaluacion).respuesta_definitiva if detalle.pregunta_asociada and detalle.pregunta_asociada.respuestas.filter(evaluacion=evaluacion, pregunta=detalle.pregunta_asociada).exists() else None
             respuesta_eval = detalle.pregunta_asociada.opciones.get(valor=respuesta_eval) if respuesta_eval else None
-            res_previa = RespuestaSolicitudPromocion.objects.get(
-                detalle_aspecto = detalle,
+            res_previa = detalle.respuestas_solicitud_promocion.get(
                 solicitud_promocion = solicitud
             )
             formularios[detalle] = {
@@ -1286,6 +1313,7 @@ class FormularioRevisionPostulacionPromocion(FormularioPostulacionPromocion):
             'gerencia': True
         }
 
+        print("SALIO")
         return context
 
     def post(self, request, pk, *args, **kwargs):
@@ -1295,32 +1323,62 @@ class FormularioRevisionPostulacionPromocion(FormularioPostulacionPromocion):
                 forms_promocion = [RespuestaSolicitudPromocionSupervisorForm(request.POST, prefix=detalle.pk) for detalle in DetalleAspectoPromocion.objects.filter(formulario_promocion__nivel=nivel)]
                 evaluacion = Evaluacion.objects.get(pk=pk)
 
-                solicitud_promocion = SolicitudPromocion.objects.create(
-                    evaluacion = evaluacion,
-                    fecha_envio = datetime.datetime.now(),
-                    formulario_promocion = FormularioPromocion.objects.get(nivel__pk=nivel)
+                solicitud_promocion = SolicitudPromocion.objects.get(
+                    evaluacion = evaluacion
                 )
+                solicitud_promocion.comentario_general_gghh = request.POST.get('comentario_general_gghh')
                 
                 if all(form.is_valid() for form in forms_promocion):
                     for form in forms_promocion:
                         respuesta = form.save(commit=False)
                         respuesta.solicitud_promocion = solicitud_promocion
+                        respuesta.enviada_por = 'H'
                         respuesta.save()
 
-                    messages.success(request, 'Solicitud de promoción enviada correctamente a Gestión humana.')
-                    
+                    if request.POST.get('submit') == 'Conceder':
+                        messages.success(request, f'Promoción concedida a {evaluacion.evaluado.user.get_full_name().upper()}.')
+                        solicitud_promocion.aprobado = True
+                        solicitud_promocion.save()
+
+                        contenido = f"""Saludos,
+
+                        Le escribimos para informarle que su solicitud de promoción del empleado {evaluacion.evaluado.user.get_full_name().upper()} al nivel {solicitud_promocion.formulario_promocion.nivel} ha sido CONCEDIDA.
+
+                        Se le invita a verificar el estado de la solicitud junto a los comentarios correspondientes en el sistema de evaluación de desempeño.
+
+                        Agradecemos su comprensión y nos ponemos a su disposición para cualquier inquietud que tenga.
+
+                        Atentamente,
+                        La Gerencia de Gestión Humana
+                        """
+                    elif request.POST.get('submit') == 'Denegar':
+                        messages.success(request, 'Solicitud de promoción rechazada.')
+                        solicitud_promocion.aprobado = False
+                        solicitud_promocion.save()
+
+                        contenido = f"""Saludos,
+
+                        Le escribimos para informarle que su solicitud de promoción del empleado {evaluacion.evaluado.user.get_full_name().upper()} al nivel {solicitud_promocion.formulario_promocion.nivel} ha sido DENEGADA.
+
+                        Se le invita a verificar el estado de la solicitud junto a los comentarios correspondientes en el sistema de evaluación de desempeño.
+
+                        Agradecemos su comprensión y nos ponemos a su disposición para cualquier inquietud que tenga.
+
+                        Atentamente,
+                        La Gerencia de Gestión Humana
+                        """
+
                     send_mail_async(
-                        f'Solicitud de promoción para {evaluacion.evaluado.user.get_full_name().upper()}',
-                        f"Se solicita considerar la promoción para el empleado {evaluacion.evaluado.user.get_full_name().upper()}; el formulario correspondiente ha sido enviado con sus justificaciones y consideraciones correspondientes.",
+                        f'Decisión sobre la Solicitud de Promoción para {evaluacion.evaluado.user.get_full_name().upper()}',
+                        contenido,
                         [
-                            DatosPersonal.objects.get(user__is_superuser=True).user.email,
                             evaluacion.evaluado.supervisor.user.email,
                             DatosPersonal.objects.get(user__is_staff=True, gerencia=evaluacion.evaluado.gerencia).user.email
                         ],
-                        sender=request.user.email if request.user.email else 'no-replay@indesca.com'
+                        sender=request.user.email
                     )
 
-                    return redirect('consultar_supervisados')
+                    return redirect('consulta_promociones')
                 else:
                     raise Exception("Error en el formulario")
         except Exception as e:
