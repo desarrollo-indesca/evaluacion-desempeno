@@ -43,7 +43,11 @@
                         <tr class="hover:bg-gray-100">
                             <td class="text-center w-1/8">{{forloop.counter}}</td>
                             <td class="text-center w-2/8">
+                                {% if pregunta.pregunta.tip %}
                                 <h3 class="text-md font-semibold text-center tooltip" data-tip="{{pregunta.pregunta.tip}}">
+                                {% else %}
+                                <h3 class="text-md font-semibold text-center">
+                                {% endif %}
                                     {{pregunta.pregunta.pregunta}}
                                 </h3>
                                 {% render_field pregunta.form.pregunta class="hidden" type="hidden" %}
@@ -62,19 +66,19 @@
                                 <input type="text" value="{{pregunta.form.instance.comentario_supervisor|default_if_none:''}}" class="input input-bordered mt-1 w-full max-w-lg bg-gray-200 text-black" placeholder="Sin Comentarios" name="{{pregunta.form.prefix}}-comentario_supervisor" readonly>
                             </td>
                             <td class="text-center w-2/8">
-                                <select name="{{pregunta.form.prefix}}-respuesta_definitiva" id="id_{{pregunta.form.prefix}}-respuesta_definitiva" class="select select-bordered w-full" required>
+                                <select name="{{pregunta.form.prefix}}-respuesta_definitiva" id="id_{{pregunta.form.prefix}}-respuesta_definitiva" class="select select-bordered w-full max-w-lg" required>
                                     <option disabled selected>Seleccionar</option>
                                     {% for opcion in pregunta.pregunta.opciones.all %}
                                         <option value="{{opcion.valor}}" {% if opcion.valor == pregunta.form.instance.respuesta_definitiva or opcion.valor == pregunta.form.respuesta_definitiva.initial %}selected{% endif %}>{{opcion.opcion}}</option>
                                     {% endfor %}
                                 </select>
-                                <small class="text-error">
+                                <small class="text-error w-full max-w-lg">
                                     {% for error in pregunta.form.respuesta_definitiva.errors %}{{error}}<br>{% endfor %}
                                 </small>
 
                                 <br>
                                 {% render_field pregunta.form.comentario_gghh class="input input-bordered mt-1 w-full max-w-lg" placeholder="Comentario de Gestión Humana" %}
-                                <small class="text-error">
+                                <small class="text-error w-full max-w-lg">
                                     {% for error in pregunta.form.comentario_gghh.errors %}{{error}}<br>{% endfor %}
                                 </small>
                             </td>

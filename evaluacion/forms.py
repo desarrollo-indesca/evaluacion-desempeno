@@ -1,5 +1,5 @@
 from django import forms
-from .models import Respuesta, Formacion, Competencias, LogrosYMetas
+from .models import *
 
 class FormularioRespuestasEmpleado(forms.ModelForm):
     def clean(self):
@@ -62,3 +62,9 @@ class FormularioMetas(forms.ModelForm):
     class Meta:
         model = LogrosYMetas
         exclude = ('id', 'anadido_por', 'activo', 'periodo', 'evaluacion')
+
+class RespuestaSolicitudPromocionSupervisorForm(forms.ModelForm):
+
+    class Meta:
+        model = RespuestaSolicitudPromocion
+        fields = ('cumple', 'justificacion', 'detalle_aspecto')

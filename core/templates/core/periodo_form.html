@@ -30,10 +30,7 @@
     </div>
     {% if form.errors %}
     <ul class="text-red-600 m-3">
-    {% for error in form.errors %}
-        <li>{{ error }}</li>
-
-    {% endfor %}
+    {{form.errors}}
     </ul>
     {% endif %}
     <div class="flex justify-center">

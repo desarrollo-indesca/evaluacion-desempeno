@@ -32,7 +32,11 @@
                         <tr class="hover:bg-gray-100">
                             <td class="text-center w-1/5">{{forloop.counter}}</td>
                             <td class="text-center w-2/5">
+                                {% if pregunta.pregunta.tip %}
                                 <h3 class="text-md font-semibold text-center tooltip" data-tip="{{pregunta.pregunta.tip}}">
+                                {% else %}
+                                <h3 class="text-md font-semibold text-center">
+                                {% endif %}
                                     {{pregunta.pregunta.pregunta}}
                                 </h3>
                                 {% render_field pregunta.form.pregunta class="hidden" type="hidden" %}
@@ -72,5 +76,5 @@
     </div>
 </form>
 
-<script src="{% static 'js/carga-formulario.js' %}"></script>
+<script src="{% static 'js/carga-formulario-supervision.js' %}"></script>
 {% endblock %}

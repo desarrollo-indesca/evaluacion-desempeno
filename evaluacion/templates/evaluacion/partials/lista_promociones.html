@@ -1,0 +1,62 @@
+{% load widget_tweaks %}
+
+<div class="flex justify-between items-center mb-3">
+    <a hx-get="{% url 'panel_de_control' %}" hx-target="closest .tab-content" class="btn btn-teal-500">Regresar</a>
+    <h3 class="text-center text-2xl">Consulta de Promociones</h3>
+    <div></div>
+</div>
+
+<hr>
+
+<form hx-get="{{request.path}}" hx-select="#resultados" hx-target="#resultados" hx-swap="outerHTML" hx-trigger="change, keyup delay:1s" id="filter-form" class="flex justify-evenly w-full mt-3">
+<div>
+    {{ filter.form.evaluacion__evaluado__user__first_name__icontains.label_tag }} <br>
+    {% render_field filter.form.evaluacion__evaluado__user__first_name class="input input-bordered w-full" %}
+</div>
+<div>
+    {{ filter.form.evaluacion__periodo.label_tag }} <br>
+    {% render_field filter.form.evaluacion__periodo class="select select-bordered w-full" %}
+</div>
+<div>
+    {{ filter.form.aprobado.label_tag }} <br>
+    {% render_field filter.form.aprobado class="select select-bordered w-full" %}
+</div>
+</form>
+
+
+<table class="table table-striped text-center mt-5">
+    <thead class="text-white bg-gray-900">
+        <tr>
+            <th>Evaluado</th>
+            <th>Nivel Actual</th>
+            <th>Nivel Competencias</th>
+            <th>Nivel Solicitado</th>
+            <th>Fecha Envío</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody id="resultados">
+        {% for solicitud in object_list %}
+        <tr>
+            <td>{{ solicitud.evaluacion.evaluado.user.get_full_name }}</td>
+            <td>{{ solicitud.evaluacion.evaluado.escalafon }}</td>
+            <td>{{ solicitud.evaluacion.escalafones.all.last }}</td>
+            <td>{{ solicitud.formulario_promocion.nivel }}</td>            
+            <td>{{ solicitud.fecha_envio }}</td>
+            <td>{{ solicitud.estado }}</td>
+            <td>
+            {% if solicitud.aprobado is None %}
+            <a hx-get="{% url 'revisar_promocion' pk=solicitud.pk %}" hx-target="closest .tab-content" class="btn btn-default">Revisar Solicitud</a>
+            {% else %}
+            <label for="modal-{{ solicitud.pk }}" class="btn btn-primary">Ver Formulario</label>
+            {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <th colspan="7" class="text-center">No se han encontrado solicitudes de promoción.</th>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

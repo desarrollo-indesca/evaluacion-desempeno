@@ -16,7 +16,7 @@
                 <td>{{formacion.clasificacion}}</td>
                 <td>
                     <ul>
-                        {% for competencia in formacion.competencias_tecnicas.all %}
+                        {% for competencia in formacion.competencias_genericas.all %}
                             <li>- {{competencia}}</li>
                         {% empty %}
                             <li>No se han cargado competencias técnicas.</li>
@@ -25,7 +25,7 @@
                 </td>
                 <td>
                     <ul>
-                        {% for competencia in formacion.competencias_genericas.all %}
+                        {% for competencia in formacion.competencias_tecnicas.all %}
                             <li>- {{competencia}}</li>
                         {% empty %}
                             <li>No se han cargado competencias genéricas.</li>
