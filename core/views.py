@@ -2,6 +2,8 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.urls import reverse_lazy
+from django.contrib.sessions.models import Session
+from core.email import send_mail_async
 from .forms import PeriodoForm
 from django.views.generic.list import ListView
 from django.db.models import Q
@@ -16,6 +18,35 @@ from evaluacion.models import Evaluacion, Formulario
 from core.reportes.generate_reports import create_dnf, fill_resumen_periodo, fill_resultado_apoyo, fill_resultado_operativo
 
 # Create your views here.
+
+class SuperuserMixin():
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+class ValidarMixin():
+    def validar(self) -> bool:
+        ...
+
+    def dispatch(self, request, *args, **kwargs):
+        if(self.validar()):
+            return super().dispatch(request, *args, **kwargs)
+        
+        return redirect('dashboard')
+    
+class EvaluadoMatchMixin():
+    def dispatch(self, request, *args, **kwargs):
+        evaluacion = Evaluacion.objects.filter(pk=self.kwargs['pk']).first()
+        if not evaluacion or evaluacion.evaluado.user != request.user:
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+class GerenteMixin():
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
 
 class PeriodoContextMixin():
     def get_periodo(self):
@@ -65,10 +96,9 @@ class Login(PeriodoContextMixin, View):
             if not user:
                 try:
                     datos_personal = DatosPersonal.objects.get(ficha=username_or_ficha)
-                    print(f"FICHA: {username_or_ficha} - {datos_personal.user.username}")
                     user = authenticate(request, username=datos_personal.user.username, password=password)
-                    print(user)
-                except DatosPersonal.DoesNotExist:
+                except Exception as e:
+                    print(str(e))
                     user = None
 
             if user is not None:
@@ -91,9 +121,7 @@ class Dashboard(LoginRequiredMixin, View, PeriodoContextMixin):
 
         datos_personal = context['datos_personal']
         evaluacion = Evaluacion.objects.filter(evaluado=datos_personal, periodo = context['periodo']).first()
-        today = date.today()
-        time_in_charge_months = (today.year - datos_personal.fecha_ingreso.year) * 12 + today.month - datos_personal.fecha_ingreso.month - ((today.month, today.day) < (datos_personal.fecha_ingreso.month, datos_personal.fecha_ingreso.day))
-        context['antiguedad'] = time_in_charge_months
+        context['antiguedad'] = datos_personal.antiguedad()
         context['evaluacion'] = evaluacion
         context['puede_finalizar'] = evaluacion.resultados.count() == evaluacion.formulario.instrumentos.count() and (
             evaluacion.formaciones.exists() and evaluacion.logros_y_metas.exists()
@@ -112,7 +140,7 @@ class Dashboard(LoginRequiredMixin, View, PeriodoContextMixin):
     def get(self, request):
         return render(request, 'core/dashboard.html', context=self.get_context_data())
 
-class PanelDeControl(LoginRequiredMixin, View, PeriodoContextMixin):
+class PanelDeControl(SuperuserMixin, View, PeriodoContextMixin):
     template_name = 'core/panel_control.html'
 
     def get_context_data(self, **kwargs):
@@ -141,18 +169,17 @@ class PanelDeControl(LoginRequiredMixin, View, PeriodoContextMixin):
         
         return render(request, self.template_name, self.get_context_data())
     
-class PeriodoListView(ListView):
+class PeriodoListView(SuperuserMixin, ListView):
     model = Periodo
     template_name = 'core/periodo_list.html'
     context_object_name = 'periodos'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['periodo'] = Periodo.objects.filter(activo=True).exists()
-
+        context['periodo'] = Periodo.objects.filter(activo=True).first() if Periodo.objects.filter(activo=True).exists() else None
         return context
 
-class PeriodoCreateView(FormView):
+class PeriodoCreateView(SuperuserMixin, FormView):
     template_name = 'core/periodo_form.html'
     form_class = PeriodoForm
     success_url = reverse_lazy('periodo_lista')
@@ -166,6 +193,8 @@ class PeriodoCreateView(FormView):
             activo=True
         )
 
+        correos = []
+
         for dp in personal:
             Evaluacion.objects.get_or_create(evaluado=dp, 
                 periodo=form.instance, 
@@ -175,13 +204,23 @@ class PeriodoCreateView(FormView):
                 ), 
             )
 
+            if(dp.user.email):
+                correos.append(dp.user.email)
+
+        if(len(correos) > 0):
+            send_mail_async(
+                'Nuevo periodo de evaluación de Desempeño',
+                f'Como Gerente de Gestión Humana, emito este mensaje para informar que el período de evaluación de desempeño {form.instance.__str__()} ha sido habilitado para que todo el personal realice su evaluación de desempeño. Por favor, ingresen a través del siguiente enlace: {self.request.headers.get("Referer")} para realizar su evaluación, haciendo uso de su número de ficha y clave de máquina.',
+                correos,
+                sender='kchirino@indesca.com',
+            )
+
         return super().form_valid(form)
     
     def form_invalid(self, form):
-        print(form.errors)
         return super().form_invalid(form)
 
-class CerrarPeriodoView(View):
+class CerrarPeriodoView(SuperuserMixin, View):
     def post(self, request, pk):
         periodo = Periodo.objects.get(pk=pk)
         if periodo.activo and request.user.is_superuser:
@@ -190,7 +229,7 @@ class CerrarPeriodoView(View):
 
         return redirect('periodo_lista')
 
-class GenerarReportesPeriodo(View):
+class GenerarReportesPeriodo(SuperuserMixin, View):
     def get(self, request):
         periodos = Periodo.objects.filter(activo=False).order_by('-fecha_inicio')
         return render(request, 'core/dnf.html', context={'periodos': periodos})
@@ -204,7 +243,16 @@ class GenerarReportesPeriodo(View):
         elif(tipo == 'resumen'):
             return fill_resumen_periodo(periodo)
     
-class GenerarReporteFinal(View):
+class GenerarReporteFinal(ValidarMixin, View):
+    def validar(self):
+        evaluacion = Evaluacion.objects.get(pk=self.kwargs.get('pk'))
+
+        return (self.request.user.is_superuser 
+            or self.request.user.is_staff 
+            or self.request.user.id == evaluacion.evaluado.supervisor.user.pk 
+            or self.request.user.id == evaluacion.evaluado.user.pk
+        )
+
     def get(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
 

@@ -7,13 +7,15 @@
       </a>
       <div class="hidden w-full md:block md:w-auto" id="navbar-default">
           <ul class="font-medium text-base-100 flex flex-col items-center p-4 md:p-0 mt-4 border border-gray-300 rounded-lg bg-neutral md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-neutral">
-              <li>
+              <li id>
                   <b class="underline">Período:</b>
-                  {% if periodo %}
-                  {{periodo.fecha_inicio}}-{{periodo.fecha_fin}}
-                  {% else %}
-                  N/A
-                  {% endif %}
+                  <span id="periodo">
+                    {% if periodo %}
+                    {{periodo.fecha_inicio}}-{{periodo.fecha_fin}}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                  </span>
               </li>
           </ul>
       </div>

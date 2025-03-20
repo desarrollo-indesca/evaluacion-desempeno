@@ -7,14 +7,13 @@
                 {% if not include_others and tipo == 'H' %}
                 <option value="H" {% if tipo == 'H' %}selected{% endif %}>Definitiva</option>
                 {% elif not include_others and tipo == 'S' %}
-                {% if evaluacion.fecha_revision %}
                 <option value="S" {% if tipo == 'S' %}selected{% endif %}>Revisada por Supervisor</option>
-                {% endif %}
                 {% else %}
+
                 <option value="E" {% if tipo == 'E' %}selected{% endif %}>Autoevaluación</option>
                 {% if include_others %}
                 {% if tipo == "S" or evaluacion.estado == "G" or evaluacion.estado == "H" or evaluacion.estado == "A" or evaluacion.estado == "R" %}
-                {% if evaluacion.fecha_revision %}
+                {% if evaluacion.fecha_revision and evaluacion.total_supervisor %}
                 <option value="S" {% if tipo == 'S' or not tipo %}selected{% endif %}>Revisada por Supervisor</option>
                 {% endif %}
                 {% endif %}
@@ -22,6 +21,7 @@
                 <option value="H" {% if tipo == 'H' or not tipo %}selected{% endif %}>Definitiva</option>
                 {% endif %}
                 {% endif %}
+
                 {% endif %}
             </select>
         </div>
@@ -38,7 +38,7 @@
                 </tr>
                 <tr>
                     <th>Supervisor</th>
-                    <td class="text-center">{{evaluacion.evaluado.supervisor.user.get_full_name}}</td>
+                    <td class="text-center">{{evaluacion.evaluado.supervisor.user.get_full_name|default:'No tiene'}}</td>
                 </tr>
                 <tr>
                     <th>Periodo</th>
@@ -72,13 +72,25 @@
             <div class="collapse collapse-arrow bg-base-200 mb-2 overflow-x-auto">
                 <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
                 <div class="collapse-title text-xl font-medium">
-                    {{resultado.instrumento}} ({% if tipo == "E" %}{{resultado.resultado_empleado|default:'-'}}{% elif tipo == "S" %}
+                    {{resultado.instrumento}} ({% if tipo == "E" %} {{resultado.resultado_empleado|default:'-'}}{% elif tipo == "S" %}
                     {% if not evaluacion.fecha_revision %}
                     {{resultado.resultado_empleado|default:'-'}}
                     {% else %}
                     {{resultado.resultado_supervisor|default:'-'}}
                     {% endif %}
-                    {% else %}{{resultado.resultado_final|default:'-'}} {% endif %} / {{resultado.instrumento.peso}})
+                    {% else %}
+                    {% if not tipo %}
+                    {% if evaluacion.estado == 'R' or evaluacion.estado == 'A' %}
+                    {{resultado.resultado_final|default:'-'}}
+                    {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' %}
+                    {{resultado.resultado_supervisor|default:'-'}}
+                    {% else %}
+                    {{resultado.resultado_empleado|default:'-'}}
+                    {% endif %}
+                    {% else %}
+                    {{resultado.resultado_final|default:'-'}} 
+                    {% endif %}
+                    {% endif %} / {{resultado.instrumento.peso|floatformat:2}} )
                 </div>
                 <div class="collapse-content">
                     <div hx-trigger="revealed once" hx-get="evaluacion/seccion/" hx-vals="js:{version: document.getElementById('version-{{evaluacion.pk}}-{{id}}').value, pk: {{evaluacion.pk}}, instrumento: {{resultado.pk}}}" hx-swap="outerHTML"></div>
@@ -114,17 +126,25 @@
         </div>
 
         {% if evaluacion.total %}
-        {% if evaluacion.estado != 'P' and evaluacion.estado != 'R' %}
+        {% if evaluacion.estado != 'P' %}
         <div class="stats shadow">
             <div class="stat bg-gray-900 text-white">
               <div class="stat-title text-white">Resultado de la Evaluación</div>
               <div class="stat-value">
-                {% if tipo == "E" %}
+                {% if tipo == "E" or tipo == 'S' and not evaluacion.fecha_revision %}
                 {{evaluacion.total|floatformat:2}}
                 {% elif tipo == "S" %}
                 {{evaluacion.total_supervisor|floatformat:2}}
                 {% else %}
+                {% if evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
                 {{evaluacion.total_definitivo|floatformat:2}}
+                {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' and evaluacion.fecha_revision %}
+                {{evaluacion.total_supervisor|floatformat:2}}
+                {% elif evaluacion.estado == 'H' %}
+                {{evaluacion.total_definitivo|floatformat:2}}
+                {% else %}
+                {{evaluacion.total|floatformat:2}}
+                {% endif %}
                 {% endif %}
               </div>
               <div class="stat-desc text-white">de {{evaluacion.peso|floatformat:2}} puntos.</div>
@@ -183,7 +203,11 @@
                         {% elif tipo == 'H' %}
                         &nbsp;Yo, {{request.user.get_full_name.upper}}, he revisado la autoevaluación y revisión de su respectivo supervisor de la evaluación de desempeño de {{evaluacion.evaluado.user.get_full_name.upper}}, y en mi caracter de GERENTE DE GESTIÓN HUMANA, decido que esta sea:
                         {% else %}
+                        {% if evaluacion.evaluado.supervisor %}
                         &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y estoy de acuerdo en que sea enviada a mi supervisor. 
+                        {% else %}
+                        &nbsp;Yo, {{request.user.get_full_name.upper}}, declaro que he revisado todas las respuestas brindadas en mi autoevaluación, y autorizo que sea directamente enviada a la gerencia de gestión humana para su consideración. 
+                        {% endif %}
                         {% endif %}
                     </label>
                 </div>
@@ -192,10 +216,12 @@
                     {% if tipo == 'S' %}
                     <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la Evaluación al Gerente</button>
                     {% elif tipo == 'E' %}
-                    <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la evaluación a mi supervisor</button>
+                    <button id="enviar-evaluacion" type="submit" class="btn btn-error">Enviar la evaluación</button>
                     {% elif tipo == 'H' %}
                     <button id="enviar-evaluacion" name="tipo_evaluacion" value="A" type="submit" class="btn btn-success">Aprobada</button>&nbsp;
+                    {% if evaluacion.evaluado.supervisor and not evaluacion.evaluado.supervisor.user.is_superuser %}
                     <button id="enviar-evaluacion" hx-confirm="¿Está seguro que desea rechazar la evaluación? En este caso deberá indicar en un comentario las razones de la misma." name="tipo_evaluacion" value="R" type="submit" class="btn btn-error">Rechazada</button>
+                    {% endif %}
                     
                     <script>
                         document.addEventListener("htmx:beforeRequest", event => {
@@ -220,12 +246,14 @@
         </div>
         {% endif %}
 
-        {% if evaluacion.estado == 'A' and tipo == "H" %}
+        {% if evaluacion.estado == 'A' and tipo == "H" or evaluacion.estado == 'A' and not tipo %}
         <div class="d-flex justify-center mt-3">
-            <a class="btn btn-danger" href="{% url 'reporte_final_evaluacion' pk=evaluacion.pk %}">
+            <a class="btn btn-danger" target="_blank" href="{% url 'reporte_final_evaluacion' pk=evaluacion.pk %}">
                 Descargar Reporte XLSX
             </a>
         </div>
+        {% elif evaluacion.estado == 'R' %}
+        <h2 class="text-xl">Esta evaluación fue rechazada por la Gerencia de Gestión Humana.</h2>
         {% endif %}
     </div>
     <label class="modal-backdrop" for="modal-{{id}}{% if gerencia %}-gerencia{% endif %}{% if extra_suffix != None %}-{{extra_suffix}}{% endif %}">Close</label>

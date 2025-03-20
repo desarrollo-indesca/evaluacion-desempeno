@@ -19,7 +19,7 @@
     {% include 'messages.html' %}
 {% endif %}
 
-<form hx-get="{% url 'consultar_evaluaciones' pk=request.user.pk %}" hx-select="#evaluaciones" hx-target="#evaluaciones" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
+<form hx-get="{{request.path}}" hx-select="#evaluaciones-{{extra_suffix}}" hx-target="#evaluaciones-{{extra_suffix}}" hx-swap="outerHTML" hx- hx-trigger="change" id="filter-form" class="flex justify-evenly w-full">
     <div>
         {{filter.form.periodo.label_tag}} <br>
         {% render_field filter.form.periodo class="select select-bordered w-full" %}
@@ -40,7 +40,7 @@
         </tr>
     </thead>
 
-    <tbody id="evaluaciones">
+    <tbody id="evaluaciones-{{extra_suffix}}">
         {% for evaluacion in filter.qs %}
         <tr>
             <td>{{evaluacion.id}}</td>
@@ -57,13 +57,13 @@
                 {% endif %}
             </td>
             <td>
-                <label for="modal-{{evaluacion.pk}}-{{forloop.counter0}}" class="btn btn-error">Revisar Evaluación</label>
+                <label for="modal-{{evaluacion.pk}}-{{extra_suffix}}" class="btn btn-error">Revisar Evaluación</label>
                 {% if  evaluacion.estado == 'P' or evaluacion.estado == 'E' or evaluacion.estado == 'S' %}
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk extra_suffix=forloop.counter0 tipo="E" %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="E" %}
                 {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' %}
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk extra_suffix=forloop.counter0 tipo="S" %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="S" %}
                 {% elif evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
-                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk extra_suffix=forloop.counter0 tipo="H" %}
+                {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="H" %}
                 {% endif %}
             </td>
         </tr>

@@ -55,7 +55,7 @@
                                 {% render_field form.descripcion class="input input-bordered w-full" placeholder="Meta o Logro en este Período" required="true" %}
                             </td>
                             <td class="text-center w-1/8">
-                                {% render_field form.porc_cumplimiento class="input input-bordered w-full" placeholder="% Cumplido" required="true" %}
+                                {% render_field form.porc_cumplimiento class="input input-bordered w-full" placeholder="% Cumplido" min=0 max=100 required="true" %}
                             </td>
                             <td class="flex justify-center">
                                 {% if forloop.first %}

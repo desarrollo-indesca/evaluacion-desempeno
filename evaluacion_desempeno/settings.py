@@ -45,7 +45,8 @@ INSTALLED_APPS = [
 
     'evaluacion',
     'core',
-    'widget_tweaks'
+    'widget_tweaks',
+    'debug_toolbar',
 ]
 
 # LDAP SETTINGS
@@ -84,6 +85,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'evaluacion_desempeno.urls'
@@ -173,3 +176,17 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static"
 ]
+
+INTERNAL_IPS = [
+'127.0.0.1',
+]
+
+# Email
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'mail.indesca.com'  # Replace with your SMTP server address
+# EMAIL_PORT = 465  
+# EMAIL_HOST_USER = 'no-replay@indesca.com'  # Replace with your SMTP username
+# EMAIL_HOST_PASSWORD = 'indesca2024*'  # Replace with your SMTP password
+# EMAIL_USE_SSL = True
+# DEFAULT_FROM_EMAIL = 'no-replay@indesca.com'

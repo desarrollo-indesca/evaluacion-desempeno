@@ -27,9 +27,9 @@ PERIODO_METAS = (
 )
 
 PRIORIDADES = (
-    ("1","1"),
-    ("2","2"),
-    ("3","3"),
+    ("1", "1 - Asociado a Competencias Técnicas"),
+    ("2", "2 - Asociado a Competencias Genéricas"),
+    ("3", "3 - Otras"),
 )
 
 NIVELES_PRIORIDAD = (
@@ -78,6 +78,9 @@ class Pregunta(models.Model):
     peso = models.DecimalField(max_digits=5, decimal_places=2)
     tip = models.CharField(max_length=400, null=True, blank=True)
     seccion = models.ForeignKey(Seccion, on_delete=models.CASCADE, related_name="preguntas")
+
+    def __str__(self):
+        return f"{self.pregunta}; Sección: {self.seccion}"
 
 class Opciones(models.Model):
     opcion = models.CharField(max_length=300)
@@ -146,6 +149,9 @@ class Respuesta(models.Model):
     pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE, related_name="respuestas")
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="respuestas")
 
+    def __str__(self):
+        return f"RESPUESTAS A LA PREGUNTA {self.pregunta} DE LA EVALUACION {self.evaluacion} DEL EMPLEADO {self.evaluacion.evaluado}"
+
 class LogrosYMetas(models.Model):
     descripcion = models.CharField(max_length=200)
     porc_cumplimiento = models.SmallIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)], null=True, blank=True)
@@ -203,3 +209,48 @@ class ResultadoEscalafon(models.Model):
 
     def __str__(self):
         return self.escalafon.nivel
+    
+# Promocion del Personal
+class AspectoPromocion(models.Model):
+    nombre = models.CharField("Nombre del Aspecto a Considerar", max_length=120)
+    antiguedad = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.nombre
+
+class FormularioPromocion(models.Model):
+    nivel = models.ForeignKey(NivelEscalafon, on_delete=models.CASCADE, related_name="formularios_promocion")
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Formulario (Nivel): {self.nivel.nivel}; Activo: {self.activo}"
+
+class DetalleAspectoPromocion(models.Model):
+    aspecto = models.ForeignKey(AspectoPromocion, on_delete=models.CASCADE, related_name="detalle_aspectos")
+    formulario_promocion = models.ForeignKey(FormularioPromocion, on_delete=models.CASCADE, null=True, blank=True, related_name="detalle_aspectos")
+    pregunta_asociada = models.ForeignKey(Pregunta, on_delete=models.CASCADE, null=True, blank=True, related_name="detalle_aspectos")
+    valor_asociado = models.SmallIntegerField()
+    descripcion = models.CharField(max_length=200, null=True, blank=True)
+    opcion_asociada = models.ForeignKey(Opciones, on_delete=models.CASCADE, related_name="detalle_aspectos", null=True, blank=True)
+
+class SolicitudPromocion(models.Model):
+    evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="solicitudes_promocion")
+    aprobado = models.BooleanField(null=True, blank=True)
+    fecha_envio = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    fecha_aprobacion = models.DateTimeField(null=True, blank=True)
+    comentario_general_gghh = models.TextField(null=True, blank=True)
+    formulario_promocion = models.ForeignKey(FormularioPromocion, on_delete=models.CASCADE)
+
+    def estado(self):
+        return "PROMOCIÓN CONCEDIDA" if self.aprobado else "PROMOCIÓN PENDIENTE" if self.aprobado is None else "PROMOCIÓN RECHAZADA"
+
+class RespuestaSolicitudPromocion(models.Model):
+    solicitud_promocion = models.ForeignKey(SolicitudPromocion, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")
+    cumple = models.BooleanField(null=True, blank=True)
+    justificacion = models.TextField()
+    detalle_aspecto = models.ForeignKey(DetalleAspectoPromocion, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")
+    enviada_por = models.CharField(max_length=1, choices=ROLES, default="S")
+
+    def valor_evaluado(self):
+        res = Respuesta.objects.get(evaluacion=self.solicitud_promocion.evaluacion, pregunta=self.detalle_aspecto.pregunta_asociada).respuesta_definitiva
+        return res

@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from django.contrib.auth import get_user_model
 
@@ -12,7 +13,7 @@ class Periodo(models.Model):
     activo = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"PERIODO {self.fecha_inicio} - {self.fecha_fin}"
+        return f"{self.fecha_inicio} - {self.fecha_fin}"
     
     def todas_evaluaciones_terminadas(self):
         return self.evaluaciones.filter(estado__in=("A", "R")).count() == self.evaluaciones.count()
@@ -45,6 +46,11 @@ class DatosPersonal(models.Model):
     
     def evaluacion_actual(self):
         return self.evaluaciones.filter(periodo__activo=True).first()
+    
+    def antiguedad(self):
+        today = datetime.date.today()
+        time_in_charge_months = (today.year - self.fecha_ingreso.year) * 12 + today.month - self.fecha_ingreso.month - ((today.month, today.day) < (self.fecha_ingreso.month, self.fecha_ingreso.day))
+        return time_in_charge_months
     
     class Meta:
         ordering = (

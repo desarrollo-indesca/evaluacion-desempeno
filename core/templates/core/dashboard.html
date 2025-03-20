@@ -105,7 +105,7 @@
                                         </tr>
                                         <tr>
                                             <th>Fecha Aprobación</th>
-                                            <td class="text-center">{{evaluacion.fecha_aprobacion|default:'-'}}</td>
+                                            <td class="text-center">{{evaluacion.fecha_fin|default:'-'}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="2" class="text-center">
@@ -193,7 +193,7 @@
                                             {% if puede_finalizar %}
                                             <tr>
                                                 <td colspan="4" class="text-center">
-                                                    <label for="modal-evaluacion" class="btn btn-error">Revisar Evaluación para enviar al Supervisor</label>
+                                                    <label for="modal-evaluacion" class="btn btn-error">Revisar Evaluación para Enviar</label>
                                                     {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=False finish=True id="evaluacion" tipo="E" %}
                                                 </td>
                                             </tr>                                        
@@ -248,13 +248,4 @@
     </div>
     {% endif %}
   </div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const htmxElements = document.querySelectorAll("[hx-*]");
-        htmxElements.forEach(el => {
-            htmx.process(el);
-        });
-    });    
-</script>
 {% endblock %}

@@ -104,5 +104,15 @@
             </div>
         </div>
     </div>
+    <div class="p-4">
+        <div class="card bg-base-100 shadow-xl border">
+            <div class="card-body">
+                <h2 class="card-title">Promoción del Personal</h2>
+                <p>Accede a las opciones para la revisión de las solicitudes de promoción.</p>
+                <div class="card-actions justify-end">
+                    <a hx-get="{% url 'consulta_promociones' %}" hx-target="closest .tab-content" hx-swap="innerHTML" href="#" class="btn btn-error">Ir</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
