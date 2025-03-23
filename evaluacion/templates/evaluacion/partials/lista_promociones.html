@@ -52,7 +52,8 @@
             {% if solicitud.aprobado is None %}
             <a hx-get="{% url 'revisar_promocion' pk=solicitud.pk %}" hx-target="closest .tab-content" class="btn btn-default">Revisar Solicitud</a>
             {% else %}
-            <label for="modal-{{ solicitud.pk }}" class="btn btn-primary">Ver Formulario</label>
+            <label for="modalpromocion-{{ solicitud.pk }}-consultaspromos" class="btn btn-primary">Ver Formulario</label>
+            {% include 'evaluacion/partials/modal-promocion.html' with solicitud=solicitud id=solicitud.pk extra_suffix="consultaspromos" %}
             {% endif %}
             </td>
         </tr>
