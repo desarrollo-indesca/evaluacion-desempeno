@@ -233,6 +233,9 @@ class DetalleAspectoPromocion(models.Model):
     descripcion = models.CharField(max_length=200, null=True, blank=True)
     opcion_asociada = models.ForeignKey(Opciones, on_delete=models.CASCADE, related_name="detalle_aspectos", null=True, blank=True)
 
+    def __str__(self):
+        return f"Aspecto: {self.aspecto}; Pregunta: {self.pregunta_asociada}"
+
 class SolicitudPromocion(models.Model):
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE, related_name="solicitudes_promocion")
     aprobado = models.BooleanField(null=True, blank=True)

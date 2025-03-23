@@ -616,8 +616,8 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
         datos_personal = request.user.datos_personal.get(activo=True)
         evaluado = DatosPersonal.objects.get(pk=self.kwargs['pk'])
         
-        if datos_personal != evaluado.supervisor and not request.user.is_superuser:
-            return redirect('home')
+        if datos_personal != evaluado.supervisor and not request.user.is_superuser and not request.user.is_staff:
+            return redirect('dashboard')
         
         return super().dispatch(request, *args, **kwargs)
 
@@ -639,7 +639,7 @@ class HistoricoEvaluacionesSupervisado(PeriodoContextMixin, ListView):
 
         if (datos_personal.supervisados.filter(pk=evaluado.pk).exists()
                 or request.user.is_superuser
-                or (request.user.is_staff and datos_personal.gerencia == evaluado.gerencia)):
+                or (request.user.is_staff)):
             return super().get(request, *args, **kwargs)
         else:
             return HttpResponseForbidden()
@@ -854,20 +854,23 @@ class RevisionGerencia(ValidarMixin, PeriodoContextMixin, ListView):
         context['filter'] = self.filter_class(prefix='gerencia')
         context['datos_personal'] = self.request.user.datos_personal.get(activo=True)
         self.request.session['url_previo'] = f'evaluacion/gerencia/'
-        context['puede_enviarse_gghh'] = self.request.user.is_staff and (Evaluacion.objects.filter(periodo=self.get_periodo(), estado='G', evaluado__gerencia=self.request.user.datos_personal.get(activo=True).gerencia).count())
+        context['puede_enviarse_gghh'] = self.request.user.is_staff and (Evaluacion.objects.filter(periodo=self.get_periodo(), estado='G', evaluado__gerencia__in=self.request.user.datos_personal.get(activo=True).personal_gerente.filter(activo=True).values_list('gerencia', flat=True)).count())
         context['gerencia'] = self.request.user.datos_personal.get(activo=True).gerencia
         context['total'] = self.get_queryset().count()
         return context
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(gerencia=self.request.user.datos_personal.get(activo=True).gerencia, activo=True)
+        qs = super().get_queryset().filter(
+            gerencia__in=self.request.user.datos_personal.get(activo=True).personal_gerente.filter(activo=True).values_list('gerencia', flat=True),
+            activo=True
+        )
         self.filter = self.filter_class(self.request.GET, queryset=qs, prefix='gerencia')
         return self.filter.qs
 
 class EnviarEvaluacionesGestionHumana(GerenteMixin, View):
     def post(self, request):
         periodo_actual = Periodo.objects.get(activo=True)
-        evaluaciones = Evaluacion.objects.filter(periodo=periodo_actual, estado='G', evaluado__gerencia=request.user.datos_personal.get(activo=True).gerencia)
+        evaluaciones = Evaluacion.objects.filter(periodo=periodo_actual, estado='G', evaluado__gerencia__in=request.user.datos_personal.get(activo=True).personal_gerente.filter(activo=True).values_list('gerencia', flat=True))
 
         if evaluaciones.count():
             evaluaciones.update(estado='H', fecha_entrega=datetime.datetime.now())
