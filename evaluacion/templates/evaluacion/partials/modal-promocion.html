@@ -20,6 +20,10 @@
                     <td class="text-center">{{solicitud.evaluacion.periodo.fecha_inicio}} - {{solicitud.evaluacion.periodo.fecha_fin}}</td>
                 </tr>
                 <tr>
+                    <th>Nivel Solicitada</th>
+                    <td class="text-center">{{solicitud.formulario_promocion.nivel}}</td>
+                </tr>
+                <tr>
                     <th>Fecha de Envío</th>
                     <td class="text-center">{{solicitud.fecha_envio|default:'-'}}</td>
                 </tr>
@@ -37,25 +41,32 @@
                         {% endif %}
                     </td>
                 </tr>
+                {% if solicitud.solicitud %}
+                <th>
+                    <th>Comentarios GGHH</th>
+                    <td class="text-center">{{solicitud.comentario_general_gghh}}</td>
+                </th>
+                {% endif %}
             </tbody>
         </table>
 
         <div class="my-5">
             <table class="table-xs table-zebra w-full p-5 my-5">
                 <thead>
-                    <tr class="bg-gray-900 text-white">
-                        <th>Aspecto</th>
-                        <th>Valor requerido</th>
-                        <th>Valor evaluado</th>
-                        <th>Descripción</th>
-                        <th>Cumple (Sup.)</th>
-                        <th>Observaciones/Justificación (Sup.)</th>
-                        <th>Cumple (GGHH)</th>
-                        <th>Observaciones/Justificación (GGHH)</th>
+                    <tr>
+                        <th colspan="6" class="text-center bg-gray-900 text-white">Aspectos Evaluados para el nivel Solicitado (Definitivas)</th>
+                    </tr>
+                    <tr>
+                        <th class="bg-gray-900 text-white">Aspecto</th>
+                        <th class="bg-gray-900 text-white">Valor requerido</th>
+                        <th class="bg-gray-900 text-white">Valor evaluado</th>
+                        <th class="bg-gray-900 text-white">Descripción</th>
+                        <th class="bg-gray-900 text-white">Cumple</th>
+                        <th class="bg-gray-900 text-white">Observaciones/Justificación</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for respuesta in solicitud.respuestas_solicitud_promocion.all %}
+                    {% for respuesta in solicitud.respuestas_gerencia %}
                     <tr>
                         <td>{{respuesta.detalle_aspecto.aspecto.nombre}}</td>
                         <td>
@@ -83,6 +94,66 @@
                             {% endif %}
                         </td>
                         <td>{{respuesta.justificacion}}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <th colspan="6">No se han cargado las respuestas definitivas.</th>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="my-5">
+            <table class="table-xs table-zebra w-full p-5 my-5">
+                <thead>
+                    <tr>
+                        <th colspan="6" class="text-center bg-gray-900 text-white">Aspectos Evaluados para el nivel Solicitado (Supervisor)</th>
+                    </tr>
+                    <tr class="bg-gray-900 text-white">
+                        <th class="bg-gray-900 text-white">Aspecto</th>
+                        <th class="bg-gray-900 text-white">Valor requerido</th>
+                        <th class="bg-gray-900 text-white">Valor evaluado</th>
+                        <th class="bg-gray-900 text-white">Descripción</th>
+                        <th class="bg-gray-900 text-white">Cumple</th>
+                        <th class="bg-gray-900 text-white">Observaciones/Justificación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for respuesta in solicitud.respuestas_solicitud_promocion.all %}
+                    {% if respuesta.enviada_por == "S" %}
+                    <tr>
+                        <td>{{respuesta.detalle_aspecto.aspecto.nombre}}</td>
+                        <td>
+                            {% if respuesta.detalle_aspecto.aspecto.antiguedad %}
+                                {{respuesta.detalle_aspecto.valor_asociado}} meses
+                            {% else %}
+                                {{respuesta.detalle_aspecto.opcion_asociada.valor|default:respuesta.detalle_aspecto.valor_asociado|default:'Leer Descripción'}}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if respuesta.detalle_aspecto.aspecto.antiguedad %}
+                                {{solicitud.evaluacion.evaluado.antiguedad}} meses
+                            {% else %}
+                                {{respuesta.valor_evaluado|default:'N/A'}}
+                            {% endif %}
+                        </td>
+                        <td>{{respuesta.detalle_aspecto.descripcion}}</td>
+                        <td>
+                            {% if respuesta.cumple %}
+                                Si
+                            {% elif respuesta.cumple is None %}
+                                Leer Justificación
+                            {% else %}
+                                No
+                            {% endif %}
+                        </td>
+                        <td>{{respuesta.justificacion}}</td>
+                    </tr>
+                    {% endif %}
+                    {% empty %}
+                    <tr>
+                        <th colspan="6">No se han cargado las respuestas del Supervisor.</th>
                     </tr>
                     {% endfor %}
                 </tbody>

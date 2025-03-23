@@ -50,9 +50,9 @@
             <td>{{ solicitud.estado }}</td>
             <td>
             {% if solicitud.aprobado is None %}
-            <a hx-get="{% url 'revisar_promocion' pk=solicitud.pk %}" hx-target="closest .tab-content" class="btn btn-default">Revisar Solicitud</a>
+            <a hx-get="{% url 'revisar_promocion' pk=solicitud.pk %}" hx-target="closest .tab-content" class="btn btn-error">Revisar Solicitud</a>
             {% else %}
-            <label for="modalpromocion-{{ solicitud.pk }}-consultaspromos" class="btn btn-primary">Ver Formulario</label>
+            <label for="modalpromocion-{{ solicitud.pk }}-consultaspromos" class="btn btn-default">Ver Formulario</label>
             {% include 'evaluacion/partials/modal-promocion.html' with solicitud=solicitud id=solicitud.pk extra_suffix="consultaspromos" %}
             {% endif %}
             </td>

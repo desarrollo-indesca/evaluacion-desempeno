@@ -241,6 +241,9 @@ class SolicitudPromocion(models.Model):
     comentario_general_gghh = models.TextField(null=True, blank=True)
     formulario_promocion = models.ForeignKey(FormularioPromocion, on_delete=models.CASCADE)
 
+    def respuestas_gerencia(self):
+        return self.respuestas_solicitud_promocion.filter(enviada_por="H")
+
     def estado(self):
         return "PROMOCIÓN CONCEDIDA" if self.aprobado else "PROMOCIÓN PENDIENTE" if self.aprobado is None else "PROMOCIÓN RECHAZADA"
 

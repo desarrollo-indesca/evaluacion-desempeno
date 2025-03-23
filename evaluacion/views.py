@@ -1329,6 +1329,7 @@ class FormularioRevisionPostulacionPromocion(FormularioPostulacionPromocion):
                 solicitud_promocion = SolicitudPromocion.objects.get(
                     evaluacion = evaluacion
                 )
+                solicitud_promocion.fecha_aprobacion = datetime.datetime.now()
                 solicitud_promocion.comentario_general_gghh = request.POST.get('comentario_general_gghh')
                 
                 if all(form.is_valid() for form in forms_promocion):
