@@ -6,6 +6,9 @@
     <div></div>
 </div>
 
+{% if messages %}
+    {% include 'messages.html' %}
+{% endif %}
 <hr>
 
 <form hx-get="{{request.path}}" hx-select="#resultados" hx-target="#resultados" hx-swap="outerHTML" hx-trigger="change, keyup delay:1s" id="filter-form" class="flex justify-evenly w-full mt-3">

@@ -1,6 +1,12 @@
 <input type="checkbox" id="modal-{{id}}{% if gerencia %}-gerencia{% endif %}{% if extra_suffix != None %}-{{extra_suffix}}{% endif %}" class="modal-toggle" />
 <div class="modal" role="dialog">
     <div class="modal-box w-11/12 max-w-5xl">
+        {% if evaluacion.resultados.count < 3 %}
+        <div class="alert alert-warning my-3">
+            <span class="uppercase font-bold">Advertencia</span> Este empleado no ha completado los 3 instrumentos ponderados de su evaluación.
+        </div>
+        {% endif %}
+
         <div class="flex justify-center items-center">
             <h3 class="text-lg font-bold">Evaluación &nbsp;</h3>
             <select name="version" id="version-{{evaluacion.pk}}-{{id}}" hx-select=".modal-box" hx-target="closest .modal-box" hx-trigger="change" hx-get="{% url 'generar_modal' pk=evaluacion.pk %}" hx-swap="outerHTML">
@@ -67,7 +73,7 @@
             </tbody>
         </table>
 
-        <div class="my-5">
+        <div class="my-5">            
             {% for resultado in evaluacion.resultados.all %}
             <div class="collapse collapse-arrow bg-base-200 mb-2 overflow-x-auto">
                 <input type="checkbox" name="my-accordion-{{resultado.instrumento}}" />
