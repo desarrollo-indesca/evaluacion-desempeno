@@ -246,6 +246,9 @@ class SolicitudPromocion(models.Model):
 
     def estado(self):
         return "PROMOCIÓN CONCEDIDA" if self.aprobado else "PROMOCIÓN PENDIENTE" if self.aprobado is None else "PROMOCIÓN RECHAZADA"
+    
+    class Meta:
+        ordering = ('-fecha_envio',)
 
 class RespuestaSolicitudPromocion(models.Model):
     solicitud_promocion = models.ForeignKey(SolicitudPromocion, on_delete=models.CASCADE, related_name="respuestas_solicitud_promocion")

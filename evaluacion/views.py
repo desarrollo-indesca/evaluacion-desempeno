@@ -12,6 +12,7 @@ import datetime
 from .models import *
 from .forms import *
 from .filters import *
+from core.models import PeriodoGerencial
 from core.views import PeriodoContextMixin, ValidarMixin, EvaluacionEstadoMixin, SuperuserMixin, GerenteMixin, EvaluadoMatchMixin
 
 # Create your views here.
@@ -117,7 +118,7 @@ class FinalizarEvaluacion(EvaluadoMatchMixin, View):
                 elif evaluacion.estado == 'H':
                     messages.success(request, 'La evaluación fue enviada a la Gerencia de Gestión Humana.')
                     body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a la Gerencia de Gestión Humana para su revisión final.\n\n'
-                    to = [evaluacion.evaluado.supervisor.user.email, DatosPersonal.objects.get(user__is_superuser=True).user.email]
+                    to = [evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor else None, DatosPersonal.objects.get(user__is_superuser=True).user.email]
 
                 send_mail_async(
                     'Actualización de Estatus - Evaluación de Desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
@@ -823,8 +824,8 @@ class EnviarEvaluacionGerente(ValidarSupervisorMixin, View):
                 if evaluacion.estado == 'G':
                     messages.success(request, f"Ha sido enviada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} a la Gerencia correspondiente.")
                     body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido enviada a usted para su revisión antes de ser enviada a la Gerencia de Gestión Humana; podrá encontrarla en la pestaña "GERENCIA" del sistema, y podrá enviarse mediante el botón "Enviar a Gestión Humana" de la misma pantalla.\n\n'
-                    to = [evaluacion.evaluado.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
-                elif evaluacion.estado == 'A':
+                    to = [evaluacion.evaluado.user.email, PeriodoGerencial.objects.get(activo=True, gerencia=evaluacion.evaluado.gerencia).gerente.user.email]
+                elif evaluacion.estado == 'A': # Caso Gestión Humana
                     messages.success(request, f"Ha sido aprobada la evaluación de {evaluacion.evaluado.user.get_full_name().upper()} por la Gerencia General.")
                     body = 'La evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper() + ' ha sido aprobada por la Gerencia General; siendo cerrada para el periodo activo.\n\n'
                     to = [evaluacion.evaluado.user.email, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email]
@@ -881,7 +882,9 @@ class EnviarEvaluacionesGestionHumana(GerenteMixin, View):
             for evaluacion in evaluaciones:
                 body += f"- {evaluacion.evaluado.user.get_full_name().upper()}\n"
 
-            body += "Podrá revisarlas en el Panel de Control del Gerente de Gestión Humana, en la sección de revisión de evaluaciones.\n\n"
+            body += "\nPodrá revisarlas en el Panel de Control del Gerente de Gestión Humana, en la sección de revisión de evaluaciones.\n\n"
+
+            print(body)
             
             send_mail_async(
                 f"Envío de Evaluaciones a la Gerencia de Gestión Humana",
@@ -1110,13 +1113,13 @@ class CerrarEvaluacion(ValidarSuperusuario, View):
                 send_mail_async(
                     'Rechazada - Evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
                     "La gerencia de gestión humana encontró irregularidades en la última evaluación enviada por lo cual se ha rechazado y ha sido remitida al supervisor. Para más detalles, reunirse con el gerente de gestión humana.\n\n",
-                    [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor else None, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email],
+                    [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor else None, PeriodoGerencial.objects.get(gerencia=evaluacion.evaluado.gerencia, activo=True).gerente.user.email],
                 )
             else:
                 send_mail_async(
                     'Aprobada - Evaluación de desempeño de ' + evaluacion.evaluado.user.get_full_name().upper(),
                     "La gerencia de gestión humana ha revisado la evaluación y ha sido aprobada; cerrando definitivamente el proceso de evaluación para usted en el periodo evaluado.\n\n",
-                    [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor else None, evaluacion.evaluado.gerencia.gerencias.get(activo=True).gerente.user.email],
+                    [evaluacion.evaluado.user.email, evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor else None, PeriodoGerencial.objects.get(gerencia=evaluacion.evaluado.gerencia, activo=True).gerente.user.email],
                 )
 
         messages.success(request, 'Evaluación cerrada correctamente.')
@@ -1202,8 +1205,8 @@ class FormularioPostulacionPromocion(ValidarMixin, View):
                         f"Se solicita considerar la promoción para el empleado {evaluacion.evaluado.user.get_full_name().upper()}; el formulario correspondiente ha sido enviado con sus justificaciones y consideraciones correspondientes.",
                         [
                             DatosPersonal.objects.get(user__is_superuser=True).user.email,
-                            evaluacion.evaluado.supervisor.user.email,
-                            DatosPersonal.objects.get(user__is_staff=True, gerencia=evaluacion.evaluado.gerencia).user.email
+                            evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor else None,
+                            PeriodoGerencial.objects.get(activo=True, gerencia=evaluacion.evaluado.gerencia).gerente.user.email
                         ],
                         sender=request.user.email if request.user.email else 'no-replay@indesca.com'
                     )
@@ -1376,8 +1379,8 @@ class FormularioRevisionPostulacionPromocion(FormularioPostulacionPromocion):
                         f'Decisión sobre la Solicitud de Promoción para {evaluacion.evaluado.user.get_full_name().upper()}',
                         contenido,
                         [
-                            evaluacion.evaluado.supervisor.user.email,
-                            DatosPersonal.objects.get(user__is_staff=True, gerencia=evaluacion.evaluado.gerencia).user.email
+                            evaluacion.evaluado.supervisor.user.email if evaluacion.evaluado.supervisor else None,
+                            PeriodoGerencial.objects.get(activo=True, gerencia=evaluacion.evaluado.gerencia).gerente.user.email
                         ],
                         sender=request.user.email
                     )

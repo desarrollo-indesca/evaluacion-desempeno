@@ -6,7 +6,7 @@
         <h3 class="text-2xl">Consulta de Personal de la Gerencia</h3>
         <h4 class="text-md">{{gerencia}}</h4>
         {% else %}
-        <h3 class="text-2xl">Consulta de Supervisados (Periodo Actual)</h3>
+        <h3 class="text-2xl">Consulta de Supervisados</h3>
         {% endif %}
 
         {% if messages %}
@@ -75,9 +75,9 @@
                 <span class="badge badge-error">Sin Evaluación Activa</span>
                 {% endif %}
 
-                {% if evaluacion.estado == 'A' and not evaluacion.solicitudes_promocion.count %}
+                {% if evaluacion.estado == 'A' and not evaluacion.solicitudes_promocion.count and not evaluacion.evaluado.is_superuser %}
                 <span class="badge badge-error">Sin Promoción Solicitada</span>
-                {% elif evaluacion.solicitudes_promocion.count %}
+                {% elif evaluacion.solicitudes_promocion.count and not evaluacion.evaluado.is_superuser %}
                 <span class="badge badge-info">{{evaluacion.solicitudes_promocion.first.estado}}</span>
                 {% endif %}
             </td>
@@ -98,7 +98,7 @@
                 {% endif %}
                 
                 <a class="btn btn-gray" hx-target="closest .tab-content" hx-get="{% url 'consultar_historico_supervisados' pk=supervisado.pk %}" hx-vals="js:{previous_url: '{{url_regreso}}'}">Ver Histórico de Evaluaciones</a>
-                {% if evaluacion and evaluacion.estado == 'A' %}
+                {% if evaluacion and evaluacion.estado == 'A' and not evaluacion.evaluado.user.is_superuser %}
 
                 {% if not evaluacion.solicitudes_promocion.count and not gerencia %}
                 <a class="btn btn-gray bg-gray-900 text-white" hx-confirm="Está a punto de ingresar al formulario de postulación a promoción del empleado. Toda la información que coloque deberá ser real y correcta a efectos de tomar una decisión de promoción. Asimismo, solo se podrá realizar este proceso una vez por evaluación. ¿Desea continuar?" hx-get="{% url 'postular_promocion' pk=evaluacion.pk %}" hx-target="closest .tab-content">Postular a Promoción</a>

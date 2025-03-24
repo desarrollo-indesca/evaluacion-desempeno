@@ -20,7 +20,7 @@
                     <td class="text-center">{{solicitud.evaluacion.periodo.fecha_inicio}} - {{solicitud.evaluacion.periodo.fecha_fin}}</td>
                 </tr>
                 <tr>
-                    <th>Nivel Solicitada</th>
+                    <th>Nivel Solicitado</th>
                     <td class="text-center">{{solicitud.formulario_promocion.nivel}}</td>
                 </tr>
                 <tr>
@@ -41,11 +41,11 @@
                         {% endif %}
                     </td>
                 </tr>
-                {% if solicitud.solicitud %}
-                <th>
+                {% if solicitud.comentario_general_gghh %}
+                <tr>
                     <th>Comentarios GGHH</th>
                     <td class="text-center">{{solicitud.comentario_general_gghh}}</td>
-                </th>
+                </tr>
                 {% endif %}
             </tbody>
         </table>
