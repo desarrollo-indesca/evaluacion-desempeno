@@ -4,8 +4,9 @@ import datetime
 from evaluacion.models import Evaluacion, SolicitudPromocion
 from io import BytesIO
 from django.http import HttpResponse
+from evaluacion_desempeno.settings import BASE_DIR
 
-def create_dnf(periodo, file_path='core/reportes/bases/plan-anual-formacion.xlsx'):
+def create_dnf(periodo, file_path=f'{BASE_DIR}/core/reportes/bases/plan-anual-formacion.xlsx'):
     # Load the Excel workbook
     workbook = openpyxl.load_workbook(file_path)
 
@@ -67,7 +68,7 @@ def create_dnf(periodo, file_path='core/reportes/bases/plan-anual-formacion.xlsx
     output.seek(0)
 
     # add the picture in static/img/LogoDeIndesca.svg in A3
-    img = openpyxl.drawing.image.Image('static/img/LogoDeIndesca.png')
+    img = openpyxl.drawing.image.Image(f'{BASE_DIR}/static/img/LogoDeIndesca.png')
     img.anchor = 'A3'
     worksheet.add_image(img)
     
@@ -135,7 +136,7 @@ def fill_resumen_periodo(periodo):
     ).order_by('evaluado__user__first_name')
         
     # Load the Excel workbook
-    workbook = openpyxl.load_workbook('core/reportes/bases/resumen.xlsx')
+    workbook = openpyxl.load_workbook(f'{BASE_DIR}/core/reportes/bases/resumen.xlsx')
 
     # Access the first worksheet
     worksheet = workbook.active
@@ -184,7 +185,7 @@ def fill_resumen_periodo(periodo):
     output.seek(0)
 
     # add the picture in static/img/LogoDeIndesca.png
-    img = openpyxl.drawing.image.Image('static/img/LogoDeIndesca.png')
+    img = openpyxl.drawing.image.Image(f'{BASE_DIR}/static/img/LogoDeIndesca.png')
     img.anchor = 'A3'
     worksheet.add_image(img)
     
@@ -197,7 +198,7 @@ def fill_resumen_periodo(periodo):
     return response
 
 def fill_resultado_operativo(evaluacion):
-    workbook = openpyxl.load_workbook('core/reportes/bases/resultados-operativos.xlsx')
+    workbook = openpyxl.load_workbook(f'{BASE_DIR}/core/reportes/bases/resultados-operativos.xlsx')
     worksheet = workbook.active
 
     worksheet.cell(row=6, column=1, value=f"EVALUACIÓN DE DESEMPEÑO")
@@ -334,7 +335,7 @@ def fill_resultado_operativo(evaluacion):
     return response
 
 def fill_resultado_apoyo(evaluacion):
-    workbook = openpyxl.load_workbook('core/reportes/bases/resultados-apoyo.xlsx')
+    workbook = openpyxl.load_workbook(f'{BASE_DIR}/core/reportes/bases/resultados-apoyo.xlsx')
     worksheet = workbook.active
 
     worksheet.cell(row=6, column=1, value=f"EVALUACIÓN DE DESEMPEÑO")

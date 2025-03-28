@@ -55,6 +55,14 @@
                 {% else %}
                 {{evaluacion.estado_largo}}
                 {% endif %}
+
+                {% if extra_suffix != 'propias' %}
+                {% if evaluacion.estado == 'A' and not evaluacion.solicitudes_promocion.count %}
+                <span class="badge badge-error">Sin Promoción Solicitada</span>
+                {% elif evaluacion.solicitudes_promocion.count %}
+                <span class="badge badge-info">{{evaluacion.solicitudes_promocion.first.estado}}</span>
+                {% endif %}
+                {% endif %}
             </td>
             <td>
                 <label for="modal-{{evaluacion.pk}}-{{extra_suffix}}" class="btn btn-error">Revisar Evaluación</label>
@@ -64,6 +72,11 @@
                 {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="S" %}
                 {% elif evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
                 {% include 'evaluacion/partials/modal-evaluacion-empleado.html' with include_others=True finish=False id=evaluacion.pk tipo="H" %}
+                {% endif %}
+                
+                {% if evaluacion and evaluacion.estado == 'A' and evaluacion.solicitudes_promocion.count and extra_suffix != 'propias' %}
+                <label for="modalpromocion-{{evaluacion.pk}}-{{extra_suffix}}" class="btn btn-gray bg-gray-900 text-white">Ver Promoción Solicitada</label>
+                {% include 'evaluacion/partials/modal-promocion.html' with evaluacion=evaluacion solicitud=evaluacion.solicitudes_promocion.first id=evaluacion.pk %}
                 {% endif %}
             </td>
         </tr>
