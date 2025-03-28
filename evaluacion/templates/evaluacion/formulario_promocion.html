@@ -3,7 +3,7 @@
 
 <div class="flex justify-between items-center p-3">
     <div class="w-1/4">
-        <a href="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
+        <a hx-get="{% url 'dashboard' %}" hx-target="closest .tab-content" href="#" class="btn btn-teal-500">Regresar</a>
     </div>
     <div class="w-1/2 text-center">
         <h1 class="text-2xl">Postulación de Promoción para {{evaluacion.evaluado.user.first_name}}</h1>
@@ -23,7 +23,7 @@
       hx-target="closest .tab-content" 
       hx-swap="innerHTML" 
       hx-vals="js:{nivel: document.getElementById('nivel').value}" 
-      hx-confirm="{% if gerencia %}¿Está seguro de promover al empleado al nivel declarado?{% else %}¿Está seguro que desea postular al empleado a este nivel?{% endif %}">
+      hx-confirm="{% if gerencia %}¿Está seguro de realizar esta acción{% else %}¿Está seguro que desea postular al empleado a este nivel?{% endif %}">
     {% csrf_token %}
     <table class="table table-zebra w-full text-xs text-center mb-4">
         <thead>
@@ -54,7 +54,7 @@
                             </span>
                         </span>
                     {% else %}
-                        {% if aspecto.aspecto.antiguedad %}
+                        {% if aspecto.aspecto.antiguedad or 'Años' in aspecto.aspecto.nombre %}
                             {{aspecto.valor_asociado}} meses
                         {% else %}
                             {{aspecto.opcion_asociada.valor|default:aspecto.valor_asociado|default:'Leer Descripción'}}
@@ -77,7 +77,12 @@
                     {% endif %}
                 </td>
                 <td>{{aspecto.descripcion}}</td>
-                <td>{% render_field valor.formulario.cumple class="select select-bordered w-full" %}</td>
+                <td>
+                    <div class="bg-gray-200 p-1 rounded-lg tooltip" data-tip="">
+                        <span class="tooltip" data-tip="Comparación Automática: {% if valor.respuesta_eval %}{% if valor.respuesta_eval.valor > aspecto.valor_asociado %}Cumple{% else %}No Cumple{% endif %}{% else %}Debe Justificarse{% endif %}">
+                        {% render_field valor.formulario.cumple class="select select-bordered w-full" %}
+                    </div>
+                </td>
                 <td>
                     {% if not gerencia %}
                     {% render_field valor.formulario.justificacion class="input input-bordered w-full" required="" %}
