@@ -138,13 +138,19 @@
               <div class="stat-title text-white">Resultado de la Evaluación</div>
               <div class="stat-value">
                 {% if tipo == "E" or tipo == 'S' and not evaluacion.fecha_revision %}
+                {% if evaluacion.estado == "E" %}
                 {{evaluacion.total|floatformat:2}}
+                {% elif evaluacion.estado == "S" and not include_others and request.user.pk == evaluacion.evaluado.supervisor.user.pk %}
+                {{evaluacion.total_supervisor|floatformat:2}}
+                {% else %}
+                {{evaluacion.total|floatformat:2}}
+                {% endif %}
                 {% elif tipo == "S" %}
                 {{evaluacion.total_supervisor|floatformat:2}}
                 {% else %}
-                {% if evaluacion.estado == 'A' or evaluacion.estado == 'R' %}
+                {% if evaluacion.estado == 'A' or evaluacion.estado == 'R' or evaluacion.estado == 'H' and not include_others %}
                 {{evaluacion.total_definitivo|floatformat:2}}
-                {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' and evaluacion.fecha_revision %}
+                {% elif evaluacion.estado == 'G' or evaluacion.estado == 'H' and evaluacion.fecha_revision or evaluacion.estado == 'S' and not include_others %}
                 {{evaluacion.total_supervisor|floatformat:2}}
                 {% elif evaluacion.estado == 'H' %}
                 {{evaluacion.total_definitivo|floatformat:2}}
