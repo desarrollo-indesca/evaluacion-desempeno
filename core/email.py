@@ -2,7 +2,7 @@ import threading
 from django.core.mail import send_mail
 from django.conf import settings
 
-EMAIL_HOST_USER = settings.EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
 
 class EmailThread(threading.Thread):
     def __init__(self, subject, content, recipient_list, sender):
@@ -13,9 +13,7 @@ class EmailThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run (self):
-        msg = send_mail(self.subject, '', self.sender, self.recipient_list, html_message=self.content)
-        msg.content_subtype = "html"
-        msg.send()
+        send_mail(self.subject, '', self.sender, self.recipient_list, html_message=self.content)
 
-def send_mail_async(subject, content, recipient_list, sender=EMAIL_HOST_USER):
+def send_mail_async(subject, content, recipient_list, sender=DEFAULT_FROM_EMAIL):
     EmailThread(subject, content, recipient_list, sender).start()
