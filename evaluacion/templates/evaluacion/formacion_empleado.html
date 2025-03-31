@@ -92,7 +92,20 @@
                                 </small>
                             </td>
                             <td class="text-xs">
-                                {% render_field form.competencias_genericas %}
+                                {% if evaluacion.evaluado.tipo_personal.pk == 1 %}
+                                {% for opcion in form.competencias_genericas.field.queryset %}
+                                    {% if 'Síntesis' not in opcion.nombre %}
+                                        <div>
+                                            <label class="">
+                                                <input type="checkbox" id="id_{{form.prefix}}-competencias_genericas_{{opcion.id}}" name="{{form.prefix}}-competencias_genericas" value="{{opcion.id}}" {% if opcion.id in form.competencias_genericas.value %}checked{% endif %}>
+                                                {{opcion.nombre.upper}}                                            
+                                            </label>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                                {% else %}
+                                    {% render_field form.competencias_genericas %}
+                                {% endif %}
                                 <small class="text-error">
                                     {% for error in form.competencias_genericas.errors %}{{error}}<br>{% endfor %}
                                 </small>

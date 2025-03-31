@@ -354,7 +354,6 @@ class FormacionEmpleado(ValidarEvaluadoMixin, PeriodoContextMixin, EvaluacionEst
     
     def post(self, request, pk):
         evaluacion = Evaluacion.objects.get(pk=pk)
-
         formset = modelformset_factory(
             Formacion, form=FormularioFormacion, exclude = ('evaluacion', 'anadido_por', 'activo', 'competencias'),
         )(request.POST)
