@@ -871,6 +871,7 @@ class EnviarEvaluacionesGestionHumana(GerenteMixin, View):
     def post(self, request):
         periodo_actual = Periodo.objects.get(activo=True)
         evaluaciones = Evaluacion.objects.filter(periodo=periodo_actual, estado='G', evaluado__gerencia__in=request.user.datos_personal.get(activo=True).personal_gerente.filter(activo=True).values_list('gerencia', flat=True))
+        nombres = list(evaluaciones.values_list('evaluado__user__first_name', flat=True))
 
         if evaluaciones.count():
             evaluaciones.update(estado='H', fecha_entrega=datetime.datetime.now())
@@ -878,8 +879,8 @@ class EnviarEvaluacionesGestionHumana(GerenteMixin, View):
             body = 'Las evaluaciones de desempeño de los empleados han sido enviadas a la Gerencia de Gestión Humana.\n\n'
             body += "Los empleados enviados son: \n\n"
 
-            for evaluacion in evaluaciones:
-                body += f"- {evaluacion.evaluado.user.get_full_name().upper()}\n"
+            for nombre in nombres:
+                body += f"- {nombre.upper()}\n"
 
             body += "\nPodrá revisarlas en el Panel de Control del Gerente de Gestión Humana, en la sección de revisión de evaluaciones.\n\n"
 
