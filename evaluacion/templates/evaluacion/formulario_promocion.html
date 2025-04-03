@@ -3,7 +3,7 @@
 
 <div class="flex justify-between items-center p-3">
     <div class="w-1/4">
-        <a hx-get="{% url 'dashboard' %}" hx-target="closest .tab-content" href="#" class="btn btn-teal-500">Regresar</a>
+        <a href="{% url 'dashboard' %}" class="btn btn-teal-500">Regresar</a>
     </div>
     <div class="w-1/2 text-center">
         <h1 class="text-2xl">Postulación de Promoción para {{evaluacion.evaluado.user.first_name}}</h1>
