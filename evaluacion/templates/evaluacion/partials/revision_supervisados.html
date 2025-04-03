@@ -15,7 +15,7 @@
     </div>
     <div class="w-1/3">
         {% if puede_enviarse_gghh %}
-        <a href="#" class="btn btn-teal-500" hx-trigger="click" hx-target="closest .tab-content" hx-confirm="Se enviarán las evaluaciones con el estatus 'Enviado a la Gerencia' a la Gerencia de Gestión Humana. ¿Desea continuar?" hx-post="{% url 'enviar_gghh' %}">
+        <a href="#" class="btn btn-error" hx-trigger="click" hx-target="closest .tab-content" hx-confirm="Se enviarán las evaluaciones con el estatus 'Enviado a la Gerencia' a la Gerencia de Gestión Humana. ¿Desea continuar?" hx-post="{% url 'enviar_gghh' %}">
             Enviar a Gestión Humana
         </a>
         {% endif %}
